@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model CateringInquiry {
+  id         String   @id @default(uuid())
+  name       String
+  email      String
+  phone      String
+  eventType  String   @map("event_type")
+  guestCount Int      @map("guest_count")
+  eventDate  DateTime @map("event_date")
+  message    String?
+  status     String   @default("new")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("catering_inquiries")
+}

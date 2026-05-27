@@ -1,6 +1,7 @@
 import { PartyPopper, Users, Building2, Cake, GraduationCap, CalendarHeart, Phone, DollarSign } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
+import CateringForm from "@/components/CateringForm";
 
 /**
  * Catering Section
@@ -10,6 +11,7 @@ import { formatPrice } from "@/lib/utils";
  * - Shows event types we cater to
  * - Shows catering menu with small/large tray pricing
  * - Minimum order info and advance notice
+ * - Catering inquiry form (Phase 2)
  * 
  * VISUAL:
  * - Cream background
@@ -41,9 +43,10 @@ export default function Catering() {
 
   return (
     <section id="catering" className="py-20 bg-cream">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto">
           <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-6">
             {catering.headline}
           </h2>
@@ -53,7 +56,7 @@ export default function Catering() {
         </div>
 
         {/* Event Types Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {catering.eventTypes.map((event) => (
             <div
               key={event}
@@ -68,7 +71,7 @@ export default function Catering() {
         </div>
 
         {/* Catering Menu */}
-        <div className="mb-12">
+        <div>
           <h3 className="font-heading text-2xl font-bold text-primary text-center mb-8">
             Catering Menu
           </h3>
@@ -119,8 +122,21 @@ export default function Catering() {
           </div>
         </div>
 
+        {/* Catering Inquiry Form */}
+        <div className="bg-white rounded-2xl p-6 md:p-10 shadow-lg border border-gray-100">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-heading font-bold text-primary text-center mb-2">
+              Request a Quote
+            </h2>
+            <p className="text-text-light text-center mb-8">
+              Fill out the form below and we&apos;ll get back to you with a custom catering proposal.
+            </p>
+            <CateringForm />
+          </div>
+        </div>
+
         {/* CTA */}
-        <div className="text-center mt-10">
+        <div className="text-center">
           <a
             href={`tel:${phone}`}
             className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-8 py-4 rounded-full text-lg font-semibold transition-colors duration-200"
@@ -129,6 +145,7 @@ export default function Catering() {
             Call to Discuss Your Event
           </a>
         </div>
+
       </div>
     </section>
   );
