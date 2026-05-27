@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getSeoData } from "@/lib/data";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import CookieConsent from "@/components/CookieConsent";
 import "./globals.css";
 
 const seo = getSeoData();
@@ -45,6 +46,7 @@ export default function RootLayout({
         <Header />
         <main>{children}</main>
         <Footer />
+        <CookieConsent />
       </body>
     </html>
   );
