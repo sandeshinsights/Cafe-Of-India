@@ -1,0 +1,202 @@
+{
+  "name": "Cafe of India",
+  "tagline": "Authentic Indian Cuisine",
+  "address": {
+    "street": "155 Main Street",
+    "city": "Maynard",
+    "state": "MA",
+    "zip": "01754",
+    "full": "155 Main Street, Maynard, MA 01754"
+  },
+  "phone": "978-897-9227",
+  "phoneDisplay": "(978) 897-9227",
+  "email": "info@cafeindiamaynard.com",
+  "hours": {
+    "monday": "11:30 AM - 9:00 PM",
+    "tuesday": "11:30 AM - 9:00 PM",
+    "wednesday": "11:30 AM - 9:00 PM",
+    "thursday": "11:30 AM - 9:00 PM",
+    "friday": "11:30 AM - 9:00 PM",
+    "saturday": "11:30 AM - 9:00 PM",
+    "sunday": "11:30 AM - 9:00 PM"
+  },
+  "social": {
+    "facebook": "https://www.facebook.com/cafeofindiamaynard",
+    "instagram": "https://www.instagram.com/cafeofindiamaynard",
+    "yelp": "https://www.yelp.com/biz/cafe-of-india-maynard"
+  },
+  "geo": {
+    "lat": 42.4331,
+    "lng": -71.4505
+  },
+  "rating": {
+    "value": 4.7,
+    "count": 120,
+    "source": "Google"
+  },
+  "hero": {
+    "headline": "Experience the Flavors of India",
+    "subheadline": "Authentic Indian cuisine made with fresh ingredients and traditional recipes, served with warmth in the heart of Maynard.",
+    "ctaPrimary": "View Our Menu",
+    "ctaSecondary": "Call to Order"
+  },
+  "about": {
+    "headline": "Welcome to Cafe of India",
+    "description": "Nestled in the charming town of Maynard, Massachusetts, Cafe of India brings you the rich and diverse flavors of authentic Indian cuisine. Our chefs use traditional recipes passed down through generations, combined with the freshest ingredients, to create dishes that delight every palate. Whether you're a longtime lover of Indian food or trying it for the first time, our warm and inviting atmosphere makes every visit a memorable experience.",
+    "highlights": [
+      {
+        "icon": "chef-hat",
+        "title": "Experienced Chefs",
+        "description": "Our skilled chefs bring decades of culinary expertise, crafting authentic dishes using time-honored techniques and traditional recipes."
+      },
+      {
+        "icon": "leaf",
+        "title": "Fresh Ingredients",
+        "description": "We source the finest spices and freshest ingredients daily, ensuring every dish is bursting with authentic Indian flavor."
+      },
+      {
+        "icon": "heart",
+        "title": "Made with Love",
+        "description": "Every dish is prepared with care and passion, reflecting our commitment to quality and our love for the culinary traditions of India."
+      },
+      {
+        "icon": "users",
+        "title": "Family Friendly",
+        "description": "Our warm and welcoming atmosphere makes Cafe of India the perfect destination for family dinners, celebrations, and casual gatherings."
+      }
+    ]
+  },
+  "testimonials": [
+    {
+      "name": "Sarah M.",
+      "rating": 5,
+      "text": "Absolutely love this place! The butter chicken is the best I've had outside of India. The staff is incredibly friendly and the atmosphere is warm and inviting. A hidden gem in Maynard!",
+      "source": "Google"
+    },
+    {
+      "name": "James R.",
+      "rating": 5,
+      "text": "We've been coming here for years and it never disappoints. The lunch specials are an incredible value. The naan bread is always fresh and the portions are generous. Highly recommend!",
+      "source": "Google"
+    },
+    {
+      "name": "Priya K.",
+      "rating": 4,
+      "text": "As someone who grew up eating Indian food, I can say this place is authentic. The flavors remind me of home. The vegetarian options are extensive and delicious. Will keep coming back!",
+      "source": "Yelp"
+    },
+    {
+      "name": "Michael T.",
+      "rating": 5,
+      "text": "Catered our wedding reception and the food was phenomenal. Our guests are still talking about the samosas and chicken tikka masala. Professional service and incredible food!",
+      "source": "Google"
+    }
+  ],
+  "catering": {
+    "headline": "Catering Services",
+    "description": "Let Cafe of India bring the vibrant flavors of India to your next event. We offer full-service catering for weddings, corporate events, birthday parties, and more. Our catering team works with you to create a custom menu that fits your taste and budget.",
+    "eventTypes": [
+      "Weddings & Receptions",
+      "Corporate Events & Meetings",
+      "Birthday Parties",
+      "Anniversaries",
+      "Holiday Gatherings",
+      "Community Events"
+    ],
+    "formFields": [
+      { "name": "name", "label": "Full Name", "type": "text", "required": true },
+      { "name": "email", "label": "Email", "type": "email", "required": true },
+      { "name": "phone", "label": "Phone Number", "type": "tel", "required": true },
+      { "name": "eventType", "label": "Event Type", "type": "select", "options": ["Wedding", "Corporate Event", "Birthday Party", "Anniversary", "Holiday Party", "Other"], "required": true },
+      { "name": "guestCount", "label": "Estimated Guest Count", "type": "number", "required": true },
+      { "name": "eventDate", "label": "Event Date", "type": "date", "required": true },
+      { "name": "message", "label": "Additional Details", "type": "textarea", "required": false }
+    ],
+    "menu": [
+      { "id": "cat-1", "name": "Vegetable Samosa", "category": "Appetizers", "priceSmall": 25, "priceLarge": 45, "servesSmall": "15-20 pcs", "servesLarge": "30-40 pcs" },
+      { "id": "cat-2", "name": "Chicken Tikka", "category": "Appetizers", "priceSmall": 55, "priceLarge": 95, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-3", "name": "Onion Bhaji", "category": "Appetizers", "priceSmall": 20, "priceLarge": 35, "servesSmall": "15-20 pcs", "servesLarge": "30-40 pcs" },
+      { "id": "cat-4", "name": "Chicken Pakora", "category": "Appetizers", "priceSmall": 45, "priceLarge": 75, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-5", "name": "Lamb Seekh Kebab", "category": "Appetizers", "priceSmall": 60, "priceLarge": 100, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-6", "name": "Paneer Tikka", "category": "Appetizers", "priceSmall": 45, "priceLarge": 75, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-7", "name": "Butter Chicken", "category": "Entrees", "priceSmall": 65, "priceLarge": 110, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-8", "name": "Chicken Tikka Masala", "category": "Entrees", "priceSmall": 65, "priceLarge": 110, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-9", "name": "Lamb Curry", "category": "Entrees", "priceSmall": 75, "priceLarge": 125, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-10", "name": "Saag Paneer", "category": "Entrees", "priceSmall": 55, "priceLarge": 90, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-11", "name": "Chana Masala", "category": "Entrees", "priceSmall": 45, "priceLarge": 75, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-12", "name": "Dal Tadka", "category": "Entrees", "priceSmall": 40, "priceLarge": 65, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-13", "name": "Aloo Gobi", "category": "Entrees", "priceSmall": 40, "priceLarge": 65, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-14", "name": "Shrimp Vindaloo", "category": "Entrees", "priceSmall": 75, "priceLarge": 125, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-15", "name": "Fish Curry", "category": "Entrees", "priceSmall": 70, "priceLarge": 115, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-16", "name": "Chicken Biryani", "category": "Rice", "priceSmall": 55, "priceLarge": 90, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-17", "name": "Vegetable Biryani", "category": "Rice", "priceSmall": 45, "priceLarge": 75, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-18", "name": "Lamb Biryani", "category": "Rice", "priceSmall": 65, "priceLarge": 110, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-19", "name": "Jeera Rice", "category": "Rice", "priceSmall": 25, "priceLarge": 40, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-20", "name": "Basmati Rice", "category": "Rice", "priceSmall": 20, "priceLarge": 35, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-21", "name": "Naan Bread", "category": "Breads", "priceSmall": 15, "priceLarge": 25, "servesSmall": "10 pcs", "servesLarge": "20 pcs" },
+      { "id": "cat-22", "name": "Garlic Naan", "category": "Breads", "priceSmall": 18, "priceLarge": 30, "servesSmall": "10 pcs", "servesLarge": "20 pcs" },
+      { "id": "cat-23", "name": "Tandoori Roti", "category": "Breads", "priceSmall": 12, "priceLarge": 20, "servesSmall": "10 pcs", "servesLarge": "20 pcs" },
+      { "id": "cat-24", "name": "Paratha", "category": "Breads", "priceSmall": 18, "priceLarge": 30, "servesSmall": "10 pcs", "servesLarge": "20 pcs" },
+      { "id": "cat-25", "name": "Peshwari Naan", "category": "Breads", "priceSmall": 20, "priceLarge": 35, "servesSmall": "10 pcs", "servesLarge": "20 pcs" },
+      { "id": "cat-26", "name": "Chicken Tandoori", "category": "Tandoori", "priceSmall": 70, "priceLarge": 115, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-27", "name": "Lamb Boti Kebab", "category": "Tandoori", "priceSmall": 80, "priceLarge": 130, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-28", "name": "Tandoori Shrimp", "category": "Tandoori", "priceSmall": 75, "priceLarge": 125, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-29", "name": "Malai Kofta", "category": "Vegetarian", "priceSmall": 55, "priceLarge": 90, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-30", "name": "Dal Makhani", "category": "Vegetarian", "priceSmall": 45, "priceLarge": 75, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-31", "name": "Palak Paneer", "category": "Vegetarian", "priceSmall": 50, "priceLarge": 85, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-32", "name": "Matter Paneer", "category": "Vegetarian", "priceSmall": 50, "priceLarge": 85, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-33", "name": "Gulab Jamun", "category": "Desserts", "priceSmall": 25, "priceLarge": 40, "servesSmall": "15-20 pcs", "servesLarge": "30-40 pcs" },
+      { "id": "cat-34", "name": "Rasmalai", "category": "Desserts", "priceSmall": 30, "priceLarge": 50, "servesSmall": "10-15 pcs", "servesLarge": "20-30 pcs" },
+      { "id": "cat-35", "name": "Kheer", "category": "Desserts", "priceSmall": 30, "priceLarge": 50, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-36", "name": "Mango Lassi", "category": "Beverages", "priceSmall": 25, "priceLarge": 40, "servesSmall": "10 servings", "servesLarge": "20 servings" },
+      { "id": "cat-37", "name": "Mango Lassi (Sweet)", "category": "Beverages", "priceSmall": 25, "priceLarge": 40, "servesSmall": "10 servings", "servesLarge": "20 servings" },
+      { "id": "cat-38", "name": "Masala Chai", "category": "Beverages", "priceSmall": 15, "priceLarge": 25, "servesSmall": "10 servings", "servesLarge": "20 servings" },
+      { "id": "cat-39", "name": "Raita", "category": "Sides", "priceSmall": 15, "priceLarge": 25, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-40", "name": "Green Salad", "category": "Sides", "priceSmall": 20, "priceLarge": 35, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-41", "name": "Papadum", "category": "Sides", "priceSmall": 10, "priceLarge": 18, "servesSmall": "20 pcs", "servesLarge": "40 pcs" },
+      { "id": "cat-42", "name": "Mango Chutney", "category": "Sides", "priceSmall": 10, "priceLarge": 18, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" },
+      { "id": "cat-43", "name": "Mint Chutney", "category": "Sides", "priceSmall": 10, "priceLarge": 18, "servesSmall": "10-15 ppl", "servesLarge": "20-30 ppl" }
+    ],
+    "minOrder": 150,
+    "advanceNotice": "At least 48 hours notice required for all catering orders"
+  },
+  "faq": [
+    {
+      "question": "Do you offer vegetarian and vegan options?",
+      "answer": "Yes! We have an extensive vegetarian menu with over 20 dishes. Many of our dishes can be prepared vegan upon request. Please inform your server about any dietary restrictions and our chefs will be happy to accommodate."
+    },
+    {
+      "question": "Do you take reservations?",
+      "answer": "We accept reservations for parties of 6 or more. For smaller parties, we operate on a first-come, first-served basis. Call us at (978) 897-9227 to make a reservation."
+    },
+    {
+      "question": "Do you offer delivery?",
+      "answer": "We offer takeout and you can place orders by calling us at (978) 897-9227. Online ordering will be available soon on our website."
+    },
+    {
+      "question": "What are your hours?",
+      "answer": "We are open 7 days a week from 11:30 AM to 9:00 PM. We are open on all holidays unless otherwise noted on our social media pages."
+    },
+    {
+      "question": "Do you cater events?",
+      "answer": "Absolutely! We cater weddings, corporate events, birthday parties, and more. Contact us through our catering form or call us directly to discuss your event needs. A minimum order of $150 applies with at least 48 hours advance notice."
+    },
+    {
+      "question": "Do you have parking available?",
+      "answer": "Yes, there is free street parking available on Main Street and in the public parking lot behind the building. The parking lot can be accessed from both Main Street and Nason Street."
+    }
+  ],
+  "serviceAreas": [
+    "Maynard",
+    "Acton",
+    "Concord",
+    "Sudbury",
+    "Stow",
+    "Hudson",
+    "Marlborough",
+    "Framingham",
+    "Westborough",
+    "Northborough"
+  ],
+  "gallery": []
+}

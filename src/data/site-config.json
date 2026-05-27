@@ -1,0 +1,52 @@
+{
+  "navigation": [
+    { "label": "Home", "href": "#hero" },
+    { "label": "About", "href": "#about" },
+    { "label": "Menu", "href": "#menu" },
+    { "label": "Specials", "href": "#specials" },
+    { "label": "Catering", "href": "#catering" }
+  ],
+  "ctaButton": {
+    "label": "Order Now",
+    "href": "tel:978-897-9227"
+  },
+  "footer": {
+    "copyright": "Cafe of India. All Rights Reserved.",
+    "tagline": "Authentic Indian Cuisine in the Heart of Maynard"
+  },
+  "sections": [
+    { "id": "hero", "title": "Hero", "order": 1, "enabled": true },
+    { "id": "about", "title": "About Us", "order": 2, "enabled": true },
+    { "id": "menu", "title": "Our Menu", "order": 3, "enabled": true },
+    { "id": "specials", "title": "Chef's Specials", "order": 4, "enabled": true },
+    { "id": "reviews", "title": "What Our Guests Say", "order": 5, "enabled": true },
+    { "id": "catering", "title": "Catering", "order": 6, "enabled": true },
+    { "id": "faq", "title": "FAQ", "order": 7, "enabled": true },
+    { "id": "gallery", "title": "Gallery", "order": 8, "enabled": true },
+    { "id": "contact", "title": "Contact & Location", "order": 9, "enabled": true }
+  ],
+  "features": {
+    "onlineOrdering": false,
+    "cateringForm": false,
+    "newsletter": true,
+    "cookieConsent": true,
+    "analytics": true
+  },
+  "theme": {
+    "colors": {
+      "primary": "#5C1A1B",
+      "primaryLight": "#7A2627",
+      "secondary": "#C4973B",
+      "secondaryLight": "#D4AD5B",
+      "background": "#FBF8F1",
+      "backgroundAlt": "#F5F0E6",
+      "text": "#2D2D2D",
+      "textLight": "#6B6B6B",
+      "white": "#FFFFFF"
+    },
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    }
+  }
+}
