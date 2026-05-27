@@ -1,14 +1,6 @@
 @import "tailwindcss";
 
-/* ─── Custom Theme ─────────────────────────────────────── */
-/* 
- * In Tailwind v4, theme customization lives in CSS using @theme.
- * These become available as utility classes automatically.
- * Example: bg-primary → uses the maroon color below.
- */
-
 @theme {
-  /* Restaurant Colors */
   --color-primary: #5C1A1B;
   --color-primary-light: #7A2627;
   --color-secondary: #C4973B;
@@ -17,22 +9,9 @@
   --color-cream-dark: #F5F0E6;
   --color-text-main: #2D2D2D;
   --color-text-light: #6B6B6B;
-
-  /* Font Families */
   --font-heading: "Playfair Display", Georgia, serif;
   --font-body: "Inter", system-ui, sans-serif;
 }
-
-/* ─── Google Fonts ─────────────────────────────────────── */
-/* 
- * We load Playfair Display and Inter from Google Fonts.
- * The font-display: swap ensures text is visible immediately 
- * with a fallback font while the custom font loads.
- */
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap");
-
-/* ─── Base Styles ──────────────────────────────────────── */
 
 html {
   scroll-behavior: smooth;
@@ -46,15 +25,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Typography ───────────────────────────────────────── */
-
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--color-primary);
   line-height: 1.2;
 }
-
-/* ─── Scrollbar Styling ────────────────────────────────── */
 
 ::-webkit-scrollbar {
   width: 8px;
@@ -73,21 +48,15 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--color-primary);
 }
 
-/* ─── Selection Highlight ──────────────────────────────── */
-
 ::selection {
   background-color: var(--color-secondary);
   color: white;
 }
 
-/* ─── Focus Styles (Accessibility) ─────────────────────── */
-
 *:focus-visible {
   outline: 2px solid var(--color-secondary);
   outline-offset: 2px;
 }
-
-/* ─── Smooth Image Loading ─────────────────────────────── */
 
 img {
   transition: opacity 0.3s ease;
