@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Flame, Star, Leaf, Wheat } from "lucide-react";
+import { Flame, Star, Leaf, Wheat, Plus, Check } from "lucide-react";
 import { getMenuData } from "@/lib/data";
-import { cn, formatPrice, capitalize } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
+import { useCart } from "@/context/CartContext";
 
 /**
  * Menu Section
@@ -14,9 +15,11 @@ import { cn, formatPrice, capitalize } from "@/lib/utils";
  * - Menu items shown as clean cards with name, description, price
  * - Dietary tags (vegetarian, vegan, gluten-free) shown as colored badges
  * - Special badges (Best Seller, Chef's Favorite, etc.) highlighted
+ * - "Add to Cart" button on each item with animated feedback
  * 
  * WHY "use client":
  * - Category tab switching needs useState
+ * - Add to cart interaction
  * - Client component for interactive tab selection
  */
 
@@ -29,8 +32,16 @@ const tagConfig: Record<string, { label: string; color: string; icon?: React.Rea
 export default function Menu() {
   const { categories } = getMenuData();
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || "");
+  const [addedId, setAddedId] = useState<string | null>(null);
+  const { addItem } = useCart();
 
   const activeItems = categories.find((c) => c.id === activeCategory);
+
+  function handleAddToCart(item: { id: string; name: string; price: number }) {
+    addItem({ id: item.id, name: item.name, price: item.price });
+    setAddedId(item.id);
+    setTimeout(() => setAddedId(null), 1500);
+  }
 
   return (
     <section id="menu" className="py-20 bg-cream">
@@ -105,7 +116,7 @@ export default function Menu() {
 
                     {/* Dietary Tags */}
                     {item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-1.5 mb-3">
                         {item.tags.map((tag) => {
                           const config = tagConfig[tag];
                           if (!config) return null;
@@ -124,6 +135,30 @@ export default function Menu() {
                         })}
                       </div>
                     )}
+
+                    {/* Add to Cart Button */}
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      disabled={addedId === item.id}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                        addedId === item.id
+                          ? "bg-green-500 text-white"
+                          : "bg-primary/10 text-primary hover:bg-primary hover:text-white"
+                      )}
+                    >
+                      {addedId === item.id ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Added
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4" />
+                          Add to Cart
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   {/* Price */}

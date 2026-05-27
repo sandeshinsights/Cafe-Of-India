@@ -3,6 +3,7 @@ import { getSeoData } from "@/lib/data";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
 const seo = getSeoData();
@@ -42,11 +43,13 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-body antialiased">
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <CookieConsent />
+      <body className="font-body bg-cream text-text-main antialiased">
+        <CartProvider>
+          <Header />
+          <main>{children}</main>
+          <Footer />
+          <CookieConsent />
+        </CartProvider>
       </body>
     </html>
   );

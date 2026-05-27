@@ -22,3 +22,18 @@ model CateringInquiry {
 
   @@map("catering_inquiries")
 }
+
+model Order {
+  id            String   @id @default(uuid())
+  name          String
+  email         String
+  items         Json     // Array of { id, name, price, quantity }
+  subtotal      Float
+  tax           Float
+  total         Float
+  stripeSessionId String @unique @map("stripe_session_id")
+  status        String   @default("pending") // pending, paid, failed
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("orders")
+}
