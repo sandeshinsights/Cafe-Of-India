@@ -20,12 +20,13 @@ export default function HomePage() {
     <>
       <Hero />
       <About />
+      <Gallery />
       <Menu />
       <Specials />
       <Reviews />
       <Catering />
       <FAQ />
-      <Gallery />
+      
       <Contact />
     </>
   );

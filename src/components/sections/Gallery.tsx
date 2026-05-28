@@ -1,4 +1,3 @@
-import { Camera } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
 
 /**
@@ -6,34 +5,22 @@ import { getRestaurantData } from "@/lib/data";
  * 
  * WHAT IT DOES:
  * - Displays a grid of restaurant/food photos
- * - Currently shows placeholders (you'll add real photos later)
- * - Drop photos into public/images/gallery/ folder to populate
- * 
- * VISUAL:
- * - Clean white background
  * - Responsive grid (2 cols mobile, 3 cols tablet, 4 cols desktop)
  * - Hover effect with zoom
  */
 
-const placeholderImages = [
-  { src: "/images/gallery/placeholder-1.jpg", alt: "Restaurant interior" },
-  { src: "/images/gallery/placeholder-2.jpg", alt: "Indian dishes" },
-  { src: "/images/gallery/placeholder-3.jpg", alt: "Chef cooking" },
-  { src: "/images/gallery/placeholder-4.jpg", alt: "Tandoor oven" },
-  { src: "/images/gallery/placeholder-5.jpg", alt: "Dinner setup" },
-  { src: "/images/gallery/placeholder-6.jpg", alt: "Fresh ingredients" },
-  { src: "/images/gallery/placeholder-7.jpg", alt: "Naan bread" },
-  { src: "/images/gallery/placeholder-8.jpg", alt: "Spice collection" },
+const galleryImages = [
+  { src: "/images/gallery/gallery-1.jpg", alt: "Traditional Indian thali platter" },
+  { src: "/images/gallery/gallery-2.jpg", alt: "Fresh tandoori naan bread" },
+  { src: "/images/gallery/gallery-3.jpg", alt: "Chicken tikka masala" },
+  { src: "/images/gallery/gallery-4.jpg", alt: "Samosa and pakora platter" },
+  { src: "/images/gallery/gallery-5.jpg", alt: "Restaurant dining room" },
+  { src: "/images/gallery/gallery-6.jpg", alt: "Mango lassi and gulab jamun" },
+  { src: "/images/gallery/gallery-7.jpg", alt: "Traditional Indian spices" },
+  { src: "/images/gallery/gallery-8.jpg", alt: "Tandoori mixed grill platter" },
 ];
 
 export default function Gallery() {
-  const { gallery } = getRestaurantData();
-
-  // Use real gallery images if provided, otherwise show placeholders
-  const images = gallery.length > 0
-    ? gallery.map((src, i) => ({ src, alt: `Gallery image ${i + 1}` }))
-    : placeholderImages;
-
   return (
     <section id="gallery" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,18 +36,11 @@ export default function Gallery() {
 
         {/* Photo Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {images.map((image, index) => (
+          {galleryImages.map((image, index) => (
             <div
               key={index}
               className="group relative aspect-square rounded-xl overflow-hidden bg-cream"
             >
-              {/* Placeholder (shown when no real image) */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-text-light/40">
-                <Camera className="w-10 h-10 mb-2" />
-                <p className="text-xs">Photo {index + 1}</p>
-              </div>
-
-              {/* Real Image (shown when photo exists) */}
               <img
                 src={image.src}
                 alt={image.alt}

@@ -1,23 +1,26 @@
 import { Star, Flame, Award } from "lucide-react";
 import { getMenuData } from "@/lib/data";
+import { formatPrice } from "@/lib/utils";
 
 /**
  * Chef's Specials Section
  * 
  * WHAT IT DOES:
  * - Highlights 3 signature dishes from the head chef
- * - Each special shows dish name and why it's special
+ * - Each special shows photo, dish name, price, and why it's special
  * - Eye-catching gold/maroon design
- * 
- * VISUAL:
- * - Alternating background from menu section
- * - 3 cards with decorative accents
  */
 
 const badgeIcons: Record<string, React.ReactNode> = {
   "Best Seller": <Flame className="w-5 h-5" />,
   "Chef's Favorite": <Award className="w-5 h-5" />,
   "House Special": <Star className="w-5 h-5" />,
+};
+
+const specialPhotos: Record<string, string> = {
+  "menu-31": "/images/specials/butter-chicken.jpg",
+  "menu-46": "/images/specials/dal-makhani.jpg",
+  "menu-62": "/images/specials/chicken-biryani.jpg",
 };
 
 export default function Specials() {
@@ -29,7 +32,8 @@ export default function Specials() {
       cat.items.some((item) => item.id === special.id)
     );
     const menuItem = category?.items.find((item) => item.id === special.id);
-    return { ...special, price: menuItem?.price, description: menuItem?.description };
+    const photoUrl = specialPhotos[special.id] || "";
+    return { ...special, price: menuItem?.price, description: menuItem?.description, photoUrl };
   });
 
   return (
@@ -59,17 +63,24 @@ export default function Specials() {
               className="group relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/15 transition-all duration-300"
             >
               {/* Number badge */}
-              <div className="absolute top-4 left-4 w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-lg">
+              <div className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-secondary text-white flex items-center justify-center font-bold text-lg">
                 {index + 1}
               </div>
 
               <div className="p-8 pt-16">
-                {/* Image Placeholder */}
-                <div className="w-full h-48 bg-white/10 rounded-xl mb-6 flex items-center justify-center overflow-hidden">
-                  <div className="text-center text-white/50">
-                    <Star className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p className="text-xs">Photo</p>
-                  </div>
+                {/* Dish Photo */}
+                <div className="w-full h-48 bg-white/10 rounded-xl mb-6 overflow-hidden">
+                  {special.photoUrl ? (
+                    <img
+                      src={special.photoUrl}
+                      alt={special.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-white/50">
+                      <Star className="w-12 h-12 opacity-30" />
+                    </div>
+                  )}
                 </div>
 
                 {/* Dish Name */}
@@ -78,9 +89,9 @@ export default function Specials() {
                 </h3>
 
                 {/* Price */}
-                {special.price && (
+                {special.price != null && (
                   <p className="text-secondary font-semibold text-lg mb-3">
-                    ${special.price.toFixed(2)}
+                    {formatPrice(special.price)}
                   </p>
                 )}
 

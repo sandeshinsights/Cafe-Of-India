@@ -8,7 +8,7 @@ import { getRestaurantData } from "@/lib/data";
  * - Full-width banner at the top of the homepage
  * - Large headline + subheadline from restaurant.json
  * - Two CTA buttons: "View Menu" (scrolls down) and "Call to Order" (calls phone)
- * - Dark gradient overlay on a placeholder background
+ * - Dark gradient overlay on background image
  */
 
 export default function Hero() {
@@ -17,7 +17,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-screen flex items-center justify-center"
+      className="relative min-h-screen flex items-center justify-center pt-20"
     >
       {/* Background with gradient overlay */}
       <div
