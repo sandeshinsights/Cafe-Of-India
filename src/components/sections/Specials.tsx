@@ -9,12 +9,6 @@ interface SpecialDetail extends ChefsSpecial {
   photoUrl: string;
 }
 
-const badgeConfig: Record<string, { icon: React.ReactNode; label: string }> = {
-  "Best Seller": <Flame className="w-5 h-5" />,
-  "Chef's Favorite": <Award className="w-5 h-5" />,
-  "House Special": <Star className="w-5 h-5" />,
-};
-
 const specialPhotos: Record<string, string> = {
   "menu-70": "/images/specials/butter-chicken.jpg",
   "menu-69": "/images/specials/dal-makhani.jpg",
@@ -93,12 +87,22 @@ export default function Specials() {
                 </div>
 
                 {/* Badge */}
-                {special.badge && (
+                {special.badge === "Best Seller" && (
                   <div className="flex items-center gap-1.5 mb-2">
-                    {badgeConfig[special.badge] || <Star className="w-4 h-4 text-secondary" />}
-                    <span className="text-secondary text-sm font-semibold">
-                      {special.badge}
-                    </span>
+                    <Flame className="w-5 h-5 text-secondary" />
+                    <span className="text-secondary text-sm font-semibold">Best Seller</span>
+                  </div>
+                )}
+                {special.badge === "Chef's Favorite" && (
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Award className="w-5 h-5 text-secondary" />
+                    <span className="text-secondary text-sm font-semibold">Chef&apos;s Favorite</span>
+                  </div>
+                )}
+                {special.badge === "House Special" && (
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Star className="w-5 h-5 text-secondary" />
+                    <span className="text-secondary text-sm font-semibold">House Special</span>
                   </div>
                 )}
 
