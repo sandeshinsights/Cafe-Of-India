@@ -1,225 +1,230 @@
 {
   "categories": [
     {
-      "id": "hot-appetizers",
+      "id": "category-1",
       "name": "Hot Appetizers",
-      "description": "Crispy and savory starters fresh from our kitchen",
+      "description": "Crispy, flavorful starters fresh from our kitchen",
       "items": [
-        { "id": "menu-1", "name": "Samosa (2 pcs)", "price": 7.95, "description": "Crispy golden pastries stuffed with spiced potatoes and green peas, served with tamarind and mint chutneys.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-2", "name": "Chicken Samosa (2 pcs)", "price": 8.95, "description": "Flaky pastry filled with seasoned ground chicken, herbs, and spices. Served with chutneys.", "tags": [], "image": "" },
-        { "id": "menu-3", "name": "Chicken Pakora", "price": 9.95, "description": "Tender pieces of chicken marinated in spiced gram flour batter, deep fried until golden and crispy.", "tags": [], "image": "" },
-        { "id": "menu-4", "name": "Vegetable Pakora", "price": 8.95, "description": "Mixed seasonal vegetables coated in seasoned gram flour batter, lightly fried to perfection.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-5", "name": "Onion Bhaji", "price": 7.95, "description": "Crispy spiced onion fritters made with fresh onions, chickpea flour, and aromatic spices.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-6", "name": "Chicken Tikka (Appetizer)", "price": 12.95, "description": "Boneless chicken pieces marinated in yogurt and tandoori spices, grilled in our clay oven.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-7", "name": "Lamb Seekh Kebab", "price": 13.95, "description": "Seasoned ground lamb skewered and cooked in our traditional tandoor oven with herbs and spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-8", "name": "Paneer Tikka", "price": 11.95, "description": "Chunks of fresh Indian cottage cheese marinated in tandoori spices, grilled in the clay oven.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-9", "name": "Tandoori Shrimp", "price": 14.95, "description": "Jumbo shrimp marinated in yogurt and aromatic spices, chargrilled in our tandoor oven.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-10", "name": "Aloo Tikki", "price": 7.95, "description": "Pan-fried spiced potato patties seasoned with cumin, coriander, and green chilies. Served with chutneys.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-11", "name": "Chaat Papri", "price": 7.95, "description": "Crispy wafers topped with chickpeas, potatoes, yogurt, tamarind and mint chutneys.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-12", "name": "Hara Bhara Kebab", "price": 9.95, "description": "Spinach and green pea patties with cashews and aromatic spices, lightly pan-fried.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-13", "name": "Fish Pakora", "price": 11.95, "description": "Fresh fish fillet pieces marinated in spiced batter and deep fried until crispy and golden.", "tags": [], "image": "" }
+        { "id": "menu-1", "name": "Vegetable Samosa", "price": 7.99, "description": "Light spicy turnovers stuffed with potatoes and green peas.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-2", "name": "Lamb Samosa", "price": 9.99, "description": "Light spicy turnovers with minced lamb and spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-3", "name": "Gobi 65", "price": 10.99, "description": "A southern delight, battered cauliflower florets sauteed with spice chili garlic sauce", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-4", "name": "Paneer Pakoras", "price": 8.99, "description": "Fresh home made cheese, deep fried in spicy chickpea batter.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-5", "name": "Vegetable Pakoras", "price": 7.99, "description": "Fresh cut vegetables, deep fried in chickpea batter.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-6", "name": "Aloo Tikki", "price": 6.99, "description": "Flavorful potatoes patties and deep fried in chickpea batter.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-7", "name": "Lasooni Gobi", "price": 10.99, "description": "Garlicky cauliflower with scallions and tomatoes.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-8", "name": "Cafe Vegetarian Appetizer Platter", "price": 11.00, "description": "Assorted combination of vegetable pakoras, samosa, tikki and cheese pakora.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-9", "name": "Chicken Pakoras", "price": 9.99, "description": "Boneless tender pieces of chicken, deep fried in chickpea batter.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-10", "name": "Chicken Tikka", "price": 9.99, "description": "Tender pieces of white meat chicken marinated in spicy yogurt and cooked on skewers in tandoor a clay oven.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-11", "name": "Chefs Special Combination Appetizer Platter", "price": 14.99, "description": "Chefs daily selection of vegetarian and non-vegetarian appetizers.", "tags": ["Chef's Special"], "badge": "Chef's Choice", "image": "" },
+        { "id": "menu-12", "name": "Chicken 65", "price": 10.99, "description": "Southern delight and battered chicken sauteed with chilly garlic sauce", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-13", "name": "Tawa Shrimp", "price": 13.99, "description": "Shrimp sauteed with onions and peppers with Indian spices", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "cold-appetizers",
+      "id": "category-2",
       "name": "Cold Appetizers",
-      "description": "Fresh and refreshing starters",
+      "description": "Refreshing and tangy starters",
       "items": [
-        { "id": "menu-14", "name": "Kachumber Salad", "price": 5.95, "description": "Fresh diced cucumbers, tomatoes, and red onions tossed with lemon juice and spices.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-15", "name": "Raita", "price": 4.95, "description": "Cool and creamy yogurt blended with fresh cucumbers, cumin, and a hint of mint.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-16", "name": "Green Salad", "price": 6.95, "description": "Crisp mixed greens with tomatoes, cucumbers, red onions, and our house-made lemon dressing.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-17", "name": "Papadum (2 pcs)", "price": 3.95, "description": "Thin crispy lentil wafers served with tamarind and mint chutneys.", "tags": ["vegetarian"], "image": "" }
+        { "id": "menu-14", "name": "Vegetable Samosa Chat", "price": 10.99, "description": "Light spicy turnovers stuffed with potatoes and green peas.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-15", "name": "Aloo Tiki Chat", "price": 10.99, "description": "Spicy potato patties tossed with mint and yogurt tangy sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-16", "name": "Bhel Poori", "price": 9.99, "description": "Puffed rice with potatoes, onions, chat masala and chutneys.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-17", "name": "Chicken Chat", "price": 10.99, "description": "Chicken cubes with cucumber, onions and yogurt mint sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "soups",
-      "name": "Soups",
+      "id": "category-3",
+      "name": "Soup",
       "description": "Warm and comforting soups",
       "items": [
-        { "id": "menu-18", "name": "Dal Shorba", "price": 5.95, "description": "A warming lentil soup tempered with cumin, garlic, and ghee. Comfort in a bowl.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-19", "name": "Chicken Shorba", "price": 6.95, "description": "Aromatic chicken broth simmered with traditional Indian spices and fresh herbs.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-20", "name": "Tomato Soup", "price": 5.95, "description": "Creamy tomato soup infused with Indian spices, finished with a touch of cream.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-21", "name": "Mulligatawny Soup", "price": 6.95, "description": "A classic Anglo-Indian soup made with red lentils, vegetables, and aromatic curry spices.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-22", "name": "Sweet Corn Soup", "price": 5.95, "description": "Sweet corn kernels in a mild spiced broth with a hint of black pepper and ginger.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-18", "name": "Mulligatawny Soup", "price": 6.49, "description": "Made with lentils, vegetables and spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-19", "name": "Chicken Soup", "price": 6.49, "description": "Boneless chicken soup, with herbs and spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-20", "name": "Coconut Soup", "price": 7.00, "description": "Creamy shredded coconut milk soup, with nuts and flavored with Indian cardamom.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-21", "name": "Tomato Soup", "price": 6.49, "description": "Tomato , black pepper and spices.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-22", "name": "Mushroom Soup", "price": 6.49, "description": "Sliced mushrooms with Indian seasonings", "tags": ["Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "salads",
-      "name": "Salads",
-      "description": "Fresh and healthy salad options",
+      "id": "category-4",
+      "name": "Salad",
+      "description": "Fresh garden salads",
       "items": [
-        { "id": "menu-23", "name": "Chicken Tikka Salad", "price": 12.95, "description": "Grilled chicken tikka strips over fresh mixed greens with tomatoes, cucumbers, and our house dressing.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-24", "name": "Paneer Tikka Salad", "price": 11.95, "description": "Grilled paneer cubes on a bed of fresh greens with vegetables and our tangy lemon dressing.", "tags": ["vegetarian"], "image": "" }
+        { "id": "menu-23", "name": "Garden Salad", "price": 8.99, "description": "Fresh garden greens and tomatoes.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-24", "name": "Grilled Chicken Salad", "price": 11.99, "description": "Grilled chicken cubes with lettuce, tomatoes and cucumbers.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "dinner-entrees",
-      "name": "Dinner Entrees",
-      "description": "Signature dishes served with basmati rice. Choose your base sauce below.",
+      "id": "category-5",
+      "name": "Dinner",
+      "description": "Classic Indian dinner entrées served with basmati rice and chutney",
       "items": [
-        { "id": "menu-25", "name": "Chicken Curry", "price": 15.95, "description": "Tender chicken pieces simmered in a rich and aromatic curry sauce with onions, tomatoes, and traditional spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-26", "name": "Lamb Curry", "price": 17.95, "description": "Slow-cooked tender lamb in a deeply flavored curry sauce with a blend of aromatic Indian spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-27", "name": "Shrimp Curry", "price": 17.95, "description": "Fresh shrimp cooked in a fragrant curry sauce with tomatoes, onions, and a touch of coconut.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-28", "name": "Fish Curry", "price": 16.95, "description": "Fresh fish fillet simmered in a tangy and spicy curry sauce with mustard seeds and curry leaves.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-29", "name": "Goat Curry", "price": 18.95, "description": "Tender goat meat slow-cooked in a robust and aromatic curry sauce. A traditional favorite.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-30", "name": "Beef Curry", "price": 17.95, "description": "Tender beef pieces cooked in a rich, deeply spiced curry sauce with onions and ginger-garlic paste.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-31", "name": "Butter Chicken", "price": 15.95, "description": "Our most popular dish! Tender chicken in a creamy tomato-butter sauce with a hint of sweetness. Mild and flavorful.", "tags": ["gluten-free"], "badge": "Best Seller", "image": "" },
-        { "id": "menu-32", "name": "Chicken Tikka Masala", "price": 15.95, "description": "Grilled chicken tikka pieces simmered in a creamy, spiced tomato sauce. A classic crowd-pleaser.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-33", "name": "Vindaloo (Chicken/Lamb/Goat)", "price": 16.95, "description": "A fiery Goan-style curry with potatoes and aromatic spices. Available with chicken, lamb, or goat.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-34", "name": "Korma (Chicken/Lamb)", "price": 16.95, "description": "A mild, creamy curry made with yogurt, nuts, and aromatic spices. Available with chicken or lamb.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-35", "name": "Saag (Chicken/Lamb)", "price": 15.95, "description": "Tender meat simmered in a vibrant spinach-based sauce with garlic, ginger, and garam masala.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-36", "name": "Bhuna (Chicken/Lamb)", "price": 15.95, "description": "A dry, intensely flavored curry where meat is stir-fried with caramelized onions and bold spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-37", "name": "Rogan Josh (Lamb)", "price": 17.95, "description": "A Kashmiri specialty featuring tender lamb in a rich, aromatic sauce with whole spices and saffron.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-38", "name": "Madras Curry (Chicken/Lamb)", "price": 15.95, "description": "A bold and spicy South Indian-style curry with coconut and a blend of roasted spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-39", "name": "Tikka Masala Sauce (Paneer/Vegetable)", "price": 14.95, "description": "Our popular tikka masala sauce available with paneer or mixed vegetables.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-25", "name": "Tikka Masala", "price": 18.99, "description": "Served with basmati rice & chutney. Tomato & Light Cream sauce with herbs and spices.", "tags": ["Gluten Free", "Nut Free"], "badge": "", "image": "" },
+        { "id": "menu-26", "name": "Curry", "price": 18.99, "description": "Home style roasted cumin, garlic, onion, sauce.", "tags": ["Gluten Free", "Dairy Free", "Nut Free"], "badge": "", "image": "" },
+        { "id": "menu-27", "name": "Saag", "price": 18.99, "description": "Fresh Chopped spinach with ginger, garlic, onion and sauce.", "tags": ["Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-28", "name": "Korma", "price": 18.99, "description": "Mild cream sauce with nuts and raisins.", "tags": ["Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-29", "name": "Madras", "price": 18.99, "description": "Curry leaves, mustard seeds, coconut milk sauce with a touch of ginger & garlic.", "tags": ["Gluten Free", "Dairy Free"], "badge": "", "image": "" },
+        { "id": "menu-30", "name": "Vindaloo", "price": 18.99, "description": "Fiery sauce, sundried Kashmiri red chili, potato, tamarind medium or spicy only.", "tags": ["Gluten Free", "Dairy Free"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "indo-chinese",
+      "id": "category-6",
       "name": "Indo Chinese",
-      "description": "A flavorful fusion of Indian and Chinese cuisines",
+      "description": "A fusion of Indian and Chinese flavors",
       "items": [
-        { "id": "menu-40", "name": "Chicken Chilli", "price": 14.95, "description": "Stir-fried chicken with bell peppers, onions, and green chilies in a tangy Indo-Chinese sauce.", "tags": [], "image": "" },
-        { "id": "menu-41", "name": "Vegetable Chilli", "price": 12.95, "description": "A medley of crisp vegetables stir-fried with soy sauce, vinegar, and Indo-Chinese spices.", "tags": ["vegetarian"], "image": "" }
+        { "id": "menu-31", "name": "Vegetable Manchurian", "price": 16.99, "description": "Crispy vegetable rounds in a mild soy garlic sauce, served with basmati rice", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-32", "name": "Chicken Manchurian", "price": 17.99, "description": "Seasoned chicken with chopped onions and peppers in a mild soy garlic sauce, served with basmati rice", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "vegetarian-entrees",
-      "name": "Vegetarian Entrees",
-      "description": "A delicious selection of plant-based dishes",
+      "id": "category-7",
+      "name": "Vegetarian",
+      "description": "Authentic vegetarian dishes served with basmati rice and chutneys",
       "items": [
-        { "id": "menu-42", "name": "Saag Paneer", "price": 13.95, "description": "Fresh cottage cheese cubes in a creamy, aromatic spinach sauce with garlic and ginger.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-43", "name": "Palak Paneer", "price": 13.95, "description": "Soft paneer cubes swimming in a velvety pureed spinach gravy with warming spices.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-44", "name": "Chana Masala", "price": 12.95, "description": "Chickpeas slow-cooked in a tangy, aromatic tomato-onion sauce with cumin and coriander.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-45", "name": "Dal Tadka", "price": 12.95, "description": "Yellow lentils tempered with ghee, cumin, mustard seeds, garlic, and dried red chilies.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-46", "name": "Dal Makhani", "price": 13.95, "description": "Black lentils and kidney beans slow-cooked overnight with butter, cream, and aromatic spices.", "tags": ["vegetarian", "gluten-free"], "badge": "Chef's Favorite", "image": "" },
-        { "id": "menu-47", "name": "Aloo Gobi", "price": 12.95, "description": "Cauliflower and potatoes stir-fried with turmeric, cumin, and aromatic spices.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-48", "name": "Aloo Matar", "price": 12.95, "description": "Potatoes and green peas in a lightly spiced tomato-based sauce with ginger and cumin.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-49", "name": "Malai Kofta", "price": 13.95, "description": "Deep-fried paneer and potato dumplings in a rich, creamy cashew and tomato sauce.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-50", "name": "Matar Paneer", "price": 13.95, "description": "Fresh paneer cubes and green peas in a mild, creamy tomato gravy with warming spices.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-51", "name": "Bhindi Masala", "price": 12.95, "description": "Fresh okra slices stir-fried with onions, tomatoes, and a blend of traditional spices.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-52", "name": "Baingan Bharta", "price": 12.95, "description": "Roasted and mashed eggplant cooked with onions, tomatoes, and aromatic spices. Smoky and savory.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-53", "name": "Shahi Paneer", "price": 14.95, "description": "Paneer cubes in a luxurious creamy cashew and almond sauce with a touch of saffron.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-54", "name": "Paneer Do Pyaza", "price": 13.95, "description": "Paneer cubes cooked with a generous amount of onions in a rich, spiced gravy.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-55", "name": "Mixed Vegetable Curry", "price": 12.95, "description": "A colorful medley of seasonal vegetables in a mild, aromatic curry sauce.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-56", "name": "Kadai Paneer", "price": 13.95, "description": "Paneer stir-fried with bell peppers and onions in a bold kadai masala sauce.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-57", "name": "Navratan Korma", "price": 14.95, "description": "Nine-gem curry with vegetables, fruits, nuts, and paneer in a mild creamy sauce.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-58", "name": "Vegetable Vindaloo", "price": 12.95, "description": "A fiery and tangy curry with mixed vegetables, potatoes, and vindaloo spices.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-59", "name": "Tofu Masala", "price": 13.95, "description": "Crispy pan-fried tofu cubes in a rich, aromatic tomato-based masala sauce.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-33", "name": "Aloo Mutter", "price": 16.99, "description": "Fresh green peas cooked in a delicately spiced sauce with potato balls. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-34", "name": "Saag Paneer", "price": 16.99, "description": "Cubes of home made cheese cooked with fresh spinach and spices. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-35", "name": "Shahi Aloo Gobhi", "price": 16.99, "description": "Cauliflower and potatoes cooked with tomato, onion, herbs and spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-36", "name": "Baingan Bhartha", "price": 16.99, "description": "An eggplant specialty baked over open flame, mashed, then sauteed with onions, tomato, garlic, ginger and other spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-37", "name": "Aloo Palak", "price": 16.99, "description": "Fresh spinach, potato balls and freshly ground garlic, ginger and exotic spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-38", "name": "Mixed Vegetables", "price": 16.99, "description": "Mixed garden fresh vegetables cooked with herbs and spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-39", "name": "Aloo Chole", "price": 16.99, "description": "Whole chickpeas and potato balls cooked with onions, tomatoes, spices and herbs. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-40", "name": "Bhindi Aloo", "price": 16.99, "description": "Fresh okra sauteed with onions, ginger, potatoes and herbs.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-41", "name": "Dal Maharani", "price": 16.99, "description": "Black lentils cooked with fresh herbs and spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-42", "name": "Shahi Navratan Korma", "price": 16.99, "description": "9 different fresh garden vegetables cooked in a creamy sauce with almonds, cashews, raisins and spices. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-43", "name": "Shahi Paneer Korma", "price": 16.99, "description": "Homemade cheese cubes sauteed with fresh ginger, garlic, onion and tomato garnished with nuts and raisins and cooked in a creamy sauce. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-44", "name": "Malai Kofta", "price": 16.99, "description": "Vegetable balls cooked in an onion and creamy tomato sauce with almonds, cashews and raisins. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-45", "name": "Mushroom Curry", "price": 16.99, "description": "Sliced mushroom cooked with curry sauce. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-46", "name": "Paneer Tikka Masala", "price": 16.99, "description": "Homemade cheese cooked in creamy tomato sauce. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-47", "name": "Yellow Dal Fry", "price": 16.99, "description": "Yellow lentil cooked with fried spices and herbs. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-48", "name": "Aloo Baingan", "price": 16.99, "description": "Cubed potatoes tossed with chopped eggplant, roasted with Indian spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-49", "name": "Mutter Paneer", "price": 16.99, "description": "Fresh green peas cooked with home made cheese cubes and a variety of herbs. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "rice-specialties",
+      "id": "category-8",
       "name": "Rice Specialties",
-      "description": "Aromatic basmati rice preparations",
+      "description": "Aromatic biryanis served with raita and chutney",
       "items": [
-        { "id": "menu-60", "name": "Steamed Basmati Rice", "price": 3.95, "description": "Fluffy, long-grain basmati rice steamed to perfection. The perfect companion to any curry.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-61", "name": "Jeera Rice", "price": 4.95, "description": "Fragrant basmati rice tempered with cumin seeds and a touch of ghee.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-62", "name": "Chicken Biryani", "price": 15.95, "description": "Layers of aromatic basmati rice and marinated chicken slow-cooked with saffron, whole spices, and fried onions.", "tags": ["gluten-free"], "badge": "House Special", "image": "" },
-        { "id": "menu-63", "name": "Lamb Biryani", "price": 17.95, "description": "Fragrant basmati rice layered with tender lamb, saffron, and a blend of whole spices. Slow-cooked to perfection.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-64", "name": "Vegetable Biryani", "price": 13.95, "description": "Aromatic rice layered with mixed vegetables, saffron, and whole spices. A vegetarian delight.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-65", "name": "Shrimp Biryani", "price": 17.95, "description": "Aromatic basmati rice layered with jumbo shrimp, saffron, and traditional spices.", "tags": ["gluten-free"], "image": "" }
+        { "id": "menu-50", "name": "Goat Biryani", "price": 19.99, "description": "Pieces of bone in goat cooked with basmati rice, spices and garnished with nuts and raisins. Served with raita and chutney. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-51", "name": "Vegetable Biryani", "price": 16.99, "description": "Basmati rice cooked with exotic spices, herbs, fresh vegetables, cashews, almonds and raisins. Biryani is served with raita and chutney. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-52", "name": "Chicken Biryani", "price": 17.99, "description": "Basmati rice, chicken chunks, fresh vegetables, nuts, raisins and spices garnished with fresh coriander. Biryani is served with raita and chutney. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-53", "name": "Lamb Biryani", "price": 19.99, "description": "Juicy pieces of lamb, fresh vegetables, basmati rice and spices, garnished with almonds, cashews and raisins. Biryani is served with raita and chutney. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-54", "name": "Shrimp Biryani", "price": 21.99, "description": "Saffron flavored basmati rice cooked with shrimps, almonds, cashews, raisins and vegetables. Biryani is served with raita and chutney. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-55", "name": "Cafe Of India Special Biryani", "price": 21.99, "description": "Basmati rice cooked in butter with shrimps, fish, chicken, lamb, paneer cheese, vegetables, almonds, cashews, raisins and more. Biryani is served with raita and chutney. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "House Special", "image": "" }
       ]
     },
     {
-      "id": "tandoori-specials",
+      "id": "category-9",
       "name": "Tandoori Specials",
-      "description": "Dishes cooked in our traditional clay oven",
+      "description": "Traditional clay oven specialties served with onions, potatoes, broccoli, peppers and basmati rice",
       "items": [
-        { "id": "menu-66", "name": "Tandoori Chicken (Half)", "price": 14.95, "description": "Half chicken marinated overnight in yogurt and tandoori spices, chargrilled in our clay oven. Sizzling and smoky.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-67", "name": "Tandoori Chicken (Whole)", "price": 25.95, "description": "A whole chicken marinated in aromatic spices and grilled in the tandoor. Perfect for sharing.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-68", "name": "Chicken Tikka", "price": 15.95, "description": "Boneless chicken chunks marinated in yogurt, lemon, and tandoori spices, grilled on skewers.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-69", "name": "Lamb Boti Kebab", "price": 16.95, "description": "Tender cubes of lamb marinated in spices and grilled in the tandoor until perfectly charred.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-70", "name": "Lamb Chops", "price": 19.95, "description": "Herb-marinated lamb chops grilled in the tandoor oven. Juicy and full of flavor.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-71", "name": "Tandoori Shrimp", "price": 17.95, "description": "Jumbo shrimp marinated in spiced yogurt and grilled in the clay oven. Succulent and aromatic.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-72", "name": "Tandoori Fish", "price": 16.95, "description": "Fresh fish fillet marinated in tandoori spices and grilled in the clay oven. Flaky and flavorful.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-73", "name": "Tandoori Mixed Grill", "price": 22.95, "description": "A grand platter of chicken tikka, lamb kebab, seekh kebab, and tandoori shrimp. Perfect for two.", "tags": ["gluten-free"], "image": "" }
+        { "id": "menu-56", "name": "Malai Chicken Kabab", "price": 19.99, "description": "Boneless chicken marinated with nuts and mild tandoor spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-57", "name": "Tandoori Chicken", "price": 19.99, "description": "Tender chicken, marinated in yogurt and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-58", "name": "Chicken Tikka Kabab", "price": 19.99, "description": "Boneless white meat chicken cubes marinated in yogurt and freshly ground spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-59", "name": "Seekh Kabab", "price": 21.99, "description": "Finely minced lamb, seasoned with chopped onions, herbs and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-60", "name": "Tandoori Shrimp", "price": 23.00, "description": "Fresh jumbo shrimp marinated in delicately spiced yogurt and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-61", "name": "Tandoori Mixed Grill", "price": 25.00, "description": "Combination of sizzling tandoori specialties tangari chicken, chicken tikka, boti kabab, seekh kabab and tandoori shrimp. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-62", "name": "Tandoori Salmon Tikka", "price": 25.00, "description": "Salmon fillet marinated with chefs special blend. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-63", "name": "Boti Kabab", "price": 25.00, "description": "Chunks of lamb marinated in yogurt and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "cafe-specials",
+      "id": "category-10",
       "name": "Cafe Specials",
-      "description": "Unique dishes exclusive to Cafe of India",
+      "description": "Chef's signature creations",
       "items": [
-        { "id": "menu-74", "name": "Cafe of India Special Curry", "price": 16.95, "description": "Our signature dish! A unique blend of chicken, vegetables, and aromatic spices in a special sauce created by our head chef.", "tags": ["gluten-free"], "badge": "Signature", "image": "" },
-        { "id": "menu-75", "name": "Maynard's Best Chicken", "price": 15.95, "description": "Tender chicken cooked in a rich, smoky tandoori sauce with bell peppers and onions. A local favorite.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-76", "name": "Royal Lamb", "price": 18.95, "description": "Premium lamb slow-cooked in a luxurious sauce of cashews, saffron, and aromatic spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-77", "name": "Coconut Shrimp", "price": 17.95, "description": "Jumbo shrimp simmered in a creamy coconut milk sauce with lemongrass and mild spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-78", "name": "Paneer Lababdar", "price": 14.95, "description": "Paneer cubes in a rich, creamy tomato and cashew sauce with a hint of fenugreek.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-79", "name": "Garlic Chicken", "price": 15.95, "description": "Chicken pieces stir-fried with generous amounts of fresh garlic, ginger, and green chilies.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-80", "name": "Spinach Chicken", "price": 15.95, "description": "Tender chicken simmered in a vibrant, aromatic spinach sauce with garlic and warming spices.", "tags": ["gluten-free"], "image": "" },
-        { "id": "menu-81", "name": "Mango Curry", "price": 14.95, "description": "A sweet and savory curry made with ripe mangoes, cream, and mild spices. Available with chicken or vegetables.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-64", "name": "Chicken Manchurian", "price": 10.99, "description": "Deep fried florets of cauliflower or chicken sauteed with chopped onion and garlic served in soy and chili sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-65", "name": "Gobi Manchurian", "price": 10.99, "description": "Deep fried florets of cauliflower or chicken sauteed with chopped onion and garlic served in soy and chili sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-66", "name": "Green Chili Chicken", "price": 18.99, "description": "Hot green chilis, green and red peppers, garam masala and ginger garlic sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-67", "name": "Chicken Mango", "price": 17.99, "description": "Chicken cooked in a creamy mango sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-68", "name": "Lamb Mushroom", "price": 19.99, "description": "Lamb cubes cooked with ginger, garlic and spinach.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-69", "name": "Lamb Roganjosh", "price": 19.99, "description": "Lamb cooked in yogurt, cardamom saffron curry sauce, Kashmiri style. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-70", "name": "Goan Shrimp Curry", "price": 20.99, "description": "Gluten free. Shrimp cooked Goan Style with coconut milk and curry leaves.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-71", "name": "Coconut Chicken", "price": 17.99, "description": "Gluten free. Boneless chicken pieces cooked in a mild coconut cream sauce.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "breads-naan",
-      "name": "Breads & Naan",
-      "description": "Freshly baked in our tandoor oven",
+      "id": "category-11",
+      "name": "Breads / Naan",
+      "description": "Freshly baked in our tandoor clay oven",
       "items": [
-        { "id": "menu-82", "name": "Naan", "price": 3.95, "description": "Traditional soft leavened bread baked in our clay tandoor oven.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-83", "name": "Garlic Naan", "price": 4.95, "description": "Soft naan brushed with butter and topped with fresh garlic and cilantro.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-84", "name": "Butter Naan", "price": 4.95, "description": "Classic naan bread brushed generously with melted butter.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-85", "name": "Cheese Naan", "price": 5.95, "description": "Naan stuffed with melted cheese. A crowd favorite!", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-86", "name": "Peshwari Naan", "price": 5.95, "description": "Naan stuffed with almonds, raisins, coconut, and a touch of sweetness.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-87", "name": "Keema Naan", "price": 5.95, "description": "Naan stuffed with seasoned ground lamb, onions, and aromatic spices.", "tags": [], "image": "" },
-        { "id": "menu-88", "name": "Onion Kulcha", "price": 4.95, "description": "Leavened bread stuffed with spiced onions and fresh herbs.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-89", "name": "Aloo Kulcha", "price": 4.95, "description": "Bread stuffed with seasoned spiced potatoes and herbs.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-90", "name": "Tandoori Roti", "price": 2.95, "description": "Whole wheat flatbread baked in the tandoor. Light and wholesome.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-91", "name": "Paratha", "price": 3.95, "description": "Flaky, layered whole wheat bread cooked on a griddle with butter or ghee.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-92", "name": "Laccha Paratha", "price": 4.95, "description": "Multi-layered, flaky paratha with a crispy texture. Perfect for scooping up curries.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-93", "name": "Missi Roti", "price": 3.95, "description": "Gram flour and whole wheat flatbread seasoned with spices and onions.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-94", "name": "Chapati", "price": 2.95, "description": "Thin whole wheat flatbread cooked on a griddle. Simple and satisfying.", "tags": ["vegetarian", "vegan"], "image": "" }
+        { "id": "menu-72", "name": "Plain Naan", "price": 4.95, "description": "Leavened, fine flour handmade bread.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-73", "name": "Plain Paratha", "price": 5.99, "description": "Multi-layered whole wheat bread, cooked with butter on a griddle.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-74", "name": "Chapati", "price": 4.99, "description": "Thin, unleavened bread, cooked on a griddle served with or without butter.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-75", "name": "Garlic Naan", "price": 5.95, "description": "Unleavened white flour bread stuffed with chopped fresh garlic and coriander and baked in our tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-76", "name": "Green Chilli Naan", "price": 5.99, "description": "Naan stuffed with onions and green chilies.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-77", "name": "Keema Naan", "price": 5.99, "description": "White flour bread stuffed with spices and minced lamb.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-78", "name": "Tandoori Roti", "price": 4.95, "description": "Round shaped whole wheat bread baked in a clay oven. No dairy.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-79", "name": "Onion Kulcha", "price": 5.99, "description": "Unleavened white bread stuffed with onions, baked in our tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-80", "name": "Poori", "price": 5.95, "description": "Whole wheat deep fried puffed bread.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-81", "name": "Aloo Paratha", "price": 6.00, "description": "Whole wheat bread, stuffed with spiced potatoes, cooked on a griddle with butter.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-82", "name": "Aloo Naan", "price": 5.99, "description": "Unleavened bread stuffed with potatoes and peas and baked in tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-83", "name": "Peshawary Naan", "price": 5.25, "description": "Unleavened white flour stuffed with raisins and almonds, baked in a clay oven.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-84", "name": "Cafe Basket", "price": 12.50, "description": "Plain naan, garlic naan, Tandoori roti.", "tags": ["Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "side-orders",
+      "id": "category-12",
       "name": "Side Orders",
-      "description": "Perfect additions to any meal",
+      "description": "Accompaniments to complement your meal",
       "items": [
-        { "id": "menu-95", "name": "Raita", "price": 4.95, "description": "Cool yogurt with cucumbers, cumin, and mild spices.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-96", "name": "Mango Chutney", "price": 2.95, "description": "Sweet and tangy chutney made from ripe mangoes.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-97", "name": "Mint Chutney", "price": 2.95, "description": "Fresh mint and cilantro blended with green chilies and lemon juice.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-98", "name": "Tamarind Chutney", "price": 2.95, "description": "Sweet and tangy tamarind sauce. The perfect dipping companion.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-99", "name": "Papadum (4 pcs)", "price": 3.95, "description": "Crispy thin lentil wafers.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-100", "name": "Plain Yogurt", "price": 2.95, "description": "Fresh, cool plain yogurt. A soothing side for spicy dishes.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-101", "name": "Indian Pickles", "price": 2.95, "description": "Traditional Indian pickled vegetables. Tangy and spicy.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-102", "name": "Extra Basmati Rice", "price": 3.95, "description": "An additional portion of steamed basmati rice.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" },
-        { "id": "menu-103", "name": "Extra Naan", "price": 3.95, "description": "An additional piece of fresh tandoor-baked naan bread.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-104", "name": "Green Salad", "price": 5.95, "description": "Crisp mixed greens with cucumbers, tomatoes, and red onions.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-85", "name": "Raita", "price": 3.99, "description": "Yogurt-based condiment with cucumbers and spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-86", "name": "Mixed Pickle", "price": 3.99, "description": "Traditional Indian pickled vegetables.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-87", "name": "Mango Chutney", "price": 3.99, "description": "Sweet and tangy mango relish.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-88", "name": "Basmati Rice", "price": 3.25, "description": "Steamed aromatic basmati rice.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-89", "name": "Plain Yogurt", "price": 3.25, "description": "Fresh plain yogurt.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-90", "name": "Plain Yogurt", "price": 2.99, "description": "Fresh plain yogurt.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-91", "name": "Masala Sauce", "price": 6.99, "description": "House-made spiced curry sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-92", "name": "Jeera Aloo", "price": 9.99, "description": "Potato cubes sauteed with cumin and spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-93", "name": "Chili Paneer", "price": 10.99, "description": "Paneer sauteed with chilies, onions and peppers.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-94", "name": "Papadum", "price": 3.99, "description": "A thin crisp from lentil, chickpea flour.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "desserts",
+      "id": "category-13",
       "name": "Desserts",
-      "description": "Sweet endings to your meal",
+      "description": "Traditional Indian sweets",
       "items": [
-        { "id": "menu-105", "name": "Gulab Jamun (2 pcs)", "price": 5.95, "description": "Soft, golden milk dumplings soaked in warm rose-cardamom sugar syrup. A classic Indian dessert.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-106", "name": "Rasmalai (2 pcs)", "price": 6.95, "description": "Soft cottage cheese patties soaked in sweetened, saffron-infused milk with pistachios and cardamom.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-107", "name": "Kheer", "price": 5.95, "description": "Traditional Indian rice pudding slow-cooked with milk, sugar, cardamom, and topped with almonds and raisins.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-108", "name": "Mango Kulfi", "price": 4.95, "description": "Traditional Indian ice cream made with sweetened mango pulp, cream, and cardamom. Rich and refreshing.", "tags": ["vegetarian", "gluten-free"], "image": "" }
+        { "id": "menu-95", "name": "Kheer", "price": 4.95, "description": "Gently cooked rice in milk flavored with cardamom and hint of black peppers with pistachios.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-96", "name": "Rasmalai", "price": 4.95, "description": "Homemade cheese patties, cooked in a special condensed milk with pistachios and rose water.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-97", "name": "Gulab Jamun", "price": 4.95, "description": "Deep fried cheese balls simmered in honey syrup.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-98", "name": "Vanilla Ice Cream", "price": 4.95, "description": "Classic vanilla ice cream.", "tags": ["Vegetarian"], "badge": "", "image": "" }
       ]
     },
     {
-      "id": "beverages",
+      "id": "category-14",
       "name": "Beverages",
-      "description": "Refreshing drinks to complement your meal",
+      "description": "Refreshing drinks",
       "items": [
-        { "id": "menu-109", "name": "Mango Lassi", "price": 4.95, "description": "Creamy yogurt blended with sweet mango pulp. A classic Indian smoothie.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-110", "name": "Sweet Lassi", "price": 4.95, "description": "Chilled, sweetened yogurt drink. Smooth and refreshing.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-111", "name": "Salty Lassi", "price": 4.95, "description": "Traditional savory yogurt drink with a pinch of salt and roasted cumin.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-112", "name": "Masala Chai", "price": 3.95, "description": "Traditional Indian spiced tea brewed with cardamom, cinnamon, ginger, and cloves. Served with milk.", "tags": ["vegetarian", "gluten-free"], "image": "" },
-        { "id": "menu-113", "name": "Indian Coffee", "price": 3.95, "description": "Strong, aromatic Indian-style coffee with cardamom and milk.", "tags": ["vegetarian"], "image": "" },
-        { "id": "menu-114", "name": "Thumbs Up", "price": 2.95, "description": "India's favorite cola! A classic Indian soft drink.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-115", "name": "Sprite", "price": 2.95, "description": "Crisp lemon-lime soda. A refreshing choice.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-116", "name": "Coca-Cola", "price": 2.95, "description": "The classic refreshment.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-117", "name": "Diet Coke", "price": 2.95, "description": "Coca-Cola with zero sugar, same great taste.", "tags": ["vegetarian", "vegan"], "image": "" },
-        { "id": "menu-118", "name": "Bottled Water", "price": 1.95, "description": "Chilled purified bottled water.", "tags": ["vegetarian", "vegan", "gluten-free"], "image": "" }
+        { "id": "menu-99", "name": "Tea", "price": 2.99, "description": "Hot Indian tea.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-100", "name": "Masala Tea", "price": 3.99, "description": "Darjeeling tea made with flavorful spices and milk boiled together in water.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-101", "name": "Sweet Lassi", "price": 5.99, "description": "Sweet yogurt drink blended smooth.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-102", "name": "Mango Lassi", "price": 5.99, "description": "A delicious sweet yogurt shake with rose water.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-103", "name": "Strawberry Lassi", "price": 5.99, "description": "Fresh strawberry yogurt drink.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-104", "name": "Salty Lassi", "price": 5.99, "description": "Traditional salty yogurt drink with spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-105", "name": "Fruit Juice", "price": 3.99, "description": "Fresh fruit juice.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-106", "name": "Soda", "price": 3.25, "description": "Carbonated beverage.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
+        { "id": "menu-107", "name": "Ice Tea", "price": 3.25, "description": "Chilled iced tea.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-108", "name": "Lemonade", "price": 3.99, "description": "Fresh squeezed lemonade.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" }
       ]
     }
   ],
   "chefsSpecials": [
-    { "id": "menu-31", "name": "Butter Chicken", "reason": "Our most popular dish! Creamy tomato-butter sauce with tender chicken." },
-    { "id": "menu-46", "name": "Dal Makhani", "reason": "Black lentils slow-cooked overnight with butter and cream. Rich and indulgent." },
-    { "id": "menu-62", "name": "Chicken Biryani", "reason": "Fragrant basmati rice layered with marinated chicken and saffron. A royal feast." }
+    {
+      "id": "menu-70",
+      "name": "Goan Shrimp Curry",
+      "reason": "Shrimp cooked Goan style with coconut milk and curry leaves — a coastal Indian favorite that our guests can't stop ordering.",
+      "badge": "House Special"
+    },
+    {
+      "id": "menu-69",
+      "name": "Lamb Roganjosh",
+      "reason": "Tender lamb simmered in a fragrant yogurt, cardamom and saffron curry sauce, authentic Kashmiri style.",
+      "badge": "Chef's Favorite"
+    },
+    {
+      "id": "menu-66",
+      "name": "Green Chili Chicken",
+      "reason": "A fiery favorite — hot green chilis, fresh peppers and garam masala create the perfect spicy kick.",
+      "badge": "Best Seller"
+    }
   ]
 }

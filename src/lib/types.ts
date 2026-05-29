@@ -206,6 +206,7 @@ export interface ChefsSpecial {
   id: string;
   name: string;
   reason: string;
+  badge?: string;
 }
 
 export interface MenuData {

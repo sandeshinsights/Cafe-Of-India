@@ -1,40 +1,48 @@
 import { Star, Flame, Award } from "lucide-react";
 import { getMenuData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
+import type { ChefsSpecial, MenuCategory, MenuItem } from "@/lib/types";
 
-/**
- * Chef's Specials Section
- * 
- * WHAT IT DOES:
- * - Highlights 3 signature dishes from the head chef
- * - Each special shows photo, dish name, price, and why it's special
- * - Eye-catching gold/maroon design
- */
+interface SpecialDetail extends ChefsSpecial {
+  price?: number;
+  description?: string;
+  photoUrl: string;
+}
 
-const badgeIcons: Record<string, React.ReactNode> = {
+const badgeConfig: Record<string, { icon: React.ReactNode; label: string }> = {
   "Best Seller": <Flame className="w-5 h-5" />,
   "Chef's Favorite": <Award className="w-5 h-5" />,
   "House Special": <Star className="w-5 h-5" />,
 };
 
 const specialPhotos: Record<string, string> = {
-  "menu-31": "/images/specials/butter-chicken.jpg",
-  "menu-46": "/images/specials/dal-makhani.jpg",
-  "menu-62": "/images/specials/chicken-biryani.jpg",
+  "menu-70": "/images/specials/butter-chicken.jpg",
+  "menu-69": "/images/specials/dal-makhani.jpg",
+  "menu-66": "/images/specials/chicken-biryani.jpg",
 };
 
 export default function Specials() {
-  const { chefsSpecials, categories } = getMenuData();
+  const menuData = getMenuData();
 
-  // Find full menu item details for each special
-  const specialDetails = chefsSpecials.map((special) => {
-    const category = categories.find((cat) =>
-      cat.items.some((item) => item.id === special.id)
-    );
-    const menuItem = category?.items.find((item) => item.id === special.id);
-    const photoUrl = specialPhotos[special.id] || "";
-    return { ...special, price: menuItem?.price, description: menuItem?.description, photoUrl };
-  });
+  const specialDetails: SpecialDetail[] = menuData.chefsSpecials.map(
+    (special: ChefsSpecial) => {
+      const category: MenuCategory | undefined = menuData.categories.find(
+        (cat: MenuCategory) =>
+          cat.items.some((item: MenuItem) => item.id === special.id)
+      );
+      const menuItem: MenuItem | undefined = category?.items.find(
+        (item: MenuItem) => item.id === special.id
+      );
+      const photoUrl: string = specialPhotos[special.id] || "";
+
+      return {
+        ...special,
+        price: menuItem?.price,
+        description: menuItem?.description,
+        photoUrl,
+      } as SpecialDetail;
+    }
+  );
 
   return (
     <section id="specials" className="py-20 bg-primary text-white">
@@ -51,13 +59,14 @@ export default function Specials() {
             Chef&apos;s Specials
           </h2>
           <p className="text-white/80 text-lg max-w-2xl mx-auto">
-            Our head chef&apos;s personal recommendations — the dishes our guests love the most.
+            Our head chef&apos;s personal recommendations — the dishes our guests
+            love the most.
           </p>
         </div>
 
         {/* Specials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {specialDetails.map((special, index) => (
+          {specialDetails.map((special: SpecialDetail, index: number) => (
             <div
               key={special.id}
               className="group relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden hover:bg-white/15 transition-all duration-300"
@@ -82,6 +91,16 @@ export default function Specials() {
                     </div>
                   )}
                 </div>
+
+                {/* Badge */}
+                {special.badge && (
+                  <div className="flex items-center gap-1.5 mb-2">
+                    {badgeConfig[special.badge] || <Star className="w-4 h-4 text-secondary" />}
+                    <span className="text-secondary text-sm font-semibold">
+                      {special.badge}
+                    </span>
+                  </div>
+                )}
 
                 {/* Dish Name */}
                 <h3 className="font-heading text-2xl font-bold mb-2 group-hover:text-secondary transition-colors">
