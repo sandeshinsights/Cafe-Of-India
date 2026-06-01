@@ -3,6 +3,7 @@ import { getSeoData } from "@/lib/data";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import CartDrawer from "@/components/CartDrawer";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
 
@@ -49,6 +50,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
           <CookieConsent />
+          <CartDrawer />
         </CartProvider>
       </body>
     </html>

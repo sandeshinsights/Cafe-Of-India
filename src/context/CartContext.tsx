@@ -9,20 +9,20 @@ import {
   ReactNode,
 } from "react";
 
-/**
- * Cart Item
- * Represents a single item in the shopping cart.
- */
 export interface CartItem {
   id: string;
   name: string;
-  price: number; // price per unit
+  price: number;
   quantity: number;
+  protein?: string;
+  surcharge?: number;
+  spiceLevel?: string;
+  specialInstructions?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity">) => void;
+  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -30,53 +30,45 @@ interface CartContextType {
   tax: number;
   total: number;
   itemCount: number;
+  isCartOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const TAX_RATE = 0.07; // 7% Massachusetts sales tax
+const TAX_RATE = 0.07;
 const STORAGE_KEY = "cafe-of-india-cart";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setItems(parsed);
-        }
+        if (Array.isArray(parsed)) setItems(parsed);
       }
-    } catch {
-      // If localStorage fails, start with empty cart
-    }
+    } catch {}
     setLoaded(true);
   }, []);
 
-  // Save cart to localStorage whenever items change
   useEffect(() => {
-    if (loaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    }
+    if (loaded) localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items, loaded]);
 
-  const addItem = useCallback((newItem: Omit<CartItem, "quantity">) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.id === newItem.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === newItem.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { ...newItem, quantity: 1 }];
-    });
-  }, []);
+  const addItem = useCallback(
+    (newItem: Omit<CartItem, "quantity"> & { quantity?: number }) => {
+      setItems((prev) => [
+        ...prev,
+        { ...newItem, quantity: newItem.quantity || 1 },
+      ]);
+    },
+    []
+  );
 
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
@@ -94,18 +86,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const clearCart = useCallback(() => {
-    setItems([]);
-  }, []);
+  const clearCart = useCallback(() => setItems([]), []);
+  const openCart = useCallback(() => setIsCartOpen(true), []);
+  const closeCart = useCallback(() => setIsCartOpen(false), []);
 
-  const subtotal = Array.isArray(items)
-    ? items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    : 0;
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
-  const itemCount = Array.isArray(items)
-    ? items.reduce((sum, item) => sum + item.quantity, 0)
-    : 0;
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <CartContext.Provider
@@ -119,6 +107,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         tax,
         total,
         itemCount,
+        isCartOpen,
+        openCart,
+        closeCart,
       }}
     >
       {children}
@@ -128,8 +119,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 export function useCart() {
   const context = useContext(CartContext);
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
+  if (!context) throw new Error("useCart must be used within a CartProvider");
   return context;
 }
