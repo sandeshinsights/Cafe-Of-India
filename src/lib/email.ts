@@ -94,7 +94,7 @@ export async function sendOrderNotification(data: OrderEmailData) {
           ${item.quantity}
         </td>
         <td style="padding: 6px 0; text-align: right; border-bottom: 1px solid #eee;">
-          $${(item.totalPrice * item.quantity).toFixed(2)}
+           $${((item.price || 0) * item.quantity).toFixed(2)}
         </td>
       </tr>
     `
@@ -229,7 +229,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
           <div style="background: #FBF8F1; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4973B;">
             <h3 style="color: #5C1A1B; margin-top: 0;">Pickup Information</h3>
             <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
-            <p style="margin: 4px 0;"><strong>Address:</strong> 54 Nason Street, Maynard, MA 01754</p>
+            <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
             <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
             <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
           </div>
@@ -240,7 +240,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
 
           <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee;">
             <p style="color: #999; font-size: 12px; margin: 0;">
-              Cafe of India &middot; 54 Nason Street, Maynard, MA 01754
+              Cafe of India &middot; 155 Main St, Maynard, MA 01754
             </p>
           </div>
         </div>
