@@ -1,13 +1,7 @@
 import { Resend } from "resend";
 
-/**
- * Email Helper
- * 
- * Sends notification emails using Resend.
- * Used when someone submits the catering form.
- */
-
 const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 interface CateringEmailData {
   name: string;
@@ -22,7 +16,7 @@ interface CateringEmailData {
 export async function sendCateringNotification(data: CateringEmailData) {
   const toEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: `Cafe of India Website <${toEmail}>`,
     to: ["info@cafeindiamaynard.com"],
     subject: `New Catering Inquiry from ${data.name}`,
@@ -49,13 +43,9 @@ export async function sendCateringNotification(data: CateringEmailData) {
       </div>
     `,
   });
+  console.log("Catering email Resend response:", JSON.stringify(result));
 }
 
-
-
-/**
- * Order Email Data
- */
 interface OrderEmailData {
   orderId: string;
   name: string;
@@ -67,18 +57,11 @@ interface OrderEmailData {
   total: number;
 }
 
-/**
- * Send Order Notification to Restaurant
- * 
- * Called after Stripe payment is verified.
- * Sends full order details to the restaurant email.
- */
 export async function sendOrderNotification(data: OrderEmailData) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
   const restaurantEmail =
     process.env.RESTAURANT_EMAIL || "cafeofindia2@gmail.com";
 
-  // Build items HTML table
   const items = Array.isArray(data.items) ? data.items : [];
   const itemsHtml = items
     .map(
@@ -101,7 +84,7 @@ export async function sendOrderNotification(data: OrderEmailData) {
     )
     .join("");
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: `Cafe of India Website <${fromEmail}>`,
     to: [restaurantEmail],
     subject: `New Order #${data.orderId.slice(0, 8)} from ${data.name} — $${data.total.toFixed(2)}`,
@@ -161,12 +144,6 @@ export async function sendOrderNotification(data: OrderEmailData) {
   });
 }
 
-/**
- * Send Customer Order Confirmation Email
- *
- * Called after a successful order, sends a friendly confirmation
- * to the customer with order details and pickup info.
- */
 export async function sendCustomerConfirmation(data: OrderEmailData) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
@@ -192,7 +169,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
     )
     .join("");
 
-  await resend.emails.send({
+  const result = await resend.emails.send({
     from: `Cafe of India <${fromEmail}>`,
     to: [data.email],
     subject: `Order Confirmed! Your Cafe of India order has been received`,

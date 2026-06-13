@@ -52,33 +52,39 @@ export async function POST(request: NextRequest) {
       data: { status: "paid" },
     });
 
-    // 5. Send restaurant notification email (fire-and-forget)
-    sendOrderNotification({
-      orderId: order.id,
-      name: order.name,
-      email: order.email,
-      phone: order.phone,
-      items: order.items,
-      subtotal: order.subtotal,
-      tax: order.tax,
-      total: order.total,
-    }).catch((err) => {
+    // 5. Send restaurant notification email — AWAIT so Vercel doesn't kill the function
+    try {
+      await sendOrderNotification({
+        orderId: order.id,
+        name: order.name,
+        email: order.email,
+        phone: order.phone,
+        items: order.items,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        total: order.total,
+      });
+      console.log("Restaurant email sent successfully");
+    } catch (err) {
       console.error("Restaurant email failed:", err);
-    });
+    }
 
-    // 6. Send customer confirmation email (fire-and-forget)
-    sendCustomerConfirmation({
-      orderId: order.id,
-      name: order.name,
-      email: order.email,
-      phone: order.phone,
-      items: order.items,
-      subtotal: order.subtotal,
-      tax: order.tax,
-      total: order.total,
-    }).catch((err) => {
+    // 6. Send customer confirmation email — AWAIT
+    try {
+      await sendCustomerConfirmation({
+        orderId: order.id,
+        name: order.name,
+        email: order.email,
+        phone: order.phone,
+        items: order.items,
+        subtotal: order.subtotal,
+        tax: order.tax,
+        total: order.total,
+      });
+      console.log("Customer email sent successfully");
+    } catch (err) {
       console.error("Customer email failed:", err);
-    });
+    }
 
     return NextResponse.json({
       success: true,
