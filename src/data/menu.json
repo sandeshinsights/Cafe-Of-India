@@ -21,6 +21,19 @@
       ]
     },
     {
+      "id": "category-15",
+      "name": "Nepali Food",
+      "description": "Authentic Nepali flavors — momos and chow mein",
+      "items": [
+        { "id": "menu-109", "name": "Veg MOMO (Fry)", "price": 13.99, "description": "Crispy fried vegetable dumplings served with dipping sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-110", "name": "Veg MOMO (Steamed)", "price": 13.99, "description": "Steamed vegetable dumplings served with dipping sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-111", "name": "Chicken MOMO (Fry)", "price": 14.99, "description": "Crispy fried chicken dumplings served with dipping sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-112", "name": "Chicken MOMO (Steamed)", "price": 14.99, "description": "Steamed chicken dumplings served with dipping sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-113", "name": "Veg Chow Mein (Nepali Flavor)", "price": 11.99, "description": "Stir-fried noodles with fresh vegetables in Nepali-style spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-114", "name": "Chicken Chow Mein (Nepali Flavor)", "price": 12.99, "description": "Stir-fried noodles with chicken and vegetables in Nepali-style spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
+      ]
+    },
+    {
       "id": "category-2",
       "name": "Cold Appetizers",
       "description": "Refreshing and tangy starters",
