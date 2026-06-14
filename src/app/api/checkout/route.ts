@@ -24,8 +24,28 @@ const checkoutSchema = z.object({
   ).min(1, "At least one item is required"),
 });
 
+function isOrderingAvailable(): boolean {
+  const now = new Date();
+  const etTime = new Date(
+    now.toLocaleString("en-US", { timeZone: "America/New_York" })
+  );
+  const hours = etTime.getHours();
+  const minutes = etTime.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  // 11:15 AM = 675, 8:45 PM = 1305
+  return totalMinutes >= 675 && totalMinutes <= 1305;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    // Check ordering hours (Eastern Time)
+    if (!isOrderingAvailable()) {
+      return NextResponse.json(
+        { error: "Orders are accepted between 11:15 AM and 8:45 PM." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
@@ -57,7 +77,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: item.name,
-            description, // always has a value now
+            description,
           },
           unit_amount: unitPrice,
         },
