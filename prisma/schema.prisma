@@ -24,7 +24,7 @@ model CateringInquiry {
 }
 
 model Order {
-  id              String   @id @default(uuid())
+  id              String     @id @default(uuid())
   name            String
   email           String
   phone           String
@@ -32,9 +32,47 @@ model Order {
   subtotal        Float
   tax             Float
   total           Float
-  stripeSessionId String   @unique @map("stripe_session_id")
-  status          String   @default("pending") // pending, paid, failed
-  createdAt       DateTime @default(now()) @map("created_at")
+  discountAmount  Float      @default(0) @map("discount_amount")
+  stripeSessionId String     @unique @map("stripe_session_id")
+  status          String     @default("pending") // pending, paid, failed
+  createdAt       DateTime   @default(now()) @map("created_at")
+  promoCodeId     String?    @map("promo_code_id")
+  promoCode       PromoCode? @relation(fields: [promoCodeId], references: [id])
+  usages          PromoCodeUsage[]
 
   @@map("orders")
+}
+
+model PromoCode {
+  id                String    @id @default(uuid())
+  code              String    @unique // e.g. "WELCOME10"
+  discountType      String    @default("PERCENTAGE") @map("discount_type") // PERCENTAGE or FIXED
+  discountValue     Float     @map("discount_value") // e.g. 10 for 10% or 5 for $5 off
+  maxUsesPerCustomer Int?     @map("max_uses_per_customer") // null = unlimited
+  orderNumber        Int?     @map("order_number")
+  maxTotalUses      Int?      @map("max_total_uses") // null = unlimited
+  usedCount         Int       @default(0) @map("used_count")
+  minOrderAmount    Float?    @map("min_order_amount") // null = no minimum
+  active            Boolean   @default(true)
+  expiresAt         DateTime? @map("expires_at") // null = never expires
+  description       String?
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  orders            Order[]
+  usages            PromoCodeUsage[]
+
+  @@map("promo_codes")
+}
+
+model PromoCodeUsage {
+  id            String   @id @default(uuid())
+  promoCodeId   String   @map("promo_code_id")
+  orderId       String   @map("order_id")
+  customerEmail String   @map("customer_email")
+  discountAmount Float   @map("discount_amount") // actual amount saved
+  createdAt     DateTime @default(now()) @map("created_at")
+  promoCode     PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("promo_code_usages")
 }
