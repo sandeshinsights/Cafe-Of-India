@@ -138,20 +138,20 @@ export async function POST(req: NextRequest) {
     const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
     const total = parseFloat((discountedSubtotal + tax).toFixed(2));
 
-      // 4. Apply discount by reducing the first line item's price
+    // 4. Apply discount by reducing the first line item's price
     if (discountAmount > 0) {
       const discountCents = Math.round(discountAmount * 100);
       const firstItem = lineItems[0];
-      if (firstItem && firstItem.price_data) {
+      if (firstItem?.price_data?.unit_amount) {
         const currentAmount = firstItem.price_data.unit_amount;
         const newAmount = Math.max(1, currentAmount - discountCents);
         firstItem.price_data.unit_amount = newAmount;
-        // Append discount info to item description
-        firstItem.price_data.product_data.description =
-          `${firstItem.price_data.product_data.description || ""} | Promo: -$${discountAmount.toFixed(2)}`.trim();
+        const currentDesc = firstItem.price_data.product_data?.description || "";
+        firstItem.price_data.product_data!.description = `${currentDesc} | Promo: -$${discountAmount.toFixed(2)}`.trim();
       }
     }
 
+    
     // 5. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
