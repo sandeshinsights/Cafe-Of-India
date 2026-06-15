@@ -22,6 +22,7 @@ const checkoutSchema = z.object({
       specialInstructions: z.string().optional(),
     })
   ).min(1, "At least one item is required"),
+  promoCodeId: z.string().optional(),
 });
 
 function isOrderingAvailable(): boolean {
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items } = parsed;
+    const { name, email, phone, items, promoCodeId } = parsed;
 
     // 1. Calculate totals
     let subtotal = 0;
@@ -60,14 +61,12 @@ export async function POST(req: NextRequest) {
       const lineItemTotal = unitPrice * item.quantity;
       subtotal += lineItemTotal / 100;
 
-      // Build description — ALWAYS non-empty
       const descParts: string[] = [];
       if (item.protein && item.protein.trim() !== "") descParts.push(item.protein.trim());
       if (item.spicyLevel && item.spicyLevel.trim() !== "") descParts.push(item.spicyLevel.trim());
       if (item.specialInstructions && item.specialInstructions.trim() !== "") {
         descParts.push(`Note: ${item.specialInstructions.trim()}`);
       }
-      // Fallback so description is NEVER empty
       const description = descParts.length > 0
         ? descParts.join(" | ")
         : "Pickup order";
@@ -85,11 +84,75 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
-    const tax = parseFloat((subtotal * taxRate).toFixed(2));
-    const total = parseFloat((subtotal + tax).toFixed(2));
+    // 2. Validate promo code (server-side)
+    let discountAmount = 0;
+    let validPromoCodeId: string | null = null;
+    let promoDescription: string | null = null;
 
-    // 2. Create Stripe Checkout Session
+    if (promoCodeId) {
+      const promo = await prisma.promoCode.findUnique({
+        where: { id: promoCodeId },
+      });
+
+      if (promo && promo.active) {
+        if (promo.expiresAt && new Date() > promo.expiresAt) {
+          // silently ignore expired
+        } else if (promo.maxTotalUses && promo.usedCount >= promo.maxTotalUses) {
+          // silently ignore max reached
+        } else {
+          const normalizedEmail = email.toLowerCase().trim();
+
+          const customerUsageCount = await prisma.promoCodeUsage.count({
+            where: { promoCodeId: promo.id, customerEmail: normalizedEmail },
+          });
+
+          if (!promo.maxUsesPerCustomer || customerUsageCount < promo.maxUsesPerCustomer) {
+            // Check order sequence
+            let sequenceValid = true;
+            if (promo.orderNumber) {
+              const totalPaidOrders = await prisma.order.count({
+                where: { email: normalizedEmail, status: "paid" },
+              });
+              if (totalPaidOrders + 1 !== promo.orderNumber) {
+                sequenceValid = false;
+              }
+            }
+
+            if (sequenceValid) {
+              if (promo.discountType === "PERCENTAGE") {
+                discountAmount = parseFloat((subtotal * promo.discountValue / 100).toFixed(2));
+              } else {
+                discountAmount = Math.min(promo.discountValue, subtotal);
+              }
+              validPromoCodeId = promo.id;
+              promoDescription = promo.description;
+            }
+          }
+        }
+      }
+    }
+
+    // 3. Calculate final totals with discount
+    const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
+    const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
+    const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
+    const total = parseFloat((discountedSubtotal + tax).toFixed(2));
+
+      // 4. Apply discount by reducing the first line item's price
+    if (discountAmount > 0) {
+      const discountCents = Math.round(discountAmount * 100);
+      const firstItem = lineItems[0];
+      if (firstItem && firstItem.price_data) {
+        const currentAmount = firstItem.price_data.unit_amount;
+        const newAmount = Math.max(1, currentAmount - discountCents);
+        firstItem.price_data.unit_amount = newAmount;
+        // Append discount info to item description
+        firstItem.price_data.product_data.description =
+          `${firstItem.price_data.product_data.description || ""} | Promo: -$${discountAmount.toFixed(2)}`.trim();
+      }
+    }
+
+    // 5. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -100,11 +163,13 @@ export async function POST(req: NextRequest) {
         customer_name: name,
         customer_email: email,
         customer_phone: phone,
+        promo_code_id: validPromoCodeId || "",
+        discount_amount: discountAmount.toFixed(2),
       },
     });
 
-    // 3. Save order to database
-    await prisma.order.create({
+    // 6. Save order to database
+    const order = await prisma.order.create({
       data: {
         name,
         email,
@@ -113,10 +178,30 @@ export async function POST(req: NextRequest) {
         subtotal,
         tax,
         total,
+        discountAmount,
         stripeSessionId: session.id,
         status: "pending",
+        promoCodeId: validPromoCodeId,
       },
     });
+
+    // 7. Record promo usage
+    if (validPromoCodeId && discountAmount > 0) {
+      await prisma.$transaction([
+        prisma.promoCode.update({
+          where: { id: validPromoCodeId },
+          data: { usedCount: { increment: 1 } },
+        }),
+        prisma.promoCodeUsage.create({
+          data: {
+            promoCodeId: validPromoCodeId,
+            orderId: order.id,
+            customerEmail: email.toLowerCase().trim(),
+            discountAmount,
+          },
+        }),
+      ]);
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
@@ -127,19 +212,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

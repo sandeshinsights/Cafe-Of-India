@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
 function isOrderingAvailable(): boolean {
@@ -14,6 +14,14 @@ function isOrderingAvailable(): boolean {
   const totalMinutes = hours * 60 + minutes;
   // 11:15 AM = 675, 8:45 PM = 1305
   return totalMinutes >= 675 && totalMinutes <= 1305;
+}
+
+interface AppliedPromo {
+  promoCodeId: string;
+  discountType: string;
+  discountValue: number;
+  description: string;
+  message: string;
 }
 
 export default function CartDrawer() {
@@ -37,10 +45,86 @@ export default function CartDrawer() {
   const [checkoutError, setCheckoutError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
 
+  // Promo code state
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<AppliedPromo | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+
   const handleClose = () => {
     closeCart();
-    setTimeout(() => setStep("review"), 300);
+    setTimeout(() => {
+      setStep("review");
+      setPromoInput("");
+      setAppliedPromo(null);
+      setPromoError("");
+    }, 300);
   };
+
+  // Calculate discount
+  const discountAmount = appliedPromo
+    ? parseFloat(
+        appliedPromo.discountType === "PERCENTAGE"
+          ? (subtotal * appliedPromo.discountValue / 100).toFixed(2)
+          : Math.min(appliedPromo.discountValue, subtotal).toFixed(2)
+      )
+    : 0;
+
+  const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
+  const discountTax = parseFloat((discountedSubtotal * 0.07).toFixed(2));
+  const discountTotal = parseFloat((discountedSubtotal + discountTax).toFixed(2));
+
+  const displaySubtotal = appliedPromo ? discountedSubtotal : subtotal;
+  const displayTax = appliedPromo ? discountTax : tax;
+  const displayTotal = appliedPromo ? discountTotal : total;
+
+  async function handleApplyPromo() {
+    if (!promoInput.trim()) return;
+    if (!customerEmail.trim() || !customerEmail.includes("@")) {
+      setPromoError("Enter your email first to apply a promo code");
+      return;
+    }
+
+    setPromoLoading(true);
+    setPromoError("");
+
+    try {
+      const res = await fetch("/api/promo/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoInput.trim(),
+          email: customerEmail.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.valid) {
+        setAppliedPromo({
+          promoCodeId: data.promoCodeId,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          description: data.description,
+          message: data.message,
+        });
+        setPromoError("");
+      } else {
+        setAppliedPromo(null);
+        setPromoError(data.message || "Invalid promo code");
+      }
+    } catch {
+      setPromoError("Network error. Try again.");
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
+  function handleRemovePromo() {
+    setAppliedPromo(null);
+    setPromoInput("");
+    setPromoError("");
+  }
 
   async function handleCheckout() {
     if (!customerName.trim()) {
@@ -77,9 +161,7 @@ export default function CartDrawer() {
             spicyLevel: ci.spiceLevel || undefined,
             specialInstructions: ci.specialInstructions || undefined,
           })),
-          subtotal,
-          tax,
-          total,
+          promoCodeId: appliedPromo?.promoCodeId || undefined,
         }),
       });
 
@@ -285,22 +367,72 @@ export default function CartDrawer() {
 
         {/* Step 3: Customer form + Pay */}
         {step === "checkout" && (
-          <div className="p-4 border-t border-gray-200 space-y-3">
+          <div className="flex-1 overflow-y-auto p-4 border-t border-gray-200 space-y-3">
+            {/* Price breakdown */}
             <div className="space-y-1 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span className={appliedPromo ? "line-through text-gray-400" : ""}>
+                  ${subtotal.toFixed(2)}
+                </span>
               </div>
+              {appliedPromo && (
+                <div className="flex justify-between text-green-600">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3 h-3" />
+                    Discount ({appliedPromo.message})
+                  </span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>Tax (7%)</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>${displayTax.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-bold text-[#5C1A1B] text-base pt-1 border-t border-gray-200">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>${displayTotal.toFixed(2)}</span>
               </div>
             </div>
 
+            {/* Promo code section */}
+            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Promo Code</p>
+              {appliedPromo ? (
+                <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <div>
+                    <span className="text-sm font-medium text-green-700">{appliedPromo.message}</span>
+                    <p className="text-xs text-green-600">{appliedPromo.description}</p>
+                  </div>
+                  <button onClick={handleRemovePromo} className="text-green-600 hover:text-green-800">
+                    <XCircle className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter code"
+                    value={promoInput}
+                    onChange={(e) => { setPromoInput(e.target.value.toUpperCase()); setPromoError(""); }}
+                    onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B] uppercase"
+                  />
+                  <button
+                    onClick={handleApplyPromo}
+                    disabled={promoLoading || !promoInput.trim()}
+                    className="px-4 py-2 bg-[#5C1A1B] text-white text-sm font-medium rounded-lg hover:bg-[#6d2a2b] transition-colors disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed"
+                  >
+                    {promoLoading ? "..." : "Apply"}
+                  </button>
+                </div>
+              )}
+              {promoError && (
+                <p className="text-xs text-red-500">{promoError}</p>
+              )}
+            </div>
+
+            {/* Customer info form */}
             <div className="space-y-2">
               <input
                 type="text"
@@ -313,7 +445,7 @@ export default function CartDrawer() {
                 type="email"
                 placeholder="Email *"
                 value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
+                onChange={(e) => { setCustomerEmail(e.target.value); if (appliedPromo) { setAppliedPromo(null); setPromoError("Promo removed — re-apply after changing email"); } }}
                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
               />
               <input
@@ -348,7 +480,7 @@ export default function CartDrawer() {
             >
               {isCheckingOut
                 ? "Processing..."
-                : `Pay $${total.toFixed(2)} with Stripe`}
+                : `Pay $${displayTotal.toFixed(2)} with Stripe`}
             </button>
             <p className="text-xs text-center text-gray-400">
               Pickup only &middot; 7% MA tax &middot; Secure payment by Stripe
@@ -359,19 +491,3 @@ export default function CartDrawer() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
