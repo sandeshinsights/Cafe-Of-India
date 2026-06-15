@@ -12,8 +12,8 @@ function isOrderingAvailable(): boolean {
   const hours = etTime.getHours();
   const minutes = etTime.getMinutes();
   const totalMinutes = hours * 60 + minutes;
-  // 11:15 AM = 675, 8:45 PM = 1305
-  return totalMinutes >= 675 && totalMinutes <= 1305;
+  // 11:15 AM = 675, 8:45 PM = 1245
+  return totalMinutes >= 675 && totalMinutes <= 1245;
 }
 
 interface AppliedPromo {
