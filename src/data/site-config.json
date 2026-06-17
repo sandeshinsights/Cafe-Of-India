@@ -12,7 +12,7 @@
   },
   "footer": {
     "copyright": "Cafe of India. All Rights Reserved.",
-    "tagline": "Authentic Indian Cuisine in the Heart of Maynard"
+    "tagline": "Authentic Indian and Nepali Cuisine in the Heart of Maynard"
   },
   "sections": [
     { "id": "hero", "title": "Hero", "order": 1, "enabled": true },

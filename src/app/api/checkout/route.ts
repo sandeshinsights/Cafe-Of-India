@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import menuData from "@/data/menu.json";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-05-27.dahlia",
@@ -16,7 +17,7 @@ const checkoutSchema = z.object({
       id: z.string(),
       name: z.string(),
       price: z.number(),
-      quantity: z.number().min(1),
+      quantity: z.number().min(1).max(20, "Maximum 20 per item"),
       protein: z.string().optional(),
       spicyLevel: z.string().optional(),
       specialInstructions: z.string().optional(),
@@ -37,6 +38,14 @@ function isOrderingAvailable(): boolean {
   return totalMinutes >= 675 && totalMinutes <= 1245;
 }
 
+function getMenuItemPrice(itemId: string): number | null {
+  for (const category of menuData.categories) {
+    const item = (category.items as any[]).find((i: any) => i.id === itemId);
+    if (item) return item.price;
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
     // Check ordering hours (Eastern Time)
@@ -52,12 +61,16 @@ export async function POST(req: NextRequest) {
 
     const { name, email, phone, items, promoCodeId } = parsed;
 
-    // 1. Calculate totals
+    // 1. Calculate totals using SERVER prices (ignore client-sent prices)
     let subtotal = 0;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
     for (const item of items) {
-      const unitPrice = Math.round(item.price * 100); // cents
+      const serverPrice = getMenuItemPrice(item.id);
+      if (!serverPrice) {
+        return NextResponse.json({ error: "Invalid item in cart." }, { status: 400 });
+      }
+      const unitPrice = Math.round(serverPrice * 100); // cents
       const lineItemTotal = unitPrice * item.quantity;
       subtotal += lineItemTotal / 100;
 
@@ -151,7 +164,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    
     // 5. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -168,8 +180,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Save order to database
-    const order = await prisma.order.create({
+    // 6. Save order to database (promo usage recorded in verify-order on payment success)
+    await prisma.order.create({
       data: {
         name,
         email,
@@ -184,24 +196,6 @@ export async function POST(req: NextRequest) {
         promoCodeId: validPromoCodeId,
       },
     });
-
-    // 7. Record promo usage
-    if (validPromoCodeId && discountAmount > 0) {
-      await prisma.$transaction([
-        prisma.promoCode.update({
-          where: { id: validPromoCodeId },
-          data: { usedCount: { increment: 1 } },
-        }),
-        prisma.promoCodeUsage.create({
-          data: {
-            promoCodeId: validPromoCodeId,
-            orderId: order.id,
-            customerEmail: email.toLowerCase().trim(),
-            discountAmount,
-          },
-        }),
-      ]);
-    }
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {

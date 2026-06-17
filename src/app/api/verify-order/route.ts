@@ -52,6 +52,24 @@ export async function POST(request: NextRequest) {
       data: { status: "paid" },
     });
 
+    // 4.5 Record promo code usage (only when payment succeeds)
+    if (order.promoCodeId && order.discountAmount > 0) {
+      await prisma.$transaction([
+        prisma.promoCode.update({
+          where: { id: order.promoCodeId },
+          data: { usedCount: { increment: 1 } },
+        }),
+        prisma.promoCodeUsage.create({
+          data: {
+            promoCodeId: order.promoCodeId,
+            orderId: order.id,
+            customerEmail: order.email.toLowerCase().trim(),
+            discountAmount: order.discountAmount,
+          },
+        }),
+      ]);
+    }
+
     // 5. Send restaurant notification email — AWAIT so Vercel doesn't kill the function
     try {
       await sendOrderNotification({

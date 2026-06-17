@@ -1,6 +1,6 @@
 {
   "name": "Cafe of India",
-  "tagline": "Authentic Indian Cuisine",
+  "tagline": "Authentic Indian & Nepali Cuisine",
   "address": {
     "street": "155 Main Street",
     "city": "Maynard",
@@ -35,14 +35,14 @@
     "source": "Google"
   },
   "hero": {
-    "headline": "Experience the Flavors of India",
-    "subheadline": "Authentic Indian cuisine made with fresh ingredients and traditional recipes, served with warmth in the heart of Maynard.",
+    "headline": "Experience the Flavors of India & Nepal",
+    "subheadline": "Authentic Indian and Nepali cuisine made with fresh ingredients and traditional recipes, served with warmth in the heart of Maynard.",
     "ctaPrimary": "View Our Menu",
     "ctaSecondary": "Call to Order"
   },
   "about": {
     "headline": "Welcome to Cafe of India",
-    "description": "Nestled in the charming town of Maynard, Massachusetts, Cafe of India brings you the rich and diverse flavors of authentic Indian cuisine. Our chefs use traditional recipes passed down through generations, combined with the freshest ingredients, to create dishes that delight every palate. Whether you're a longtime lover of Indian food or trying it for the first time, our warm and inviting atmosphere makes every visit a memorable experience.",
+    "description": "Nestled in the charming town of Maynard, Massachusetts, Cafe of India brings you the rich and diverse flavors of authentic Indian and Nepali cuisine. Our chefs use traditional recipes passed down through generations, combined with the freshest ingredients, to create dishes that delight every palate. Whether you're a longtime lover of Indian and Nepali food or trying it for the first time, our warm and inviting atmosphere makes every visit a memorable experience.",
     "highlights": [
       {
         "icon": "chef-hat",
@@ -52,12 +52,12 @@
       {
         "icon": "leaf",
         "title": "Fresh Ingredients",
-        "description": "We source the finest spices and freshest ingredients daily, ensuring every dish is bursting with authentic Indian flavor."
+        "description": "We source the finest spices and freshest ingredients daily, ensuring every dish is bursting with authentic Indian and Nepali flavors."
       },
       {
         "icon": "heart",
         "title": "Made with Love",
-        "description": "Every dish is prepared with care and passion, reflecting our commitment to quality and our love for the culinary traditions of India."
+        "description": "Every dish is prepared with care and passion, reflecting our commitment to quality and our love for the culinary traditions of India and Nepal."
       },
       {
         "icon": "users",
@@ -94,7 +94,7 @@
   ],
   "catering": {
     "headline": "Catering Services",
-    "description": "Let Cafe of India bring the vibrant flavors of India to your next event. We offer full-service catering for weddings, corporate events, birthday parties, and more. Our catering team works with you to create a custom menu that fits your taste and budget.",
+    "description": "Let Cafe of India bring the vibrant flavors of India and Nepal to your next event. We offer full-service catering for weddings, corporate events, birthday parties, and more. Our catering team works with you to create a custom menu that fits your taste and budget.",
     "eventTypes": [
       "Weddings & Receptions",
       "Corporate Events & Meetings",
