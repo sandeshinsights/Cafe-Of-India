@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { sendOrderNotification, sendCustomerConfirmation } from "@/lib/email";
+import { handleOrderPrint } from "@/lib/order-print";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -103,6 +104,19 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       console.error("Customer email failed:", err);
     }
+
+    // 7. Send order to fax/printer (non-blocking, won't affect existing flow)
+    handleOrderPrint({
+      orderId: order.id,
+      name: order.name,
+      email: order.email,
+      phone: order.phone,
+      items: order.items as any[],
+      subtotal: order.subtotal,
+      tax: order.tax,
+      total: order.total,
+      discountAmount: order.discountAmount ?? 0,
+    }).catch((err) => console.error("[OrderPrint] Unhandled error:", err));
 
     return NextResponse.json({
       success: true,

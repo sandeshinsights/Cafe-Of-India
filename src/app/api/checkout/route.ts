@@ -39,8 +39,11 @@ function isOrderingAvailable(): boolean {
 }
 
 function getMenuItemPrice(itemId: string): number | null {
+  // Extract base ID: "menu-1-none-none-1781484924006" → "menu-1"
+  const baseId = itemId.split("-").slice(0, 2).join("-");
+
   for (const category of menuData.categories) {
-    const item = (category.items as any[]).find((i: any) => i.id === itemId);
+    const item = (category.items as any[]).find((i: any) => i.id === baseId);
     if (item) return item.price;
   }
   return null;
