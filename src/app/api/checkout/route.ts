@@ -3,6 +3,12 @@ import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import menuData from "@/data/menu.json";
+import {
+  isOrderingWindowOpen,
+  getOrderingClosedReason,
+  isValidScheduledTime,
+  formatScheduledPickup,
+} from "@/lib/ordering-hours";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-05-27.dahlia",
@@ -24,19 +30,9 @@ const checkoutSchema = z.object({
     })
   ).min(1, "At least one item is required"),
   promoCodeId: z.string().optional(),
+  scheduledDate: z.string().optional(),
+  scheduledTime: z.string().optional(),
 });
-
-function isOrderingAvailable(): boolean {
-  const now = new Date();
-  const etTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "America/New_York" })
-  );
-  const hours = etTime.getHours();
-  const minutes = etTime.getMinutes();
-  const totalMinutes = hours * 60 + minutes;
-  // 11:15 AM = 675, 8:45 PM = 1245
-  return totalMinutes >= 675 && totalMinutes <= 1245;
-}
 
 function getMenuItemPrice(itemId: string): number | null {
   // Extract base ID: "menu-1-none-none-1781484924006" → "menu-1"
@@ -51,18 +47,40 @@ function getMenuItemPrice(itemId: string): number | null {
 
 export async function POST(req: NextRequest) {
   try {
-    // Check ordering hours (Eastern Time)
-    if (!isOrderingAvailable()) {
-      return NextResponse.json(
-        { error: "Orders are accepted between 11:15 AM and 8:45 PM." },
-        { status: 403 }
-      );
-    }
-
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items, promoCodeId } = parsed;
+    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime } = parsed;
+
+    // --- Handle ordering window vs scheduled time ---
+    const hasScheduledDate = typeof scheduledDate === "string" && scheduledDate.trim() !== "";
+    const hasScheduledTime = typeof scheduledTime === "string" && scheduledTime.trim() !== "";
+
+    let scheduledForFormatted: string | undefined;
+
+    if (hasScheduledDate && hasScheduledTime) {
+      // Scheduled order — validate the chosen time slot
+            if (!isValidScheduledTime(scheduledDate, scheduledTime)) {
+        return NextResponse.json(
+          { error: "Invalid scheduled time. Please choose a different time slot." },
+          { status: 400 }
+        );
+      }
+      scheduledForFormatted = formatScheduledPickup(scheduledDate, scheduledTime);
+      // Only one provided — error
+      return NextResponse.json(
+        { error: "Both scheduled date and time are required for a scheduled order." },
+        { status: 400 }
+      );
+    } else {
+      // Immediate order — check ordering window
+      if (!isOrderingWindowOpen()) {
+        return NextResponse.json(
+          { error: getOrderingClosedReason() || "Orders are not available at this time." },
+          { status: 403 }
+        );
+      }
+    }
 
     // 1. Calculate totals using SERVER prices (ignore client-sent prices)
     let subtotal = 0;
@@ -180,6 +198,7 @@ export async function POST(req: NextRequest) {
         customer_phone: phone,
         promo_code_id: validPromoCodeId || "",
         discount_amount: discountAmount.toFixed(2),
+        ...(scheduledForFormatted ? { scheduled_for: scheduledForFormatted } : {}),
       },
     });
 
@@ -197,6 +216,7 @@ export async function POST(req: NextRequest) {
         stripeSessionId: session.id,
         status: "pending",
         promoCodeId: validPromoCodeId,
+        ...(scheduledForFormatted ? { scheduledFor: scheduledForFormatted } : {}),
       },
     });
 

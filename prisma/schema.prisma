@@ -39,7 +39,7 @@ model Order {
   promoCodeId     String?    @map("promo_code_id")
   promoCode       PromoCode? @relation(fields: [promoCodeId], references: [id])
   usages          PromoCodeUsage[]
-
+  scheduledFor    String?
   @@map("orders")
 }
 

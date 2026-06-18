@@ -55,6 +55,7 @@ interface OrderEmailData {
   subtotal: number;
   tax: number;
   total: number;
+  scheduledFor?: string;
 }
 
 export async function sendOrderNotification(data: OrderEmailData) {
@@ -84,14 +85,26 @@ export async function sendOrderNotification(data: OrderEmailData) {
     )
     .join("");
 
+  const scheduledBanner = data.scheduledFor
+    ? `
+      <div style="margin: 16px 0; padding: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; text-align: center;">
+        <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.9);">Scheduled Order</p>
+        <p style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${data.scheduledFor}</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">This order is scheduled for future pickup. Do NOT prepare yet.</p>
+      </div>
+    `
+    : "";
+
   const result = await resend.emails.send({
     from: `Cafe of India Website <${fromEmail}>`,
     to: [restaurantEmail],
-    subject: `New Order #${data.orderId.slice(0, 8)} from ${data.name} — $${data.total.toFixed(2)}`,
+    subject: `${data.scheduledFor ? "[SCHEDULED] " : ""}New Order #${data.orderId.slice(0, 8)} from ${data.name} — $${data.total.toFixed(2)}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #5C1A1B;">New Order Received!</h2>
-        <p>A customer has placed a paid order through the website.</p>
+        <h2 style="color: #5C1A1B;">${data.scheduledFor ? "Scheduled Order Received!" : "New Order Received!"}</h2>
+        <p>${data.scheduledFor ? "A customer has placed a scheduled order through the website." : "A customer has placed a paid order through the website."}</p>
+
+        ${scheduledBanner}
 
         <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; margin: 16px 0;">
           <h3 style="margin-top: 0; color: #5C1A1B;">Customer Details</h3>
@@ -108,6 +121,12 @@ export async function sendOrderNotification(data: OrderEmailData) {
               <td style="padding: 4px 0;"><strong>Phone:</strong></td>
               <td><a href="tel:${data.phone}">${data.phone}</a></td>
             </tr>
+            ${data.scheduledFor ? `
+            <tr>
+              <td style="padding: 4px 0;"><strong style="color: #d97706;">Scheduled For:</strong></td>
+              <td><strong style="color: #d97706;">${data.scheduledFor}</strong></td>
+            </tr>
+            ` : ""}
           </table>
         </div>
 
@@ -169,20 +188,58 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
     )
     .join("");
 
+  const scheduledBanner = data.scheduledFor
+    ? `
+      <div style="margin-bottom: 16px; padding: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; text-align: center;">
+        <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.9);">Scheduled Order</p>
+        <p style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${data.scheduledFor}</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">Your order will be ready for pickup at this time.</p>
+      </div>
+    `
+    : "";
+
+  const introText = data.scheduledFor
+    ? `We've received your scheduled order. It will be prepared and ready for pickup at the scheduled time.`
+    : `We've received your order and are preparing it now. Here are your order details:`;
+
+  const pickupInfo = data.scheduledFor
+    ? `
+      <div style="background: #fffbeb; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h3 style="color: #d97706; margin-top: 0;">Scheduled Pickup</h3>
+        <p style="margin: 4px 0; font-size: 16px; font-weight: 600;">${data.scheduledFor}</p>
+        <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
+        <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
+        <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
+        <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+        <p style="margin: 8px 0 0; color: #92400e; font-style: italic;">Please arrive around your scheduled time. Call us if you need to make changes.</p>
+      </div>
+    `
+    : `
+      <div style="background: #FBF8F1; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4973B;">
+        <h3 style="color: #5C1A1B; margin-top: 0;">Pickup Information</h3>
+        <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
+        <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
+        <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
+        <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+      </div>
+    `;
+
   const result = await resend.emails.send({
     from: `Cafe of India <${fromEmail}>`,
     to: [data.email],
-    subject: `Order Confirmed! Your Cafe of India order has been received`,
+    subject: `${data.scheduledFor ? "[Scheduled] " : ""}Order Confirmed! Your Cafe of India order has been received`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <div style="background: #5C1A1B; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
           <h1 style="color: white; margin: 0; font-size: 24px;">Order Confirmed!</h1>
-          <p style="color: #C4973B; margin: 8px 0 0 0;">Thank you for your order</p>
+          <p style="color: #C4973B; margin: 8px 0 0 0;">${data.scheduledFor ? "Scheduled Order — Thank You!" : "Thank you for your order"}</p>
         </div>
 
         <div style="background: white; padding: 24px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px;">
           <p style="font-size: 16px;">Hi <strong>${data.name}</strong>,</p>
-          <p>We've received your order and are preparing it now. Here are your order details:</p>
+          <p>${introText}</p>
+
+          ${scheduledBanner}
 
           <div style="margin: 20px 0;">
             <table style="width: 100%; border-collapse: collapse;">
@@ -203,13 +260,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
             </div>
           </div>
 
-          <div style="background: #FBF8F1; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4973B;">
-            <h3 style="color: #5C1A1B; margin-top: 0;">Pickup Information</h3>
-            <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
-            <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
-            <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
-            <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
-          </div>
+          ${pickupInfo}
 
           <p style="color: #666; font-size: 14px;">
             Questions about your order? Call us at <a href="tel:+19788979227" style="color: #5C1A1B;">(978) 897-9227</a>.

@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
+    // Get scheduled info from order (undefined for regular immediate orders)
+    const scheduledFor = (order as any).scheduledFor || undefined;
+
     // 5. Send restaurant notification email — AWAIT so Vercel doesn't kill the function
     try {
       await sendOrderNotification({
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
         subtotal: order.subtotal,
         tax: order.tax,
         total: order.total,
+        scheduledFor,
       });
       console.log("Restaurant email sent successfully");
     } catch (err) {
@@ -99,6 +103,7 @@ export async function POST(request: NextRequest) {
         subtotal: order.subtotal,
         tax: order.tax,
         total: order.total,
+        scheduledFor,
       });
       console.log("Customer email sent successfully");
     } catch (err) {
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
       tax: order.tax,
       total: order.total,
       discountAmount: order.discountAmount ?? 0,
+      //scheduledFor,
     }).catch((err) => console.error("[OrderPrint] Unhandled error:", err));
 
     return NextResponse.json({

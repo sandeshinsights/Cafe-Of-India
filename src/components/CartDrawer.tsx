@@ -3,18 +3,8 @@
 import { useState } from "react";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-
-function isOrderingAvailable(): boolean {
-  const now = new Date();
-  const etTime = new Date(
-    now.toLocaleString("en-US", { timeZone: "America/New_York" })
-  );
-  const hours = etTime.getHours();
-  const minutes = etTime.getMinutes();
-  const totalMinutes = hours * 60 + minutes;
-  // 11:15 AM = 675, 8:45 PM = 1245
-  return totalMinutes >= 675 && totalMinutes <= 1245;
-}
+import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h } from "@/lib/ordering-hours";
+import TimeSlotPicker from "./TimeSlotPicker";
 
 interface AppliedPromo {
   promoCodeId: string;
@@ -39,6 +29,7 @@ export default function CartDrawer() {
   } = useCart();
 
   const [step, setStep] = useState<"review" | "fulfillment" | "checkout">("review");
+
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -51,6 +42,11 @@ export default function CartDrawer() {
   const [promoError, setPromoError] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
 
+  // Scheduling state
+  const [orderMode, setOrderMode] = useState<"now" | "scheduled">("now");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+
   const handleClose = () => {
     closeCart();
     setTimeout(() => {
@@ -58,6 +54,9 @@ export default function CartDrawer() {
       setPromoInput("");
       setAppliedPromo(null);
       setPromoError("");
+      setOrderMode("now");
+      setSelectedDate(null);
+      setSelectedTimeSlot(null);
     }, 300);
   };
 
@@ -77,6 +76,21 @@ export default function CartDrawer() {
   const displaySubtotal = appliedPromo ? discountedSubtotal : subtotal;
   const displayTax = appliedPromo ? discountTax : tax;
   const displayTotal = appliedPromo ? discountTotal : total;
+
+  const orderingAvailable = isOrderingWindowOpen();
+
+  const scheduledDisplayLabel =
+    orderMode === "scheduled" && selectedDate && selectedTimeSlot
+      ? `${selectedDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          timeZone: "America/New_York",
+        })} at ${formatMinutesTo12h(
+          parseInt(selectedTimeSlot.split(":")[0]) * 60 +
+            parseInt(selectedTimeSlot.split(":")[1])
+        )}`
+      : null;
 
   async function handleApplyPromo() {
     if (!promoInput.trim()) return;
@@ -162,6 +176,14 @@ export default function CartDrawer() {
             specialInstructions: ci.specialInstructions || undefined,
           })),
           promoCodeId: appliedPromo?.promoCodeId || undefined,
+          ...(orderMode === "scheduled" && selectedDate && selectedTimeSlot
+            ? {
+                scheduledDate: selectedDate.toLocaleDateString("en-CA", {
+                  timeZone: "America/New_York",
+                }),
+                scheduledTime: selectedTimeSlot,
+              }
+            : {}),
         }),
       });
 
@@ -183,8 +205,6 @@ export default function CartDrawer() {
 
   if (!isCartOpen) return null;
 
-  const orderingAvailable = isOrderingAvailable();
-
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* backdrop */}
@@ -193,11 +213,14 @@ export default function CartDrawer() {
       {/* panel */}
       <div className="relative w-full max-w-md bg-[#FBF8F1] shadow-2xl flex flex-col">
         {/* header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2">
             {step !== "review" && (
               <button
-                onClick={() => setStep(step === "fulfillment" ? "review" : "fulfillment")}
+                onClick={() => {
+                  if (step === "checkout") setStep("fulfillment");
+                  else setStep("review");
+                }}
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -218,10 +241,10 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* Step 1: Cart items review */}
+        {/* Step 1: Cart items review + order timing choice */}
         {step === "review" && (
-          <>
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-3">
               {items.length === 0 ? (
                 <div className="text-center py-16">
                   <ShoppingBag className="w-12 h-12 text-gray-300 mx-auto mb-4" />
@@ -291,6 +314,7 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="p-4 border-t border-gray-200 space-y-3">
+                {/* Totals */}
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
@@ -306,34 +330,108 @@ export default function CartDrawer() {
                   </div>
                 </div>
 
-                {!orderingAvailable ? (
-                  <div className="text-center">
-                    <button
-                      disabled
-                      className="w-full font-bold py-3 rounded-lg bg-gray-300 text-gray-500 cursor-not-allowed"
-                    >
-                      Ordering Unavailable
-                    </button>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Orders are accepted between <strong>11:15 AM - 8:45 PM</strong>
-                    </p>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setStep("fulfillment")}
-                    className="w-full font-bold py-3 rounded-lg bg-[#C4973B] text-white hover:bg-[#d4a84b] transition-colors"
-                  >
-                    Proceed to Checkout
-                  </button>
+                {/* Outside ordering hours warning */}
+                {!orderingAvailable && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 text-center">
+                    {getOrderingClosedReason()}. You can schedule for a later time.
+                  </p>
                 )}
+
+                {/* Order timing choice */}
+                <div className="space-y-2">
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      orderMode === "now"
+                        ? "border-[#5C1A1B] bg-[#5C1A1B]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    } ${!orderingAvailable ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    <input
+                      type="radio"
+                      name="orderMode"
+                      checked={orderMode === "now"}
+                      onChange={() => setOrderMode("now")}
+                      disabled={!orderingAvailable}
+                      className="accent-[#5C1A1B]"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-[#5C1A1B]">Order Now</p>
+                      <p className="text-xs text-gray-500">
+                        {orderingAvailable
+                          ? "Ready in 25-40 minutes"
+                          : getOrderingClosedReason()}
+                      </p>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                      orderMode === "scheduled"
+                        ? "border-[#C4973B] bg-[#C4973B]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="orderMode"
+                      checked={orderMode === "scheduled"}
+                      onChange={() => setOrderMode("scheduled")}
+                      className="accent-[#C4973B]"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-[#5C1A1B]">Schedule for Later</p>
+                      <p className="text-xs text-gray-500">Pick a future date and time</p>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Time picker (only when "Schedule for Later" selected) */}
+                {orderMode === "scheduled" && (
+                  <TimeSlotPicker
+                    selectedDate={selectedDate}
+                    onDateChange={setSelectedDate}
+                    selectedTime={selectedTimeSlot}
+                    onTimeChange={setSelectedTimeSlot}
+                  />
+                )}
+
+                {/* Continue button */}
+                <button
+                  disabled={
+                    (orderMode === "now" && !orderingAvailable) ||
+                    (orderMode === "scheduled" && (!selectedDate || !selectedTimeSlot))
+                  }
+                  onClick={() => setStep("fulfillment")}
+                  className={`w-full font-bold py-3 rounded-lg transition-colors ${
+                    (orderMode === "now" && !orderingAvailable) ||
+                    (orderMode === "scheduled" && (!selectedDate || !selectedTimeSlot))
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-[#C4973B] text-white hover:bg-[#d4a84b]"
+                  }`}
+                >
+                  {orderMode === "scheduled" && (!selectedDate || !selectedTimeSlot)
+                    ? "Select date & time"
+                    : "Continue"}
+                </button>
+
+                <p className="text-xs text-center text-gray-400">
+                  7% MA sales tax applies &middot; Secure payment by Stripe
+                </p>
               </div>
             )}
-          </>
+          </div>
         )}
 
         {/* Step 2: Pickup or Delivery selection */}
         {step === "fulfillment" && (
           <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
+            {orderMode === "scheduled" && scheduledDisplayLabel && (
+              <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+                <p className="text-xs font-medium text-amber-800">Scheduled Pickup</p>
+                <p className="text-sm text-amber-700 font-medium">{scheduledDisplayLabel}</p>
+              </div>
+            )}
+
             <button
               onClick={() => setStep("checkout")}
               className="w-full border-2 border-[#5C1A1B] rounded-xl p-6 text-center hover:bg-[#5C1A1B]/5 transition-colors cursor-pointer group"
@@ -344,7 +442,9 @@ export default function CartDrawer() {
                 155 Main St, Maynard, MA 01754
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                Ready in 25-40 minutes
+                {orderMode === "scheduled"
+                  ? `Scheduled for ${scheduledDisplayLabel}`
+                  : "Ready in 25-40 minutes"}
               </p>
             </button>
 
@@ -394,6 +494,14 @@ export default function CartDrawer() {
                 <span>${displayTotal.toFixed(2)}</span>
               </div>
             </div>
+
+            {/* Scheduled order info */}
+            {scheduledDisplayLabel && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-xs font-medium text-amber-800">Scheduled Pickup</p>
+                <p className="text-sm text-amber-700 font-medium">{scheduledDisplayLabel}</p>
+              </div>
+            )}
 
             {/* Promo code section */}
             <div className="border border-gray-200 rounded-lg p-3 space-y-2">
@@ -483,7 +591,7 @@ export default function CartDrawer() {
                 : `Pay $${displayTotal.toFixed(2)} with Stripe`}
             </button>
             <p className="text-xs text-center text-gray-400">
-              Pickup only &middot; 7% MA tax &middot; Secure payment by Stripe
+              {orderMode === "scheduled" ? "Scheduled pickup" : "Pickup only"} &middot; 7% MA tax &middot; Secure payment by Stripe
             </p>
           </div>
         )}

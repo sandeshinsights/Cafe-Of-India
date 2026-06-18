@@ -20,6 +20,13 @@
     "saturday": "11:30 AM - 9:00 PM",
     "sunday": "11:30 AM - 9:00 PM"
   },
+      "orderingConfig": {
+      "orderingStarts": "11:15 AM",
+      "orderingEnds": "8:45 PM",
+      "slotIntervalMinutes": 15,
+      "minLeadTimeMinutes": 30,
+      "maxScheduleDays": 7
+    },
   "social": {
     "facebook": "https://www.facebook.com/cafeofindiamaynard",
     "instagram": "https://www.instagram.com/cafeofindiamaynard",
