@@ -243,7 +243,7 @@ export default function CartDrawer() {
 
         {/* Step 1: Cart items review + order timing choice */}
         {step === "review" && (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
             <div className="p-4 space-y-3">
               {items.length === 0 ? (
                 <div className="text-center py-16">
@@ -424,7 +424,7 @@ export default function CartDrawer() {
 
         {/* Step 2: Pickup or Delivery selection */}
         {step === "fulfillment" && (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-4">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-center p-6 space-y-4">
             {orderMode === "scheduled" && scheduledDisplayLabel && (
               <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
                 <p className="text-xs font-medium text-amber-800">Scheduled Pickup</p>
@@ -467,7 +467,7 @@ export default function CartDrawer() {
 
         {/* Step 3: Customer form + Pay */}
         {step === "checkout" && (
-          <div className="flex-1 overflow-y-auto p-4 border-t border-gray-200 space-y-3">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 border-t border-gray-200 space-y-3">
             {/* Price breakdown */}
             <div className="space-y-1 text-sm">
               <div className="flex justify-between text-gray-600">
