@@ -67,12 +67,7 @@ export async function POST(req: NextRequest) {
         );
       }
       scheduledForFormatted = formatScheduledPickup(scheduledDate, scheduledTime);
-      // Only one provided — error
-      return NextResponse.json(
-        { error: "Both scheduled date and time are required for a scheduled order." },
-        { status: 400 }
-      );
-    } else {
+      } else {
       // Immediate order — check ordering window
       if (!isOrderingWindowOpen()) {
         return NextResponse.json(
