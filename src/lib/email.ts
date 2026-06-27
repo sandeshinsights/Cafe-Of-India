@@ -276,3 +276,123 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
     `,
   });
 }
+
+// ============================================================
+// PRINTER ORDER — sends only to HP ePrint for auto-printing
+// Called ONLY from verify-order after confirmed Stripe payment
+// NEVER connect this to any other email path
+// ============================================================
+
+interface PrinterOrderData {
+  orderId: string;
+  name?: string;
+  phone?: string;
+  items: any;
+  subtotal: number;
+  tax: number;
+  total: number;
+  discountAmount?: number;
+  scheduledFor?: string;
+}
+
+export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> {
+  const eprintEmail = process.env.HP_EPRINT_EMAIL;
+  if (!eprintEmail) {
+    console.log("[Printer] HP_EPRINT_EMAIL not configured — skipping print");
+    return;
+  }
+
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+  const orderNum = data.orderId.slice(0, 8).toUpperCase();
+  const now = new Date().toLocaleString("en-US", { timeZone: "America/New_York" });
+
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  const itemsHtml = items.length > 0
+    ? items.map((item: any) => {
+        const qty = item.quantity || 1;
+        const price = (item.price || 0) * qty;
+        const name = item.name || "Unknown Item";
+        const details = [
+          item.protein || "",
+          item.spiceLevel || "",
+          item.specialInstructions || "",
+        ]
+          .filter(Boolean)
+          .join(" | ");
+
+        return `<tr>
+          <td style="padding: 4px 0; font-size: 16px;">${qty}x  ${name}</td>
+          <td style="padding: 4px 0; text-align: right; font-size: 16px;">$${price.toFixed(2)}</td>
+        </tr>${
+          details
+            ? `<tr><td colspan="2" style="padding: 0 0 8px 24px; font-size: 13px; color: #666;">${details}</td></tr>`
+            : ""
+        }`;
+      }).join("")
+    : `<tr><td style="color: #999;">No items found</td></tr>`;
+
+  const discountHtml =
+    data.discountAmount && data.discountAmount > 0
+      ? `<p style="margin: 4px 0; font-size: 16px; color: #16a34a;">Discount: -$${data.discountAmount.toFixed(2)}</p>`
+      : "";
+
+  const scheduledBlock = data.scheduledFor
+    ? `<div style="margin: 12px 0; padding: 12px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 6px; text-align: center;">
+        <p style="margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #92400e; letter-spacing: 1px;">SCHEDULED ORDER</p>
+        <p style="margin: 0; font-size: 22px; font-weight: 700; color: #b45309;">${data.scheduledFor}</p>
+        <p style="margin: 4px 0 0; font-size: 14px; color: #92400e; font-weight: 600;">Do NOT prepare yet.</p>
+      </div>`
+    : `<div style="margin: 12px 0; padding: 10px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 6px; text-align: center;">
+        <p style="margin: 0; font-size: 18px; font-weight: 700; color: #166534;">PICKUP — Ready in 25-40 min</p>
+      </div>`;
+
+  try {
+    await resend.emails.send({
+      from: `Cafe of India <${fromEmail}>`,
+      to: [eprintEmail],
+      subject: `ORDER #${orderNum}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
+          <h1 style="text-align: center; margin: 0 0 4px; font-size: 28px; color: #5C1A1B;">CAFE OF INDIA</h1>
+          <p style="text-align: center; margin: 0 0 16px; font-size: 14px; color: #666;">155 Main St, Maynard, MA 01754</p>
+
+          <div style="border-top: 3px solid #5C1A1B; border-bottom: 3px solid #5C1A1B; padding: 10px 0; margin: 12px 0; text-align: center;">
+            <p style="margin: 0; font-size: 13px; color: #666;">Order #</p>
+            <p style="margin: 0; font-size: 26px; font-weight: 700; color: #5C1A1B;">${orderNum}</p>
+            <p style="margin: 4px 0 0; font-size: 13px; color: #666;">${now}</p>
+          </div>
+
+          ${scheduledBlock}
+
+          <div style="margin: 16px 0;">
+            <h3 style="margin: 0 0 8px; font-size: 14px; color: #666; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">CUSTOMER</h3>
+            <p style="margin: 2px 0; font-size: 16px;"><strong>Name:</strong> ${data.name || "N/A"}</p>
+            <p style="margin: 2px 0; font-size: 16px;"><strong>Phone:</strong> ${data.phone || "N/A"}</p>
+          </div>
+
+          <div style="margin: 16px 0;">
+            <h3 style="margin: 0 0 8px; font-size: 14px; color: #666; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">ITEMS</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${itemsHtml}
+            </table>
+          </div>
+
+          <div style="margin: 16px 0; padding: 12px; background: #f9f9f9; border-radius: 6px;">
+            <p style="margin: 4px 0; font-size: 16px; text-align: right;">Subtotal: <strong>$${data.subtotal.toFixed(2)}</strong></p>
+            ${discountHtml}
+            <p style="margin: 4px 0; font-size: 16px; text-align: right;">Tax (7%): <strong>$${data.tax.toFixed(2)}</strong></p>
+            <div style="border-top: 2px solid #5C1A1B; margin-top: 8px; padding-top: 8px;">
+              <p style="margin: 0; font-size: 22px; font-weight: 700; text-align: right; color: #5C1A1B;">TOTAL: $${data.total.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <p style="text-align: center; font-size: 12px; color: #999; margin-top: 20px;">Paid via Stripe &middot; Online Order</p>
+        </div>
+      `,
+    });
+    console.log(`[Printer] Order #${orderNum} sent to HP ePrint`);
+  } catch (err) {
+    console.error(`[Printer] Failed to send order #${orderNum} to printer:`, err);
+  }
+}
