@@ -47,6 +47,10 @@ export default function CartDrawer() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
 
+  // Tip state
+  const [selectedTip, setSelectedTip] = useState<string>("none");
+  const [customTipInput, setCustomTipInput] = useState("");
+
   const handleClose = () => {
     closeCart();
     setTimeout(() => {
@@ -57,6 +61,8 @@ export default function CartDrawer() {
       setOrderMode("now");
       setSelectedDate(null);
       setSelectedTimeSlot(null);
+      setSelectedTip("none");
+      setCustomTipInput("");
     }, 300);
   };
 
@@ -76,6 +82,15 @@ export default function CartDrawer() {
   const displaySubtotal = appliedPromo ? discountedSubtotal : subtotal;
   const displayTax = appliedPromo ? discountTax : tax;
   const displayTotal = appliedPromo ? discountTotal : total;
+
+  // Calculate tip
+  const tipAmount = selectedTip === "custom"
+    ? Math.max(0, parseFloat(customTipInput) || 0)
+    : selectedTip === "none"
+    ? 0
+    : parseFloat((displaySubtotal * parseFloat(selectedTip) / 100).toFixed(2));
+
+  const finalTotal = parseFloat((displayTotal + tipAmount).toFixed(2));
 
   const orderingAvailable = isOrderingWindowOpen();
 
@@ -176,6 +191,7 @@ export default function CartDrawer() {
             specialInstructions: ci.specialInstructions || undefined,
           })),
           promoCodeId: appliedPromo?.promoCodeId || undefined,
+          tipAmount: tipAmount > 0 ? tipAmount : undefined,
           ...(orderMode === "scheduled" && selectedDate && selectedTimeSlot
             ? {
                 scheduledDate: selectedDate.toLocaleDateString("en-CA", {
@@ -495,6 +511,67 @@ export default function CartDrawer() {
               </div>
             </div>
 
+            {/* Tip / Gratuity */}
+            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Tip / Gratuity</p>
+              <div className="grid grid-cols-5 gap-1.5">
+                {["10", "15", "20", "25"].map((pct) => (
+                  <button
+                    key={pct}
+                    onClick={() => { setSelectedTip(pct); setCustomTipInput(""); }}
+                    className={`py-2 rounded-lg text-sm font-medium transition-colors ${
+                      selectedTip === pct
+                        ? "bg-[#5C1A1B] text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {pct}%
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => { setSelectedTip("none"); setCustomTipInput(""); }}
+                  className={`py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedTip === "none"
+                      ? "bg-gray-300 text-gray-700"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  No Tip
+                </button>
+                <button
+                  onClick={() => setSelectedTip("custom")}
+                  className={`py-2 rounded-lg text-sm font-medium transition-colors ${
+                    selectedTip === "custom"
+                      ? "bg-[#5C1A1B] text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+              {selectedTip === "custom" && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-600">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.50"
+                    placeholder="0.00"
+                    value={customTipInput}
+                    onChange={(e) => setCustomTipInput(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
+                  />
+                </div>
+              )}
+              {tipAmount > 0 && (
+                <p className="text-xs text-gray-500 text-center">
+                  Tip: ${tipAmount.toFixed(2)} &middot; Grand Total: ${finalTotal.toFixed(2)}
+                </p>
+              )}
+            </div>
+
             {/* Scheduled order info */}
             {scheduledDisplayLabel && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -588,7 +665,7 @@ export default function CartDrawer() {
             >
               {isCheckingOut
                 ? "Processing..."
-                : `Pay $${displayTotal.toFixed(2)} with Stripe`}
+                : `Pay $${finalTotal.toFixed(2)} with Stripe`}
             </button>
             <p className="text-xs text-center text-gray-400">
               {orderMode === "scheduled" ? "Scheduled pickup" : "Pickup only"} &middot; 7% MA tax &middot; Secure payment by Stripe

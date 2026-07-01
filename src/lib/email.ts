@@ -56,6 +56,7 @@ interface OrderEmailData {
   tax: number;
   total: number;
   scheduledFor?: string;
+  tipAmount?: number; // TIP: added to interface
 }
 
 export async function sendOrderNotification(data: OrderEmailData) {
@@ -93,6 +94,11 @@ export async function sendOrderNotification(data: OrderEmailData) {
         <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">This order is scheduled for future pickup. Do NOT prepare yet.</p>
       </div>
     `
+    : "";
+
+  // TIP: tip line for restaurant email (shown so owner knows tip amount)
+  const tipHtml = data.tipAmount && data.tipAmount > 0
+    ? `<p style="margin: 2px 0;">Tip: $${data.tipAmount.toFixed(2)}</p>`
     : "";
 
   const result = await resend.emails.send({
@@ -148,6 +154,7 @@ export async function sendOrderNotification(data: OrderEmailData) {
           <div style="margin-top: 12px; text-align: right;">
             <p style="margin: 2px 0;">Subtotal: $${data.subtotal.toFixed(2)}</p>
             <p style="margin: 2px 0;">Tax (7%): $${data.tax.toFixed(2)}</p>
+            ${tipHtml}
             <p style="font-size: 18px; font-weight: bold; color: #5C1A1B; margin: 8px 0;">
               Total: $${data.total.toFixed(2)}
             </p>
@@ -224,6 +231,11 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
       </div>
     `;
 
+  // TIP: tip line for customer receipt
+  const tipHtml = data.tipAmount && data.tipAmount > 0
+    ? `<p style="margin: 4px 0; color: #666;">Tip: $${data.tipAmount.toFixed(2)}</p>`
+    : "";
+
   const result = await resend.emails.send({
     from: `Cafe of India <${fromEmail}>`,
     to: [data.email],
@@ -254,6 +266,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
             <div style="margin-top: 16px; text-align: right; padding-top: 12px; border-top: 2px solid #5C1A1B;">
               <p style="margin: 4px 0; color: #666;">Subtotal: $${data.subtotal.toFixed(2)}</p>
               <p style="margin: 4px 0; color: #666;">Tax (7%): $${data.tax.toFixed(2)}</p>
+              ${tipHtml}
               <p style="font-size: 20px; font-weight: bold; color: #5C1A1B; margin: 8px 0;">
                 Total Paid: $${data.total.toFixed(2)}
               </p>
@@ -293,6 +306,7 @@ interface PrinterOrderData {
   total: number;
   discountAmount?: number;
   scheduledFor?: string;
+  // TIP: intentionally NO tipAmount here — kitchen slip stays clean
 }
 
 export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> {

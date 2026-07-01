@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
       ]);
     }
 
-    // Get scheduled info from order (undefined for regular immediate orders)
     const scheduledFor = (order as any).scheduledFor || undefined;
+    const tipAmount = order.tipAmount || 0; // TIP: get tip from DB
 
     // 5. Send restaurant notification email — AWAIT so Vercel doesn't kill the function
     try {
@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
         tax: order.tax,
         total: order.total,
         scheduledFor,
+        tipAmount, // TIP: pass tip to restaurant email
       });
       console.log("Restaurant email sent successfully");
     } catch (err) {
@@ -103,13 +104,14 @@ export async function POST(request: NextRequest) {
         tax: order.tax,
         total: order.total,
         scheduledFor,
+        tipAmount, // TIP: pass tip to customer email
       });
       console.log("Customer email sent successfully");
     } catch (err) {
       console.error("Customer email failed:", err);
     }
 
-    // 7. Send order to HP ePrint for auto-printing (non-blocking, won't affect existing flow)
+    // 7. Send order to HP ePrint — NO tip passed (kitchen slip should not show tip)
     sendOrderToPrinter({
       orderId: order.id,
       name: order.name,
@@ -119,7 +121,9 @@ export async function POST(request: NextRequest) {
       tax: order.tax,
       total: order.total,
       discountAmount: order.discountAmount ?? 0,
+      
       scheduledFor,
+      // TIP: intentionally NOT passing tipAmount — kitchen slip stays clean
     }).catch((err) => console.error("[Printer] Unhandled error:", err));
 
     return NextResponse.json({

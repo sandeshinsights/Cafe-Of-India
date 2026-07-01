@@ -40,6 +40,7 @@ model Order {
   promoCode       PromoCode? @relation(fields: [promoCodeId], references: [id])
   usages          PromoCodeUsage[]
   scheduledFor    String?
+  tipAmount       Float      @default(0) @map("tip_amount")
   @@map("orders")
 }
 

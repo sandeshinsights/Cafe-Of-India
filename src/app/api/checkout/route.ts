@@ -32,10 +32,10 @@ const checkoutSchema = z.object({
   promoCodeId: z.string().optional(),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
+  tipAmount: z.number().min(0).optional(), // TIP: accept tip from cart
 });
 
 function getMenuItemPrice(itemId: string): number | null {
-  // Extract base ID: "menu-1-none-none-1781484924006" → "menu-1"
   const baseId = itemId.split("-").slice(0, 2).join("-");
 
   for (const category of menuData.categories) {
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime } = parsed;
+    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount } = parsed; // TIP: destructure tipAmount
 
     // --- Handle ordering window vs scheduled time ---
     const hasScheduledDate = typeof scheduledDate === "string" && scheduledDate.trim() !== "";
@@ -59,16 +59,14 @@ export async function POST(req: NextRequest) {
     let scheduledForFormatted: string | undefined;
 
     if (hasScheduledDate && hasScheduledTime) {
-      // Scheduled order — validate the chosen time slot
-            if (!isValidScheduledTime(scheduledDate, scheduledTime)) {
+      if (!isValidScheduledTime(scheduledDate, scheduledTime)) {
         return NextResponse.json(
           { error: "Invalid scheduled time. Please choose a different time slot." },
           { status: 400 }
         );
       }
       scheduledForFormatted = formatScheduledPickup(scheduledDate, scheduledTime);
-      } else {
-      // Immediate order — check ordering window
+    } else {
       if (!isOrderingWindowOpen()) {
         return NextResponse.json(
           { error: getOrderingClosedReason() || "Orders are not available at this time." },
@@ -136,7 +134,6 @@ export async function POST(req: NextRequest) {
           });
 
           if (!promo.maxUsesPerCustomer || customerUsageCount < promo.maxUsesPerCustomer) {
-            // Check order sequence
             let sequenceValid = true;
             if (promo.orderNumber) {
               const totalPaidOrders = await prisma.order.count({
@@ -165,7 +162,8 @@ export async function POST(req: NextRequest) {
     const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
     const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
     const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
-    const total = parseFloat((discountedSubtotal + tax).toFixed(2));
+    const tip = parseFloat((tipAmount || 0).toFixed(2)); // TIP: get tip value
+    const total = parseFloat((discountedSubtotal + tax + tip).toFixed(2)); // TIP: include tip in total
 
     // 4. Apply discount by reducing the first line item's price
     if (discountAmount > 0) {
@@ -178,6 +176,21 @@ export async function POST(req: NextRequest) {
         const currentDesc = firstItem.price_data.product_data?.description || "";
         firstItem.price_data.product_data!.description = `${currentDesc} | Promo: -$${discountAmount.toFixed(2)}`.trim();
       }
+    }
+
+    // TIP: Add tip as separate Stripe line item
+    if (tip > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Tip / Gratuity",
+            description: "Thank you for your generosity!",
+          },
+          unit_amount: Math.round(tip * 100),
+        },
+        quantity: 1,
+      });
     }
 
     // 5. Create Stripe Checkout Session
@@ -193,11 +206,12 @@ export async function POST(req: NextRequest) {
         customer_phone: phone,
         promo_code_id: validPromoCodeId || "",
         discount_amount: discountAmount.toFixed(2),
+        tip_amount: tip.toFixed(2), // TIP: pass tip in metadata
         ...(scheduledForFormatted ? { scheduled_for: scheduledForFormatted } : {}),
       },
     });
 
-    // 6. Save order to database (promo usage recorded in verify-order on payment success)
+    // 6. Save order to database
     await prisma.order.create({
       data: {
         name,
@@ -208,6 +222,7 @@ export async function POST(req: NextRequest) {
         tax,
         total,
         discountAmount,
+        tipAmount: tip, // TIP: store tip in DB
         stripeSessionId: session.id,
         status: "pending",
         promoCodeId: validPromoCodeId,
