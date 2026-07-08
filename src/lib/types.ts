@@ -121,6 +121,7 @@ export interface HighlightCard {
 export interface AboutContent {
   headline: string;
   description: string;
+  image?: string;
   highlights: HighlightCard[];
 }
 
@@ -152,6 +153,7 @@ export interface CateringMenuItem {
 export interface CateringContent {
   headline: string;
   description: string;
+  banner?: string;          
   eventTypes: string[];
   formFields: CateringFormField[];
   menu: CateringMenuItem[];

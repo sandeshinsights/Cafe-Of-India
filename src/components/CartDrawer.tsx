@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h } from "@/lib/ordering-hours";
+import { getDeliveryFee, getDeliveryQuote, isEligibleForDelivery, validateDeliveryAddress } from "@/lib/delivery";
 import TimeSlotPicker from "./TimeSlotPicker";
 
 interface AppliedPromo {
@@ -51,6 +52,16 @@ export default function CartDrawer() {
   const [selectedTip, setSelectedTip] = useState<string>("none");
   const [customTipInput, setCustomTipInput] = useState("");
 
+  // DELIVERY: Delivery state
+  const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "delivery">("pickup");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryApt, setDeliveryApt] = useState("");
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
+
+  // DELIVERY: Quote state
+  const [quotedFee, setQuotedFee] = useState<number>(0);
+  const [quoteLoading, setQuoteLoading] = useState(false);
+
   const handleClose = () => {
     closeCart();
     setTimeout(() => {
@@ -63,6 +74,13 @@ export default function CartDrawer() {
       setSelectedTimeSlot(null);
       setSelectedTip("none");
       setCustomTipInput("");
+      // DELIVERY: reset delivery state
+      setFulfillmentType("pickup");
+      setDeliveryAddress("");
+      setDeliveryApt("");
+      setDeliveryInstructions("");
+      setQuotedFee(0);
+      setQuoteLoading(false);
     }, 300);
   };
 
@@ -90,9 +108,38 @@ export default function CartDrawer() {
     ? 0
     : parseFloat((displaySubtotal * parseFloat(selectedTip) / 100).toFixed(2));
 
-  const finalTotal = parseFloat((displayTotal + tipAmount).toFixed(2));
+  // DELIVERY: Calculate delivery fee (from quote, not sync)
+  const deliveryFee = fulfillmentType === "delivery" ? quotedFee : 0;
+  const orderTotal = parseFloat((displayTotal + deliveryFee).toFixed(2));
+  const finalTotal = parseFloat((orderTotal + tipAmount).toFixed(2));
 
   const orderingAvailable = isOrderingWindowOpen();
+
+  // DELIVERY: Delivery eligibility check
+  const deliveryEligibility = isEligibleForDelivery(displaySubtotal);
+  const addressValidation = validateDeliveryAddress(deliveryAddress);
+
+  // DELIVERY: Get delivery quote when address is valid
+  useEffect(() => {
+    if (fulfillmentType !== "delivery" || !addressValidation.valid) {
+      setQuotedFee(0);
+      return;
+    }
+
+    setQuoteLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const quote = await getDeliveryQuote(deliveryAddress);
+        setQuotedFee(quote.customerPays);
+      } catch {
+        setQuotedFee(0);
+      } finally {
+        setQuoteLoading(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [fulfillmentType, deliveryAddress, addressValidation.valid]);
 
   const scheduledDisplayLabel =
     orderMode === "scheduled" && selectedDate && selectedTimeSlot
@@ -168,6 +215,11 @@ export default function CartDrawer() {
       setCheckoutError("Please enter a valid phone number");
       return;
     }
+    // DELIVERY: validate delivery address if delivery selected
+    if (fulfillmentType === "delivery" && !addressValidation.valid) {
+      setCheckoutError(addressValidation.message || "Please enter a valid delivery address");
+      return;
+    }
     if (items.length === 0) return;
 
     setIsCheckingOut(true);
@@ -192,6 +244,16 @@ export default function CartDrawer() {
           })),
           promoCodeId: appliedPromo?.promoCodeId || undefined,
           tipAmount: tipAmount > 0 ? tipAmount : undefined,
+          // DELIVERY: send delivery info
+          ...(fulfillmentType === "delivery"
+            ? {
+                isDelivery: true,
+                deliveryAddress: deliveryAddress.trim(),
+                deliveryApt: deliveryApt.trim() || undefined,
+                deliveryInstructions: deliveryInstructions.trim() || undefined,
+                deliveryFee,
+              }
+            : {}),
           ...(orderMode === "scheduled" && selectedDate && selectedTimeSlot
             ? {
                 scheduledDate: selectedDate.toLocaleDateString("en-CA", {
@@ -245,7 +307,7 @@ export default function CartDrawer() {
             <h3 className="text-lg font-bold text-[#5C1A1B] flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
               {step === "review" && `Your Cart (${itemCount})`}
-              {step === "fulfillment" && "Choose Pickup or Delivery"}
+              {step === "fulfillment" && "Pickup or Delivery"}
               {step === "checkout" && "Checkout Details"}
             </h3>
           </div>
@@ -440,40 +502,107 @@ export default function CartDrawer() {
 
         {/* Step 2: Pickup or Delivery selection */}
         {step === "fulfillment" && (
-          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex flex-col items-center justify-center p-6 space-y-4">
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 space-y-4">
+            {/* Scheduled banner */}
             {orderMode === "scheduled" && scheduledDisplayLabel && (
               <div className="w-full bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
-                <p className="text-xs font-medium text-amber-800">Scheduled Pickup</p>
+                <p className="text-xs font-medium text-amber-800">
+                  {fulfillmentType === "delivery" ? "Scheduled Delivery" : "Scheduled Pickup"}
+                </p>
                 <p className="text-sm text-amber-700 font-medium">{scheduledDisplayLabel}</p>
               </div>
             )}
 
-            <button
-              onClick={() => setStep("checkout")}
-              className="w-full border-2 border-[#5C1A1B] rounded-xl p-6 text-center hover:bg-[#5C1A1B]/5 transition-colors cursor-pointer group"
-            >
-              <MapPin className="w-10 h-10 text-[#5C1A1B] mx-auto mb-3" />
-              <p className="text-lg font-bold text-[#5C1A1B]">Pickup</p>
-              <p className="text-sm text-gray-500 mt-1">
-                155 Main St, Maynard, MA 01754
-              </p>
-              <p className="text-xs text-gray-400 mt-1">
-                {orderMode === "scheduled"
-                  ? `Scheduled for ${scheduledDisplayLabel}`
-                  : "Ready in 25-40 minutes"}
-              </p>
-            </button>
+            {/* DELIVERY: Two option buttons side by side */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => { setFulfillmentType("pickup"); setStep("checkout"); }}
+                className={`border-2 rounded-xl p-4 text-center transition-colors cursor-pointer ${
+                  fulfillmentType === "pickup"
+                    ? "border-[#5C1A1B] bg-[#5C1A1B]/5"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <MapPin className="w-8 h-8 text-[#5C1A1B] mx-auto mb-2" />
+                <p className="text-base font-bold text-[#5C1A1B]">Pickup</p>
+                <p className="text-xs text-gray-500 mt-1">155 Main St, Maynard</p>
+              </button>
 
-            <div className="w-full border-2 border-gray-200 rounded-xl p-6 text-center opacity-50 cursor-not-allowed bg-gray-50 relative">
-              <Truck className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-              <p className="text-lg font-bold text-gray-400">Delivery</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Coming soon
-              </p>
-              <span className="absolute top-3 right-3 text-xs bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full">
-                Soon
-              </span>
+              <button
+                onClick={() => setFulfillmentType("delivery")}
+                className={`border-2 rounded-xl p-4 text-center transition-colors cursor-pointer ${
+                  fulfillmentType === "delivery"
+                    ? "border-[#C4973B] bg-[#C4973B]/5"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <Truck className="w-8 h-8 text-[#C4973B] mx-auto mb-2" />
+                <p className="text-base font-bold text-[#5C1A1B]">Delivery</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {fulfillmentType === "delivery"
+                    ? quoteLoading
+                      ? "Calculating..."
+                      : quotedFee > 0
+                        ? `$${quotedFee.toFixed(2)} fee`
+                        : "Enter address"
+                    : "To your door"}
+                </p>
+              </button>
             </div>
+
+            {/* DELIVERY: Address form (only when delivery selected) */}
+            {fulfillmentType === "delivery" && (
+              <div className="space-y-3 pt-1">
+                {/* Min order warning */}
+                {!deliveryEligibility.eligible && (
+                  <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                    {deliveryEligibility.message}
+                  </p>
+                )}
+
+                <input
+                  type="text"
+                  placeholder="Street address *"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
+                />
+                <input
+                  type="text"
+                  placeholder="Apt / Suite / Floor (optional)"
+                  value={deliveryApt}
+                  onChange={(e) => setDeliveryApt(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
+                />
+                <input
+                  type="text"
+                  placeholder="Delivery instructions (optional)"
+                  value={deliveryInstructions}
+                  onChange={(e) => setDeliveryInstructions(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
+                />
+
+                <button
+                  disabled={
+                    !deliveryEligibility.eligible ||
+                    !addressValidation.valid ||
+                    quoteLoading ||
+                    quotedFee === 0
+                  }
+                  onClick={() => setStep("checkout")}
+                  className={`w-full font-bold py-3 rounded-lg transition-colors ${
+                    !deliveryEligibility.eligible ||
+                    !addressValidation.valid ||
+                    quoteLoading ||
+                    quotedFee === 0
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-[#C4973B] text-white hover:bg-[#d4a84b]"
+                  }`}
+                >
+                  {quoteLoading ? "Calculating fee..." : "Continue"}
+                </button>
+              </div>
+            )}
 
             <p className="text-xs text-center text-gray-400">
               7% MA sales tax applies &middot; Secure payment by Stripe
@@ -505,9 +634,19 @@ export default function CartDrawer() {
                 <span>Tax (7%)</span>
                 <span>${displayTax.toFixed(2)}</span>
               </div>
+              {/* DELIVERY: Delivery fee line */}
+              {fulfillmentType === "delivery" && deliveryFee > 0 && (
+                <div className="flex justify-between text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <Truck className="w-3 h-3" />
+                    Delivery Fee
+                  </span>
+                  <span>${deliveryFee.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between font-bold text-[#5C1A1B] text-base pt-1 border-t border-gray-200">
                 <span>Total</span>
-                <span>${displayTotal.toFixed(2)}</span>
+                <span>${orderTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -575,8 +714,33 @@ export default function CartDrawer() {
             {/* Scheduled order info */}
             {scheduledDisplayLabel && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-xs font-medium text-amber-800">Scheduled Pickup</p>
+                <p className="text-xs font-medium text-amber-800">
+                  {fulfillmentType === "delivery" ? "Scheduled Delivery" : "Scheduled Pickup"}
+                </p>
                 <p className="text-sm text-amber-700 font-medium">{scheduledDisplayLabel}</p>
+              </div>
+            )}
+
+            {/* DELIVERY: Delivery address summary */}
+            {fulfillmentType === "delivery" && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-blue-800">Delivering to</p>
+                    <p className="text-sm text-blue-700 font-medium">
+                      {deliveryAddress}{deliveryApt ? `, ${deliveryApt}` : ""}
+                    </p>
+                    {deliveryInstructions && (
+                      <p className="text-xs text-blue-600 mt-0.5">{deliveryInstructions}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setStep("fulfillment")}
+                    className="text-xs text-blue-600 hover:text-blue-800 underline shrink-0 ml-2"
+                  >
+                    Change
+                  </button>
+                </div>
               </div>
             )}
 
@@ -668,7 +832,7 @@ export default function CartDrawer() {
                 : `Pay $${finalTotal.toFixed(2)} with Stripe`}
             </button>
             <p className="text-xs text-center text-gray-400">
-              {orderMode === "scheduled" ? "Scheduled pickup" : "Pickup only"} &middot; 7% MA tax &middot; Secure payment by Stripe
+              {fulfillmentType === "delivery" ? "Delivery" : orderMode === "scheduled" ? "Scheduled pickup" : "Pickup only"} &middot; 7% MA tax &middot; Secure payment by Stripe
             </p>
           </div>
         )}

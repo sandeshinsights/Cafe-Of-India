@@ -56,7 +56,13 @@ interface OrderEmailData {
   tax: number;
   total: number;
   scheduledFor?: string;
-  tipAmount?: number; // TIP: added to interface
+  tipAmount?: number;
+  // DELIVERY
+  isDelivery?: boolean;
+  deliveryAddress?: string | null;
+  deliveryApt?: string | null;
+  deliveryInstructions?: string | null;
+  deliveryFee?: number;
 }
 
 export async function sendOrderNotification(data: OrderEmailData) {
@@ -91,24 +97,44 @@ export async function sendOrderNotification(data: OrderEmailData) {
       <div style="margin: 16px 0; padding: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; text-align: center;">
         <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.9);">Scheduled Order</p>
         <p style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${data.scheduledFor}</p>
-        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">This order is scheduled for future pickup. Do NOT prepare yet.</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">This order is scheduled for future ${data.isDelivery ? "delivery" : "pickup"}. Do NOT prepare yet.</p>
       </div>
     `
     : "";
 
-  // TIP: tip line for restaurant email (shown so owner knows tip amount)
   const tipHtml = data.tipAmount && data.tipAmount > 0
     ? `<p style="margin: 2px 0;">Tip: $${data.tipAmount.toFixed(2)}</p>`
+    : "";
+
+  // DELIVERY: delivery fee line for restaurant email
+  const deliveryFeeHtml = data.isDelivery && data.deliveryFee && data.deliveryFee > 0
+    ? `<p style="margin: 2px 0;">Delivery Fee: $${data.deliveryFee.toFixed(2)}</p>`
+    : "";
+
+  // DELIVERY: address block for restaurant email
+  const deliveryAddressHtml = data.isDelivery && data.deliveryAddress
+    ? `
+      <tr>
+        <td style="padding: 4px 0;"><strong>Deliver To:</strong></td>
+        <td>${data.deliveryAddress}${data.deliveryApt ? `, ${data.deliveryApt}` : ""}</td>
+      </tr>
+      ${data.deliveryInstructions ? `
+      <tr>
+        <td style="padding: 4px 0;"><strong>Delivery Notes:</strong></td>
+        <td>${data.deliveryInstructions}</td>
+      </tr>
+      ` : ""}
+    `
     : "";
 
   const result = await resend.emails.send({
     from: `Cafe of India Website <${fromEmail}>`,
     to: [restaurantEmail],
-    subject: `${data.scheduledFor ? "[SCHEDULED] " : ""}New Order #${data.orderId.slice(0, 8)} from ${data.name} — $${data.total.toFixed(2)}`,
+    subject: `${data.scheduledFor ? "[SCHEDULED] " : ""}${data.isDelivery ? "[DELIVERY] " : ""}New Order #${data.orderId.slice(0, 8)} from ${data.name} — $${data.total.toFixed(2)}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #5C1A1B;">${data.scheduledFor ? "Scheduled Order Received!" : "New Order Received!"}</h2>
-        <p>${data.scheduledFor ? "A customer has placed a scheduled order through the website." : "A customer has placed a paid order through the website."}</p>
+        <p>${data.scheduledFor ? `A customer has placed a scheduled ${data.isDelivery ? "delivery" : "pickup"} order through the website.` : `A customer has placed a paid ${data.isDelivery ? "delivery" : "pickup"} order through the website.`}</p>
 
         ${scheduledBanner}
 
@@ -127,6 +153,7 @@ export async function sendOrderNotification(data: OrderEmailData) {
               <td style="padding: 4px 0;"><strong>Phone:</strong></td>
               <td><a href="tel:${data.phone}">${data.phone}</a></td>
             </tr>
+            ${deliveryAddressHtml}
             ${data.scheduledFor ? `
             <tr>
               <td style="padding: 4px 0;"><strong style="color: #d97706;">Scheduled For:</strong></td>
@@ -155,15 +182,16 @@ export async function sendOrderNotification(data: OrderEmailData) {
             <p style="margin: 2px 0;">Subtotal: $${data.subtotal.toFixed(2)}</p>
             <p style="margin: 2px 0;">Tax (7%): $${data.tax.toFixed(2)}</p>
             ${tipHtml}
+            ${deliveryFeeHtml}
             <p style="font-size: 18px; font-weight: bold; color: #5C1A1B; margin: 8px 0;">
               Total: $${data.total.toFixed(2)}
             </p>
           </div>
         </div>
 
-        <div style="margin-top: 20px; padding: 12px; background: #FFF3CD; border-radius: 8px; border-left: 4px solid #C4973B;">
-          <strong style="color: #856404;">Order Type:</strong> Pickup Only<br>
-          <strong style="color: #856404;">Order ID:</strong> ${data.orderId}
+        <div style="margin-top: 20px; padding: 12px; background: ${data.isDelivery ? "#DBEAFE" : "#FFF3CD"}; border-radius: 8px; border-left: 4px solid ${data.isDelivery ? "#3B82F6" : "#C4973B"};">
+          <strong style="color: ${data.isDelivery ? "#1E40AF" : "#856404"};">Order Type:</strong> ${data.isDelivery ? "Delivery" : "Pickup Only"}<br>
+          <strong style="color: ${data.isDelivery ? "#1E40AF" : "#856404"};">Order ID:</strong> ${data.orderId}
         </div>
       </div>
     `,
@@ -200,46 +228,76 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
       <div style="margin-bottom: 16px; padding: 14px; background: linear-gradient(135deg, #f59e0b, #d97706); border-radius: 8px; text-align: center;">
         <p style="margin: 0 0 4px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.9);">Scheduled Order</p>
         <p style="margin: 0; font-size: 18px; font-weight: 700; color: #fff;">${data.scheduledFor}</p>
-        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">Your order will be ready for pickup at this time.</p>
+        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(255,255,255,0.8);">${data.isDelivery ? "Your order will be delivered at this time." : "Your order will be ready for pickup at this time."}</p>
       </div>
     `
     : "";
 
-  const introText = data.scheduledFor
-    ? `We've received your scheduled order. It will be prepared and ready for pickup at the scheduled time.`
-    : `We've received your order and are preparing it now. Here are your order details:`;
+  // DELIVERY: dynamic intro text based on fulfillment type
+  const introText = data.isDelivery
+    ? data.scheduledFor
+      ? `We've received your scheduled delivery order. It will be delivered at the scheduled time.`
+      : `We've received your order and are preparing it for delivery. Here are your order details:`
+    : data.scheduledFor
+      ? `We've received your scheduled order. It will be prepared and ready for pickup at the scheduled time.`
+      : `We've received your order and are preparing it now. Here are your order details:`;
 
-  const pickupInfo = data.scheduledFor
-    ? `
-      <div style="background: #fffbeb; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
-        <h3 style="color: #d97706; margin-top: 0;">Scheduled Pickup</h3>
-        <p style="margin: 4px 0; font-size: 16px; font-weight: 600;">${data.scheduledFor}</p>
-        <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
-        <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
-        <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
-        <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
-        <p style="margin: 8px 0 0; color: #92400e; font-style: italic;">Please arrive around your scheduled time. Call us if you need to make changes.</p>
-      </div>
-    `
-    : `
-      <div style="background: #FBF8F1; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4973B;">
-        <h3 style="color: #5C1A1B; margin-top: 0;">Pickup Information</h3>
-        <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
-        <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
-        <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
-        <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
-      </div>
-    `;
+  // DELIVERY: fulfillment info block — covers all 4 combos (pickup/delivery × ASAP/scheduled)
+  const fulfillmentInfo = data.isDelivery
+    ? data.scheduledFor
+      ? `
+        <div style="background: #fffbeb; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <h3 style="color: #d97706; margin-top: 0;">Scheduled Delivery</h3>
+          <p style="margin: 4px 0; font-size: 16px; font-weight: 600;">${data.scheduledFor}</p>
+          <p style="margin: 4px 0;"><strong>Deliver To:</strong> ${data.deliveryAddress || "N/A"}${data.deliveryApt ? `, ${data.deliveryApt}` : ""}</p>
+          ${data.deliveryInstructions ? `<p style="margin: 4px 0;"><strong>Instructions:</strong> ${data.deliveryInstructions}</p>` : ""}
+          <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+          <p style="margin: 8px 0 0; color: #92400e; font-style: italic;">Please ensure someone is available to receive the order at the scheduled time.</p>
+        </div>
+      `
+      : `
+        <div style="background: #DBEAFE; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+          <h3 style="color: #1E40AF; margin-top: 0;">Delivery Information</h3>
+          <p style="margin: 4px 0;"><strong>Deliver To:</strong> ${data.deliveryAddress || "N/A"}${data.deliveryApt ? `, ${data.deliveryApt}` : ""}</p>
+          ${data.deliveryInstructions ? `<p style="margin: 4px 0;"><strong>Instructions:</strong> ${data.deliveryInstructions}</p>` : ""}
+          <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+        </div>
+      `
+    : data.scheduledFor
+      ? `
+        <div style="background: #fffbeb; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+          <h3 style="color: #d97706; margin-top: 0;">Scheduled Pickup</h3>
+          <p style="margin: 4px 0; font-size: 16px; font-weight: 600;">${data.scheduledFor}</p>
+          <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
+          <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
+          <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
+          <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+          <p style="margin: 8px 0 0; color: #92400e; font-style: italic;">Please arrive around your scheduled time. Call us if you need to make changes.</p>
+        </div>
+      `
+      : `
+        <div style="background: #FBF8F1; padding: 16px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #C4973B;">
+          <h3 style="color: #5C1A1B; margin-top: 0;">Pickup Information</h3>
+          <p style="margin: 4px 0;"><strong>Location:</strong> Cafe of India</p>
+          <p style="margin: 4px 0;"><strong>Address:</strong> 155 Main St, Maynard, MA 01754</p>
+          <p style="margin: 4px 0;"><strong>Phone:</strong> (978) 897-9227</p>
+          <p style="margin: 4px 0;"><strong>Order ID:</strong> ${data.orderId.slice(0, 8)}</p>
+        </div>
+      `;
 
-  // TIP: tip line for customer receipt
   const tipHtml = data.tipAmount && data.tipAmount > 0
     ? `<p style="margin: 4px 0; color: #666;">Tip: $${data.tipAmount.toFixed(2)}</p>`
+    : "";
+
+  // DELIVERY: delivery fee line for customer receipt
+  const deliveryFeeHtml = data.isDelivery && data.deliveryFee && data.deliveryFee > 0
+    ? `<p style="margin: 4px 0; color: #666;">Delivery Fee: $${data.deliveryFee.toFixed(2)}</p>`
     : "";
 
   const result = await resend.emails.send({
     from: `Cafe of India <${fromEmail}>`,
     to: [data.email],
-    subject: `${data.scheduledFor ? "[Scheduled] " : ""}Order Confirmed! Your Cafe of India order has been received`,
+    subject: `${data.scheduledFor ? "[Scheduled] " : ""}${data.isDelivery ? "[Delivery] " : ""}Order Confirmed! Your Cafe of India order has been received`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
         <div style="background: #5C1A1B; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
@@ -267,13 +325,14 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
               <p style="margin: 4px 0; color: #666;">Subtotal: $${data.subtotal.toFixed(2)}</p>
               <p style="margin: 4px 0; color: #666;">Tax (7%): $${data.tax.toFixed(2)}</p>
               ${tipHtml}
+              ${deliveryFeeHtml}
               <p style="font-size: 20px; font-weight: bold; color: #5C1A1B; margin: 8px 0;">
                 Total Paid: $${data.total.toFixed(2)}
               </p>
             </div>
           </div>
 
-          ${pickupInfo}
+          ${fulfillmentInfo}
 
           <p style="color: #666; font-size: 14px;">
             Questions about your order? Call us at <a href="tel:+19788979227" style="color: #5C1A1B;">(978) 897-9227</a>.
@@ -306,7 +365,13 @@ interface PrinterOrderData {
   total: number;
   discountAmount?: number;
   scheduledFor?: string;
-  // TIP: intentionally NO tipAmount here — kitchen slip stays clean
+  // DELIVERY: delivery info for kitchen slip
+  isDelivery?: boolean;
+  deliveryAddress?: string | null;
+  deliveryApt?: string | null;
+  deliveryInstructions?: string | null;
+  deliveryFee?: number;
+  // Tip intentionally NOT here — kitchen slip stays clean
 }
 
 export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> {
@@ -351,15 +416,34 @@ export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> 
       ? `<p style="margin: 4px 0; font-size: 16px; color: #16a34a;">Discount: -$${data.discountAmount.toFixed(2)}</p>`
       : "";
 
-  const scheduledBlock = data.scheduledFor
+  // DELIVERY: delivery fee line for kitchen slip
+  const deliveryFeeHtml = data.isDelivery && data.deliveryFee && data.deliveryFee > 0
+    ? `<p style="margin: 4px 0; font-size: 16px; text-align: right;">Delivery Fee: <strong>$${data.deliveryFee.toFixed(2)}</strong></p>`
+    : "";
+
+  // DELIVERY: dynamic fulfillment block for kitchen slip
+  const fulfillmentBlock = data.scheduledFor
     ? `<div style="margin: 12px 0; padding: 12px; background: #fef3c7; border: 2px solid #f59e0b; border-radius: 6px; text-align: center;">
-        <p style="margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #92400e; letter-spacing: 1px;">SCHEDULED ORDER</p>
+        <p style="margin: 0 0 2px; font-size: 14px; font-weight: 700; color: #92400e; letter-spacing: 1px;">SCHEDULED ${data.isDelivery ? "DELIVERY" : "ORDER"}</p>
         <p style="margin: 0; font-size: 22px; font-weight: 700; color: #b45309;">${data.scheduledFor}</p>
         <p style="margin: 4px 0 0; font-size: 14px; color: #92400e; font-weight: 600;">Do NOT prepare yet.</p>
       </div>`
-    : `<div style="margin: 12px 0; padding: 10px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 6px; text-align: center;">
-        <p style="margin: 0; font-size: 18px; font-weight: 700; color: #166534;">PICKUP — Ready in 25-40 min</p>
-      </div>`;
+    : data.isDelivery
+      ? `<div style="margin: 12px 0; padding: 10px; background: #DBEAFE; border: 2px solid #3B82F6; border-radius: 6px; text-align: center;">
+          <p style="margin: 0; font-size: 18px; font-weight: 700; color: #1E40AF;">DELIVERY</p>
+        </div>`
+      : `<div style="margin: 12px 0; padding: 10px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 6px; text-align: center;">
+          <p style="margin: 0; font-size: 18px; font-weight: 700; color: #166534;">PICKUP — Ready in 25-40 min</p>
+        </div>`;
+
+  // DELIVERY: address block for kitchen slip
+  const deliveryAddressBlock = data.isDelivery && data.deliveryAddress
+    ? `<div style="margin: 16px 0;">
+        <h3 style="margin: 0 0 8px; font-size: 14px; color: #666; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">DELIVER TO</h3>
+        <p style="margin: 2px 0; font-size: 16px;">${data.deliveryAddress}${data.deliveryApt ? `, ${data.deliveryApt}` : ""}</p>
+        ${data.deliveryInstructions ? `<p style="margin: 2px 0; font-size: 14px; color: #666;">Instructions: ${data.deliveryInstructions}</p>` : ""}
+      </div>`
+    : "";
 
   try {
     await resend.emails.send({
@@ -377,13 +461,15 @@ export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> 
             <p style="margin: 4px 0 0; font-size: 13px; color: #666;">${now}</p>
           </div>
 
-          ${scheduledBlock}
+          ${fulfillmentBlock}
 
           <div style="margin: 16px 0;">
             <h3 style="margin: 0 0 8px; font-size: 14px; color: #666; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">CUSTOMER</h3>
             <p style="margin: 2px 0; font-size: 16px;"><strong>Name:</strong> ${data.name || "N/A"}</p>
             <p style="margin: 2px 0; font-size: 16px;"><strong>Phone:</strong> ${data.phone || "N/A"}</p>
           </div>
+
+          ${deliveryAddressBlock}
 
           <div style="margin: 16px 0;">
             <h3 style="margin: 0 0 8px; font-size: 14px; color: #666; letter-spacing: 1px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">ITEMS</h3>
@@ -396,6 +482,7 @@ export async function sendOrderToPrinter(data: PrinterOrderData): Promise<void> 
             <p style="margin: 4px 0; font-size: 16px; text-align: right;">Subtotal: <strong>$${data.subtotal.toFixed(2)}</strong></p>
             ${discountHtml}
             <p style="margin: 4px 0; font-size: 16px; text-align: right;">Tax (7%): <strong>$${data.tax.toFixed(2)}</strong></p>
+            ${deliveryFeeHtml}
             <div style="border-top: 2px solid #5C1A1B; margin-top: 8px; padding-top: 8px;">
               <p style="margin: 0; font-size: 22px; font-weight: 700; text-align: right; color: #5C1A1B;">TOTAL: $${data.total.toFixed(2)}</p>
             </div>

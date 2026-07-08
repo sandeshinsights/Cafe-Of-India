@@ -32,7 +32,13 @@ const checkoutSchema = z.object({
   promoCodeId: z.string().optional(),
   scheduledDate: z.string().optional(),
   scheduledTime: z.string().optional(),
-  tipAmount: z.number().min(0).optional(), // TIP: accept tip from cart
+  tipAmount: z.number().min(0).optional(),
+  // DELIVERY
+  isDelivery: z.boolean().optional(),
+  deliveryAddress: z.string().optional(),
+  deliveryApt: z.string().optional(),
+  deliveryInstructions: z.string().optional(),
+  deliveryFee: z.number().min(0).optional(),
 });
 
 function getMenuItemPrice(itemId: string): number | null {
@@ -50,7 +56,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount } = parsed; // TIP: destructure tipAmount
+    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount, isDelivery, deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee } = parsed;
 
     // --- Handle ordering window vs scheduled time ---
     const hasScheduledDate = typeof scheduledDate === "string" && scheduledDate.trim() !== "";
@@ -96,7 +102,7 @@ export async function POST(req: NextRequest) {
       }
       const description = descParts.length > 0
         ? descParts.join(" | ")
-        : "Pickup order";
+        : isDelivery ? "Delivery order" : "Pickup order";
 
       lineItems.push({
         price_data: {
@@ -162,8 +168,9 @@ export async function POST(req: NextRequest) {
     const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
     const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
     const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
-    const tip = parseFloat((tipAmount || 0).toFixed(2)); // TIP: get tip value
-    const total = parseFloat((discountedSubtotal + tax + tip).toFixed(2)); // TIP: include tip in total
+    const tip = parseFloat((tipAmount || 0).toFixed(2));
+    const deliveryFeeAmount = isDelivery ? (deliveryFee || 0) : 0;
+    const total = parseFloat((discountedSubtotal + tax + tip + deliveryFeeAmount).toFixed(2));
 
     // 4. Apply discount by reducing the first line item's price
     if (discountAmount > 0) {
@@ -178,7 +185,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // TIP: Add tip as separate Stripe line item
+    // Add tip as separate Stripe line item
     if (tip > 0) {
       lineItems.push({
         price_data: {
@@ -188,6 +195,21 @@ export async function POST(req: NextRequest) {
             description: "Thank you for your generosity!",
           },
           unit_amount: Math.round(tip * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    // DELIVERY: Add delivery fee as separate Stripe line item
+    if (isDelivery && deliveryFeeAmount > 0) {
+      lineItems.push({
+        price_data: {
+          currency: "usd",
+          product_data: {
+            name: "Delivery Fee",
+            description: "Flat-rate delivery to your address",
+          },
+          unit_amount: Math.round(deliveryFeeAmount * 100),
         },
         quantity: 1,
       });
@@ -206,7 +228,12 @@ export async function POST(req: NextRequest) {
         customer_phone: phone,
         promo_code_id: validPromoCodeId || "",
         discount_amount: discountAmount.toFixed(2),
-        tip_amount: tip.toFixed(2), // TIP: pass tip in metadata
+        tip_amount: tip.toFixed(2),
+        is_delivery: isDelivery ? "true" : "false",
+        delivery_address: deliveryAddress || "",
+        delivery_apt: deliveryApt || "",
+        delivery_instructions: deliveryInstructions || "",
+        delivery_fee: deliveryFeeAmount.toFixed(2),
         ...(scheduledForFormatted ? { scheduled_for: scheduledForFormatted } : {}),
       },
     });
@@ -222,10 +249,15 @@ export async function POST(req: NextRequest) {
         tax,
         total,
         discountAmount,
-        tipAmount: tip, // TIP: store tip in DB
+        tipAmount: tip,
         stripeSessionId: session.id,
         status: "pending",
         promoCodeId: validPromoCodeId,
+        isDelivery: isDelivery || false,
+        deliveryAddress: isDelivery ? (deliveryAddress || null) : null,
+        deliveryApt: isDelivery ? (deliveryApt || null) : null,
+        deliveryInstructions: isDelivery ? (deliveryInstructions || null) : null,
+        deliveryFee: deliveryFeeAmount,
         ...(scheduledForFormatted ? { scheduledFor: scheduledForFormatted } : {}),
       },
     });

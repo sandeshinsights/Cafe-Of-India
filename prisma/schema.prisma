@@ -41,6 +41,11 @@ model Order {
   usages          PromoCodeUsage[]
   scheduledFor    String?
   tipAmount       Float      @default(0) @map("tip_amount")
+  isDelivery        Boolean   @default(false) @map("is_delivery")
+  deliveryAddress   String?   @map("delivery_address")
+  deliveryApt       String?   @map("delivery_apt")
+  deliveryInstructions String? @map("delivery_instructions")
+  deliveryFee       Float     @default(0) @map("delivery_fee")
   @@map("orders")
 }
 

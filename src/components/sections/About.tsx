@@ -1,17 +1,17 @@
 import { Award, Leaf, Heart, Users } from "lucide-react";
+import Image from "next/image";
 import { getRestaurantData } from "@/lib/data";
 
 /**
  * About Section
  * 
  * WHAT IT DOES:
- * - Restaurant story/description
+ * - Restaurant story/description with photo
  * - 4 highlight cards (Experienced Chefs, Fresh Ingredients, Made with Love, Family Friendly)
  * - Each card has an icon, title, and description
  * 
  * VISUAL:
- * - Alternating cream background
- * - Section title + description on top
+ * - Two-column layout: text left, photo right
  * - 2x2 grid of highlight cards below
  * - Each card has hover effect
  */
@@ -29,14 +29,36 @@ export default function About() {
   return (
     <section id="about" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-6">
-            {about.headline}
-          </h2>
-          <p className="text-text-light text-lg leading-relaxed">
-            {about.description}
-          </p>
+
+        {/* Two-column: Text + Photo */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-16">
+          {/* Left: Text */}
+          <div>
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-6">
+              {about.headline}
+            </h2>
+            <p className="text-text-light text-lg leading-relaxed">
+              {about.description}
+            </p>
+          </div>
+
+                   {/* Right: Photo */}
+          {about.image && (
+            <div className="relative">
+              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
+                <Image
+                  src={about.image}
+                  alt={about.headline || "About our restaurant"}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority
+                />
+              </div>
+              {/* Decorative accent bar */}
+              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-accent/20 rounded-2xl -z-10" />
+            </div>
+          )}
         </div>
 
         {/* Highlight Cards Grid */}

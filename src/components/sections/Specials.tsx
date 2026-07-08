@@ -1,4 +1,5 @@
 import { Star, Flame, Award } from "lucide-react";
+import Image from "next/image";
 import { getMenuData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 import type { ChefsSpecial, MenuCategory, MenuItem } from "@/lib/types";
@@ -72,12 +73,15 @@ export default function Specials() {
 
               <div className="p-8 pt-16">
                 {/* Dish Photo */}
-                <div className="w-full h-48 bg-white/10 rounded-xl mb-6 overflow-hidden">
+                <div className="relative w-full h-48 bg-white/10 rounded-xl mb-6 overflow-hidden">
                   {special.photoUrl ? (
-                    <img
+                    <Image
                       src={special.photoUrl}
                       alt={special.name}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/50">

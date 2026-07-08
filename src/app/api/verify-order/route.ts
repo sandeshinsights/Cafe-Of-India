@@ -71,7 +71,14 @@ export async function POST(request: NextRequest) {
     }
 
     const scheduledFor = (order as any).scheduledFor || undefined;
-    const tipAmount = order.tipAmount || 0; // TIP: get tip from DB
+    const tipAmount = order.tipAmount || 0;
+
+    // DELIVERY: extract delivery fields from order
+    const isDelivery = order.isDelivery || false;
+    const deliveryAddress = order.deliveryAddress || null;
+    const deliveryApt = order.deliveryApt || null;
+    const deliveryInstructions = order.deliveryInstructions || null;
+    const deliveryFee = order.deliveryFee || 0;
 
     // 5. Send restaurant notification email — AWAIT so Vercel doesn't kill the function
     try {
@@ -85,7 +92,12 @@ export async function POST(request: NextRequest) {
         tax: order.tax,
         total: order.total,
         scheduledFor,
-        tipAmount, // TIP: pass tip to restaurant email
+        tipAmount,
+        isDelivery,
+        deliveryAddress,
+        deliveryApt,
+        deliveryInstructions,
+        deliveryFee,
       });
       console.log("Restaurant email sent successfully");
     } catch (err) {
@@ -104,7 +116,12 @@ export async function POST(request: NextRequest) {
         tax: order.tax,
         total: order.total,
         scheduledFor,
-        tipAmount, // TIP: pass tip to customer email
+        tipAmount,
+        isDelivery,
+        deliveryAddress,
+        deliveryApt,
+        deliveryInstructions,
+        deliveryFee,
       });
       console.log("Customer email sent successfully");
     } catch (err) {
@@ -121,9 +138,14 @@ export async function POST(request: NextRequest) {
       tax: order.tax,
       total: order.total,
       discountAmount: order.discountAmount ?? 0,
-      
       scheduledFor,
-      // TIP: intentionally NOT passing tipAmount — kitchen slip stays clean
+      // DELIVERY: pass delivery info for kitchen slip
+      isDelivery,
+      deliveryAddress,
+      deliveryApt,
+      deliveryInstructions,
+      deliveryFee,
+      // Tip intentionally NOT passed — kitchen slip stays clean
     }).catch((err) => console.error("[Printer] Unhandled error:", err));
 
     return NextResponse.json({

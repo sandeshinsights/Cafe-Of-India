@@ -2,7 +2,7 @@ import { PartyPopper, Users, Building2, Cake, GraduationCap, CalendarHeart, Phon
 import { getRestaurantData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 import CateringForm from "@/components/CateringForm";
-
+import Image from "next/image";
 /**
  * Catering Section
  * 
@@ -54,6 +54,20 @@ export default function Catering() {
             {catering.description}
           </p>
         </div>
+
+        {/* Catering Banner */}
+        {catering.banner && (
+          <div className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden shadow-lg">
+            <Image
+              src={catering.banner}
+              alt={catering.headline || "Catering"}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 80vw"
+              priority={false}
+            />
+          </div>
+        )}
 
         {/* Event Types Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
