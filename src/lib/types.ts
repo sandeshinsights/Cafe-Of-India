@@ -201,6 +201,7 @@ export interface MenuCategory {
   id: string;
   name: string;
   description: string;
+  banner?: string;
   items: MenuItem[];
 }
 
@@ -212,6 +213,7 @@ export interface ChefsSpecial {
 }
 
 export interface MenuData {
+  banner?: string;   
   categories: MenuCategory[];
   chefsSpecials: ChefsSpecial[];
 }

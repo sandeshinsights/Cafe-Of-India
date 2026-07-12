@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { getMenuData } from "@/lib/data";
+import Image from "next/image";
 import {
   ShoppingCart,
   Plus,
@@ -121,6 +122,20 @@ export default function Menu() {
             Authentic Indian flavors, made fresh daily
           </p>
         </div>
+
+        {/* menu banner */}
+        {menuData.banner && (
+          <div className="relative w-full aspect-[21/9] rounded-2xl overflow-hidden mb-8">
+            <Image
+              src={menuData.banner}
+              alt="Our Menu"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 1152px"
+              priority
+            />
+          </div>
+        )}
 
         {/* category tabs */}
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
