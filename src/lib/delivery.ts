@@ -84,13 +84,13 @@ export async function getDeliveryQuote(address: string): Promise<DeliveryFeeResu
       restaurantPays: data.restaurantPays,
     };
   } catch {
-    // Network error — fallback to flat fee
-    console.warn("[getDeliveryQuote] API unreachable, using flat fee");
-    const fee = DELIVERY_CONFIG.flatFee;
+    // Network error — can't verify address is deliverable, block checkout
+    console.error("[getDeliveryQuote] Delivery API unreachable");
     return {
-      fee,
-      customerPays: Math.max(0, fee - DELIVERY_CONFIG.subsidyAmount),
-      restaurantPays: DELIVERY_CONFIG.subsidyAmount,
+      fee: 0,
+      customerPays: 0,
+      restaurantPays: 0,
+      error: "Delivery service temporarily unavailable. Please try again or call us at (978) 897-9227.",
     };
   }
 }

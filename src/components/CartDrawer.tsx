@@ -61,6 +61,7 @@ export default function CartDrawer() {
   // DELIVERY: Quote state
   const [quotedFee, setQuotedFee] = useState<number>(0);
   const [quoteLoading, setQuoteLoading] = useState(false);
+  const [deliveryError, setDeliveryError] = useState("");
 
   const handleClose = () => {
     closeCart();
@@ -81,6 +82,7 @@ export default function CartDrawer() {
       setDeliveryInstructions("");
       setQuotedFee(0);
       setQuoteLoading(false);
+      setDeliveryError("");
     }, 300);
   };
 
@@ -130,9 +132,16 @@ export default function CartDrawer() {
     const timer = setTimeout(async () => {
       try {
         const quote = await getDeliveryQuote(deliveryAddress);
-        setQuotedFee(quote.customerPays);
+        if (quote.error) {
+          setQuotedFee(0);
+          setDeliveryError(quote.error);
+        } else {
+          setQuotedFee(quote.customerPays);
+          setDeliveryError("");
+        }
       } catch {
         setQuotedFee(0);
+        setDeliveryError("Could not get delivery quote. Please try again.");
       } finally {
         setQuoteLoading(false);
       }
@@ -557,6 +566,14 @@ export default function CartDrawer() {
                 {!deliveryEligibility.eligible && (
                   <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
                     {deliveryEligibility.message}
+                  </p>
+                )}
+
+                {/* Delivery quote error (out of zone, etc.) */}
+                {deliveryError && (
+                  <p className="text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                    <XCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                    {deliveryError}
                   </p>
                 )}
 
