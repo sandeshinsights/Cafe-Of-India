@@ -3,17 +3,17 @@
  *
  * DELIVERY_CONFIG: All delivery settings in one place.
  * - To add restaurant subsidy later: change subsidyAmount
- * - feeType "uber_quote": calls getDeliveryQuote() for address-based pricing
+ * - feeType "uber_quote": calls our API route for address-based pricing from Uber Direct
  * - To switch back to flat: change feeType to "flat"
  *
- * getDeliveryQuote(): Currently a MOCK — returns flat fee estimate.
- * Replace the TODO block with real Uber Direct quote API when credentials are ready.
+ * getDeliveryQuote(): Calls /api/delivery/quote which talks to Uber Direct.
+ * Falls back to flat fee if the API is unreachable.
  *
- * createDelivery(): Currently a MOCK — logs to console and returns success.
- * Replace the TODO block with real Uber Direct delivery API when credentials are ready.
+ * createDelivery(): Calls /api/delivery/create which talks to Uber Direct.
+ * Falls back to mock (console log) if the API is unreachable.
  *
- * ONLY this file needs to change for real Uber Direct integration.
- * No other files in the project call Uber's API directly.
+ * ONLY the API routes in src/app/api/delivery/ call Uber's API directly (via uber-direct.ts).
+ * This file never touches Uber directly — it only calls our own API routes.
  */
 
 export const DELIVERY_CONFIG = {
@@ -53,36 +53,46 @@ export function getDeliveryFee(): DeliveryFeeResult {
 
 /**
  * Get a delivery quote for a specific address.
- * Currently a MOCK — returns flat fee as estimate.
- * CartDrawer calls this async when customer types their address.
+ * Calls our own API route which talks to Uber Direct.
+ * Falls back to flat fee if the API is unreachable.
  *
- * When Uber Direct credentials are ready, replace the TODO block
- * with a real POST to /v1.2/deliveries/quote.
+ * CartDrawer calls this async when customer types their address.
  */
 export async function getDeliveryQuote(address: string): Promise<DeliveryFeeResult & { error?: string }> {
-  // =============================================
-  // TODO: Replace mock with real Uber Direct quote
-  // =============================================
-  //
-  // 1. Get OAuth token:
-  //    POST https://login.uber.com/oauth/v2/token
-  //    { client_id, client_secret, grant_type: "client_credentials", scope: "eats.deliveries" }
-  //
-  // 2. Get delivery quote:
-  //    POST https://api.uber.com/v1.2/deliveries/quote
-  //    Headers: Authorization: Bearer <token>
-  //    Body: {
-  //      pickup: { address: DELIVERY_CONFIG.restaurantAddress },
-  //      dropoff: { address: address },
-  //    }
-  //
-  // 3. Return the fee from the quote response.
-  //    If quote fails (out of range, etc.), return { fee: 0, error: "Out of delivery area" }
+  try {
+    const res = await fetch("/api/delivery/quote", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
 
-  // Mock: use flat fee as estimate
-  const fee = DELIVERY_CONFIG.flatFee;
-  const customerPays = Math.max(0, fee - DELIVERY_CONFIG.subsidyAmount);
-  return { fee, customerPays, restaurantPays: DELIVERY_CONFIG.subsidyAmount };
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Out of delivery area or bad request
+      return {
+        fee: 0,
+        customerPays: 0,
+        restaurantPays: 0,
+        error: data.error || "Could not get delivery quote",
+      };
+    }
+
+    return {
+      fee: data.fee,
+      customerPays: data.customerPays,
+      restaurantPays: data.restaurantPays,
+    };
+  } catch {
+    // Network error — fallback to flat fee
+    console.warn("[getDeliveryQuote] API unreachable, using flat fee");
+    const fee = DELIVERY_CONFIG.flatFee;
+    return {
+      fee,
+      customerPays: Math.max(0, fee - DELIVERY_CONFIG.subsidyAmount),
+      restaurantPays: DELIVERY_CONFIG.subsidyAmount,
+    };
+  }
 }
 
 /**
@@ -117,10 +127,8 @@ export function validateDeliveryAddress(address: string): {
 
 /**
  * Dispatch a delivery via Uber Direct.
- *
- * Currently a MOCK — logs to console and returns success.
- * When the owner gets Uber Direct API credentials, replace the
- * TODO block below with real API calls.
+ * Calls our own API route which talks to Uber Direct.
+ * Falls back to mock (console log) if the API is unreachable.
  */
 export async function createDelivery(params: {
   orderId: string;
@@ -146,35 +154,32 @@ export async function createDelivery(params: {
     console.log(`[Delivery] Instructions: ${params.deliveryInstructions}`);
   }
 
-  // =============================================
-  // TODO: Replace mock with real Uber Direct API
-  // =============================================
-  //
-  // 1. Get OAuth token (same as in getDeliveryQuote)
-  //
-  // 2. Create the delivery:
-  //    POST https://api.uber.com/v1.2/deliveries
-  //    Headers: Authorization: Bearer <token>
-  //    Body: {
-  //      pickup: {
-  //        location: { address: DELIVERY_CONFIG.restaurantAddress },
-  //        contact: { name: "Cafe of India", phone: "(978) 897-9227" }
-  //      },
-  //      dropoff: {
-  //        location: { address: fullAddress },
-  //        contact: { name: params.customerName, phone: params.customerPhone }
-  //      }
-  //    }
-  //
-  // 3. Return deliveryId + trackingUrl from the response.
-  //
-  // Auth: Bearer token from UBER_DIRECT_CLIENT_ID / UBER_DIRECT_CLIENT_SECRET
-  // Docs: https://developer.uber.com/docs/deliveries/overview
+  try {
+    const res = await fetch("/api/delivery/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
 
-  console.log(`[Delivery] Mock: delivery dispatched successfully`);
-  return {
-    success: true,
-    deliveryId: `mock-${Date.now()}`,
-    trackingUrl: undefined,
-  };
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Delivery creation failed");
+    }
+
+    console.log(`[Delivery] Uber delivery created: ${data.deliveryId}`);
+    return {
+      success: true,
+      deliveryId: data.deliveryId,
+      trackingUrl: data.trackingUrl,
+    };
+  } catch (error: any) {
+    console.error(`[Delivery] Uber API failed: ${error.message}`);
+    console.log(`[Delivery] Falling back to manual delivery for order ${params.orderId}`);
+    return {
+      success: true,
+      deliveryId: `manual-${Date.now()}`,
+      trackingUrl: undefined,
+    };
+  }
 }

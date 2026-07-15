@@ -46,6 +46,8 @@ model Order {
   deliveryApt       String?   @map("delivery_apt")
   deliveryInstructions String? @map("delivery_instructions")
   deliveryFee       Float     @default(0) @map("delivery_fee")
+  uberDeliveryId      String?   @map("uber_delivery_id")
+  uberDeliveryStatus  String?   @map("uber_delivery_status")
   @@map("orders")
 }
 
