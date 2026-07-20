@@ -102,10 +102,20 @@ export interface UberQuoteResult {
 
 export async function getUberQuote(
   pickupAddress: string,
-  dropoffAddress: string
+  dropoffAddress: string,
+  pickupReadyDt?: string
 ): Promise<UberQuoteResult> {
   const token = await getUberToken();
   const { customerId } = getCredentials();
+
+  const requestBody: Record<string, unknown> = {
+    pickup_address: parseAddressToUber(pickupAddress),
+    dropoff_address: parseAddressToUber(dropoffAddress),
+  };
+
+  if (pickupReadyDt) {
+    requestBody.pickup_ready_dt = pickupReadyDt;
+  }
 
   const response = await fetch(
     `${API_BASE}/customers/${customerId}/delivery_quotes`,
@@ -115,10 +125,7 @@ export async function getUberQuote(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        pickup_address: parseAddressToUber(pickupAddress),
-        dropoff_address: parseAddressToUber(dropoffAddress),
-      }),
+      body: JSON.stringify(requestBody),
     }
   );
 
@@ -156,6 +163,7 @@ export async function createUberDelivery(params: {
   deliveryApt?: string;
   deliveryInstructions?: string;
   orderDescription?: string;
+  pickupReadyDt?: string;
 }): Promise<UberDeliveryResult> {
   const token = await getUberToken();
   const { customerId } = getCredentials();
@@ -163,6 +171,23 @@ export async function createUberDelivery(params: {
   const fullAddress = [params.deliveryAddress, params.deliveryApt]
     .filter(Boolean)
     .join(", ");
+
+  const requestBody: Record<string, unknown> = {
+    pickup_address: parseAddressToUber("155 Main Street, Maynard, MA 01754"),
+    pickup_name: "Cafe of India",
+    pickup_phone_number: "(978) 897-9227",
+    dropoff_address: parseAddressToUber(fullAddress),
+    dropoff_name: params.customerName,
+    dropoff_phone_number: params.customerPhone,
+    dropoff_notes: params.deliveryInstructions || "",
+    manifest_items: [
+      { name: params.orderDescription || "Food Order", quantity: 1 },
+    ],
+  };
+
+  if (params.pickupReadyDt) {
+    requestBody.pickup_ready_dt = params.pickupReadyDt;
+  }
 
   const response = await fetch(
     `${API_BASE}/customers/${customerId}/deliveries`,
@@ -172,18 +197,7 @@ export async function createUberDelivery(params: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        pickup_address: parseAddressToUber("155 Main Street, Maynard, MA 01754"),
-        pickup_name: "Cafe of India",
-        pickup_phone_number: "(978) 897-9227",
-        dropoff_address: parseAddressToUber(fullAddress),
-        dropoff_name: params.customerName,
-        dropoff_phone_number: params.customerPhone,
-        dropoff_notes: params.deliveryInstructions || "",
-        manifest_items: [
-          { name: params.orderDescription || "Food Order", quantity: 1 },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
     }
   );
 

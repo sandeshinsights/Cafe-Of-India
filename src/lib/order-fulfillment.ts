@@ -141,7 +141,7 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee,
     }).catch((err) => console.error("[Fulfillment] Printer error:", err));
 
-    // 9. Handle delivery dispatch
+    // 9. Handle delivery dispatch — always dispatch immediately, Uber handles timing
     let uberDeliveryId: string | undefined;
     let uberDeliveryStatus: string | undefined;
     let trackingUrl: string | undefined;
@@ -154,37 +154,37 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       const fifteenMinFromNow = new Date(Date.now() + 15 * 60 * 1000);
       const isScheduled = scheduledDate !== null && scheduledDate > fifteenMinFromNow;
 
-      if (isScheduled) {
-        deliveryType = "scheduled";
-        scheduledForResponse = scheduledFor;
-        console.log(`[Fulfillment] Order #${order.id} scheduled for ${scheduledFor}. Uber deferred to cron.`);
-      } else {
-        try {
-          const result = await createUberDelivery({
-            customerName: order.name,
-            customerPhone: order.phone,
-            deliveryAddress,
-            deliveryApt: deliveryApt || undefined,
-            deliveryInstructions: deliveryInstructions || undefined,
-            orderDescription: `Order ${order.id}`,
-          });
+      try {
+        const result = await createUberDelivery({
+          customerName: order.name,
+          customerPhone: order.phone,
+          deliveryAddress,
+          deliveryApt: deliveryApt || undefined,
+          deliveryInstructions: deliveryInstructions || undefined,
+          orderDescription: `Order ${order.id}`,
+          pickupReadyDt: isScheduled ? scheduledDate.toISOString() : undefined,
+        });
 
-          uberDeliveryId = result.deliveryId;
-          uberDeliveryStatus = result.status;
-          trackingUrl = result.trackingUrl;
-          dropoffEta = result.dropoffEta;
-          deliveryType = "asap";
+        uberDeliveryId = result.deliveryId;
+        uberDeliveryStatus = result.status;
+        trackingUrl = result.trackingUrl;
+        dropoffEta = result.dropoffEta;
+        deliveryType = isScheduled ? "scheduled" : "asap";
+        scheduledForResponse = isScheduled ? scheduledFor : undefined;
 
-          await prisma.order.update({
-            where: { id: order.id },
-            data: { uberDeliveryId: result.deliveryId, uberDeliveryStatus: result.status },
-          });
+        await prisma.order.update({
+          where: { id: order.id },
+          data: { uberDeliveryId: result.deliveryId, uberDeliveryStatus: result.status },
+        });
 
+        if (isScheduled) {
+          console.log(`[Fulfillment] Uber delivery scheduled: ${result.deliveryId} for ${scheduledFor}`);
+        } else {
           console.log(`[Fulfillment] Uber delivery created: ${result.deliveryId}`);
-        } catch (err: any) {
-          console.error("[Fulfillment] Uber delivery creation failed:", err.message);
-          deliveryType = "manual_fallback";
         }
+      } catch (err: any) {
+        console.error("[Fulfillment] Uber delivery creation failed:", err.message);
+        deliveryType = "manual_fallback";
       }
     }
 

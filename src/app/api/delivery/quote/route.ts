@@ -3,7 +3,7 @@ import { getUberQuote } from "@/lib/uber-direct";
 
 export async function POST(req: NextRequest) {
   try {
-    const { address } = await req.json();
+    const { address, scheduledFor } = await req.json();
 
     if (!address || address.trim().length < 10) {
       return NextResponse.json(
@@ -12,9 +12,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const pickupReadyDt = scheduledFor ? new Date(scheduledFor).toISOString() : undefined;
+
     const quote = await getUberQuote(
       "155 Main Street, Maynard, MA 01754",
-      address.trim()
+      address.trim(),
+      pickupReadyDt
     );
 
     return NextResponse.json({
@@ -26,7 +29,6 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("[Delivery Quote Error]", error.message);
 
-    // ALL Uber errors block delivery — never silently fall back to flat fee
     return NextResponse.json(
       {
         error:
