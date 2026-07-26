@@ -14,11 +14,11 @@ interface CateringEmailData {
 }
 
 export async function sendCateringNotification(data: CateringEmailData) {
-  const toEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+  const toEmail = process.env.RESEND_FROM_EMAIL || "cafeofindia2@gmail.com";
 
   const result = await resend.emails.send({
     from: `Cafe of India Website <${toEmail}>`,
-    to: ["info@cafeindiamaynard.com"],
+    to: ["toEmail"],
     subject: `New Catering Inquiry from ${data.name}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
