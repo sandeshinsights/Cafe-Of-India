@@ -57,10 +57,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // 4. Send email notification (fire-and-forget)
-    sendCateringNotification(data).catch((err) => {
-      console.error("Email failed to send:", err);
-    });
+    // 4. Send email notification (await, not fire-and-forget)
+try {
+  await sendCateringNotification(data);
+} catch (err) {
+  console.error("Catering email failed:", err);
+}
 
     // 5. Return success
     return NextResponse.json({
