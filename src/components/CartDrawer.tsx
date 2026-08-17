@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h } from "@/lib/ordering-hours";
+import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h, scheduledTimeToUtcIso } from "@/lib/ordering-hours";
 import { getDeliveryFee, getDeliveryQuote, isEligibleForDelivery, validateDeliveryAddress } from "@/lib/delivery";
 import TimeSlotPicker from "./TimeSlotPicker";
 
@@ -121,6 +121,16 @@ export default function CartDrawer() {
   const deliveryEligibility = isEligibleForDelivery(displaySubtotal);
   const addressValidation = validateDeliveryAddress(deliveryAddress);
 
+  // Scheduled time as UTC ISO — the quote and checkout both use this so the
+  // fee the customer sees is quoted on the same basis the server re-quotes.
+  const scheduledForIso =
+    orderMode === "scheduled" && selectedDate && selectedTimeSlot
+      ? scheduledTimeToUtcIso(
+          selectedDate.toLocaleDateString("en-CA", { timeZone: "America/New_York" }),
+          selectedTimeSlot
+        )
+      : undefined;
+
   // DELIVERY: Get delivery quote when address is valid
   useEffect(() => {
     if (fulfillmentType !== "delivery" || !addressValidation.valid) {
@@ -131,7 +141,7 @@ export default function CartDrawer() {
     setQuoteLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const quote = await getDeliveryQuote(deliveryAddress);
+        const quote = await getDeliveryQuote(deliveryAddress, scheduledForIso);
         if (quote.error) {
           setQuotedFee(0);
           setDeliveryError(quote.error);
@@ -148,7 +158,7 @@ export default function CartDrawer() {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [fulfillmentType, deliveryAddress, addressValidation.valid]);
+  }, [fulfillmentType, deliveryAddress, addressValidation.valid, scheduledForIso]);
 
   const scheduledDisplayLabel =
     orderMode === "scheduled" && selectedDate && selectedTimeSlot

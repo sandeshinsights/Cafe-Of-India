@@ -7,13 +7,11 @@
  * - To switch back to flat: change feeType to "flat"
  *
  * getDeliveryQuote(): Calls /api/delivery/quote which talks to Uber Direct.
- * Falls back to flat fee if the API is unreachable.
+ * Blocks checkout if the address can't be quoted.
  *
- * createDelivery(): Calls /api/delivery/create which talks to Uber Direct.
- * Falls back to mock (console log) if the API is unreachable.
- *
- * ONLY the API routes in src/app/api/delivery/ call Uber's API directly (via uber-direct.ts).
- * This file never touches Uber directly — it only calls our own API routes.
+ * This file is client-side only and never touches Uber directly — it only calls
+ * our own API routes. Dispatching an actual courier happens server-side in
+ * src/lib/order-fulfillment.ts, after Stripe confirms payment.
  */
 
 export const DELIVERY_CONFIG = {
@@ -54,16 +52,22 @@ export function getDeliveryFee(): DeliveryFeeResult {
 /**
  * Get a delivery quote for a specific address.
  * Calls our own API route which talks to Uber Direct.
- * Falls back to flat fee if the API is unreachable.
  *
- * CartDrawer calls this async when customer types their address.
+ * CartDrawer calls this async when customer types their address. For scheduled
+ * orders, pass the scheduled time (ISO string) so the displayed fee is quoted
+ * on the same basis checkout re-quotes it server-side — otherwise a
+ * scheduled-vs-ASAP price difference shows up as a fee-changed error at pay
+ * time.
  */
-export async function getDeliveryQuote(address: string): Promise<DeliveryFeeResult & { error?: string }> {
+export async function getDeliveryQuote(
+  address: string,
+  scheduledFor?: string
+): Promise<DeliveryFeeResult & { error?: string }> {
   try {
     const res = await fetch("/api/delivery/quote", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ address }),
+      body: JSON.stringify({ address, ...(scheduledFor ? { scheduledFor } : {}) }),
     });
 
     const data = await res.json();
@@ -125,61 +129,9 @@ export function validateDeliveryAddress(address: string): {
   return { valid: true };
 }
 
-/**
- * Dispatch a delivery via Uber Direct.
- * Calls our own API route which talks to Uber Direct.
- * Falls back to mock (console log) if the API is unreachable.
- */
-export async function createDelivery(params: {
-  orderId: string;
-  customerName: string;
-  customerPhone: string;
-  deliveryAddress: string;
-  deliveryApt?: string;
-  deliveryInstructions?: string;
-}): Promise<{
-  success: boolean;
-  deliveryId?: string;
-  trackingUrl?: string;
-  error?: string;
-}> {
-  const fullAddress = [params.deliveryAddress, params.deliveryApt]
-    .filter(Boolean)
-    .join(", ");
-
-  console.log(`[Delivery] Creating delivery for order ${params.orderId}`);
-  console.log(`[Delivery] To: ${fullAddress}`);
-  console.log(`[Delivery] Customer: ${params.customerName} (${params.customerPhone})`);
-  if (params.deliveryInstructions) {
-    console.log(`[Delivery] Instructions: ${params.deliveryInstructions}`);
-  }
-
-  try {
-    const res = await fetch("/api/delivery/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(params),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Delivery creation failed");
-    }
-
-    console.log(`[Delivery] Uber delivery created: ${data.deliveryId}`);
-    return {
-      success: true,
-      deliveryId: data.deliveryId,
-      trackingUrl: data.trackingUrl,
-    };
-  } catch (error: any) {
-    console.error(`[Delivery] Uber API failed: ${error.message}`);
-    console.log(`[Delivery] Falling back to manual delivery for order ${params.orderId}`);
-    return {
-      success: true,
-      deliveryId: `manual-${Date.now()}`,
-      trackingUrl: undefined,
-    };
-  }
-}
+// createDelivery() and its /api/delivery/create route were removed: nothing
+// called them, the route dispatched a real Uber courier with no payment check
+// on an unauthenticated POST, and the helper reported success with a fake
+// `manual-<timestamp>` id whenever the call failed. Couriers are dispatched
+// only from fulfillOrder() in src/lib/order-fulfillment.ts, after Stripe
+// confirms payment.

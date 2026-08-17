@@ -8,45 +8,55 @@ import {
   getOrderingClosedReason,
   isValidScheduledTime,
   formatScheduledPickup,
+  scheduledTimeToUtcIso,
 } from "@/lib/ordering-hours";
+import { DELIVERY_CONFIG } from "@/lib/delivery";
+import { getUberQuote } from "@/lib/uber-direct";
+import { getProteinSurcharge } from "@/lib/pricing";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-05-27.dahlia",
 });
 
+// Max lengths are deliberate: every string here ends up in email HTML, the
+// kitchen slip, and Stripe metadata (500-char cap per value) — unbounded input
+// is both an abuse vector and a checkout-breaking one.
 const checkoutSchema = z.object({
-  name: z.string().min(2, "Name is required"),
-  email: z.string().email("Valid email is required"),
-  phone: z.string().min(7, "Valid phone is required"),
+  name: z.string().min(2, "Name is required").max(100, "Name is too long"),
+  email: z.string().email("Valid email is required").max(254),
+  phone: z.string().min(7, "Valid phone is required").max(25, "Phone number is too long"),
   items: z.array(
     z.object({
-      id: z.string(),
-      name: z.string(),
+      id: z.string().max(120),
+      name: z.string().max(150),
       price: z.number(),
-      quantity: z.number().min(1).max(20, "Maximum 20 per item"),
-      protein: z.string().optional(),
-      spicyLevel: z.string().optional(),
-      specialInstructions: z.string().optional(),
+      quantity: z.number().int("Whole numbers only").min(1).max(20, "Maximum 20 per item"),
+      protein: z.string().max(60).optional(),
+      spicyLevel: z.string().max(60).optional(),
+      specialInstructions: z.string().max(200, "Special instructions are too long").optional(),
     })
-  ).min(1, "At least one item is required"),
-  promoCodeId: z.string().optional(),
-  scheduledDate: z.string().optional(),
-  scheduledTime: z.string().optional(),
-  tipAmount: z.number().min(0).optional(),
-  // DELIVERY
+  ).min(1, "At least one item is required").max(50, "Too many items in cart"),
+  promoCodeId: z.string().max(100).optional(),
+  scheduledDate: z.string().max(20).optional(),
+  scheduledTime: z.string().max(10).optional(),
+  tipAmount: z.number().min(0).max(500, "Tip is too large").optional(),
+  // DELIVERY — deliveryFee here is only what the customer was SHOWN. The fee
+  // actually charged comes from a fresh server-side Uber quote below; trusting
+  // this number let anyone edit the request and get free delivery while the
+  // restaurant still paid Uber the real fare.
   isDelivery: z.boolean().optional(),
-  deliveryAddress: z.string().optional(),
-  deliveryApt: z.string().optional(),
-  deliveryInstructions: z.string().optional(),
-  deliveryFee: z.number().min(0).optional(),
+  deliveryAddress: z.string().max(300).optional(),
+  deliveryApt: z.string().max(100).optional(),
+  deliveryInstructions: z.string().max(300, "Delivery instructions are too long").optional(),
+  deliveryFee: z.number().min(0).max(200).optional(),
 });
 
-function getMenuItemPrice(itemId: string): number | null {
+function getMenuItemPrice(itemId: string): { price: number; category: string } | null {
   const baseId = itemId.split("-").slice(0, 2).join("-");
 
   for (const category of menuData.categories) {
     const item = (category.items as any[]).find((i: any) => i.id === baseId);
-    if (item) return item.price;
+    if (item) return { price: item.price, category: category.name };
   }
   return null;
 }
@@ -63,6 +73,7 @@ export async function POST(req: NextRequest) {
     const hasScheduledTime = typeof scheduledTime === "string" && scheduledTime.trim() !== "";
 
     let scheduledForFormatted: string | undefined;
+    let scheduledForIso: string | undefined;
 
     if (hasScheduledDate && hasScheduledTime) {
       if (!isValidScheduledTime(scheduledDate, scheduledTime)) {
@@ -72,6 +83,11 @@ export async function POST(req: NextRequest) {
         );
       }
       scheduledForFormatted = formatScheduledPickup(scheduledDate, scheduledTime);
+      // The DB stores machine time (UTC ISO); humans get the formatted string
+      // only at display time. Storing the formatted string here is what broke
+      // scheduled delivery — new Date("Thursday, June 19 at 4:00 PM") is
+      // Invalid Date, so couriers dispatched immediately.
+      scheduledForIso = scheduledTimeToUtcIso(scheduledDate, scheduledTime);
     } else {
       if (!isOrderingWindowOpen()) {
         return NextResponse.json(
@@ -84,12 +100,33 @@ export async function POST(req: NextRequest) {
     // 1. Calculate totals using SERVER prices (ignore client-sent prices)
     let subtotal = 0;
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
+    // The cart snapshot persisted on the order (and later rendered into the
+    // kitchen slip and emails). Client-sent prices are replaced with server
+    // prices and unknown fields are dropped — otherwise the slip would print
+    // whatever numbers the request body claimed.
+    const sanitizedItems: Array<Record<string, unknown>> = [];
 
     for (const item of items) {
-      const serverPrice = getMenuItemPrice(item.id);
-      if (!serverPrice) {
+      const menuItem = getMenuItemPrice(item.id);
+      if (!menuItem || !menuItem.price) {
         return NextResponse.json({ error: "Invalid item in cart." }, { status: 400 });
       }
+      // Protein surcharge, from the same shared table the menu UI displays.
+      // Only the Dinner category offers a protein choice.
+      const surcharge =
+        menuItem.category.toLowerCase() === "dinner"
+          ? getProteinSurcharge(item.protein)
+          : 0;
+      const serverPrice = menuItem.price + surcharge;
+      sanitizedItems.push({
+        id: item.id,
+        name: item.name,
+        price: serverPrice,
+        quantity: item.quantity,
+        protein: item.protein || undefined,
+        spicyLevel: item.spicyLevel || undefined,
+        specialInstructions: item.specialInstructions || undefined,
+      });
       const unitPrice = Math.round(serverPrice * 100); // cents
       const lineItemTotal = unitPrice * item.quantity;
       subtotal += lineItemTotal / 100;
@@ -164,12 +201,61 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Calculate final totals with discount
+    // 3. Delivery: enforce requirements and price the fee SERVER-SIDE.
+    //    The client's deliveryFee is only the number the customer was shown;
+    //    the charge comes from a fresh Uber quote. Minimum order and a real
+    //    address are enforced here too — previously both were client-side only.
+    let deliveryFeeAmount = 0;
+    if (isDelivery) {
+      if (!deliveryAddress || deliveryAddress.trim().length < 10) {
+        return NextResponse.json(
+          { error: "Please enter a full delivery address." },
+          { status: 400 }
+        );
+      }
+      if (subtotal < DELIVERY_CONFIG.minOrderAmount) {
+        return NextResponse.json(
+          { error: `Delivery requires a minimum order of $${DELIVERY_CONFIG.minOrderAmount}.` },
+          { status: 400 }
+        );
+      }
+
+      let serverFee: number;
+      try {
+        const quote = await getUberQuote(
+          DELIVERY_CONFIG.restaurantAddress,
+          deliveryAddress.trim(),
+          scheduledForIso
+        );
+        serverFee = quote.fee;
+      } catch (err) {
+        console.error("[Checkout] Delivery quote failed:", err instanceof Error ? err.message : err);
+        return NextResponse.json(
+          { error: "We couldn't confirm delivery to this address. Please check the address or choose pickup." },
+          { status: 422 }
+        );
+      }
+
+      // If Uber's price moved past what the customer was shown, make them
+      // re-confirm instead of silently charging more.
+      const displayedFee = deliveryFee ?? 0;
+      if (serverFee > displayedFee + 1) {
+        return NextResponse.json(
+          {
+            error: `The delivery fee for this address is $${serverFee.toFixed(2)}. Please review and try again.`,
+            fee: serverFee,
+          },
+          { status: 409 }
+        );
+      }
+      deliveryFeeAmount = serverFee;
+    }
+
+    // 4. Calculate final totals with discount
     const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
     const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
     const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
     const tip = parseFloat((tipAmount || 0).toFixed(2));
-    const deliveryFeeAmount = isDelivery ? (deliveryFee || 0) : 0;
     const total = parseFloat((discountedSubtotal + tax + tip + deliveryFeeAmount).toFixed(2));
 
     // 4. Apply discount by reducing the first line item's price
@@ -207,7 +293,7 @@ export async function POST(req: NextRequest) {
           currency: "usd",
           product_data: {
             name: "Delivery Fee",
-            description: "Flat-rate delivery to your address",
+            description: "Delivery to your address",
           },
           unit_amount: Math.round(deliveryFeeAmount * 100),
         },
@@ -238,13 +324,14 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Save order to database
+    // 6. Save order to database. items is the sanitized snapshot (server
+    //    prices), scheduledFor is machine time — see notes above.
     await prisma.order.create({
       data: {
         name,
         email,
         phone,
-        items: items as any,
+        items: sanitizedItems as any,
         subtotal,
         tax,
         total,
@@ -258,15 +345,24 @@ export async function POST(req: NextRequest) {
         deliveryApt: isDelivery ? (deliveryApt || null) : null,
         deliveryInstructions: isDelivery ? (deliveryInstructions || null) : null,
         deliveryFee: deliveryFeeAmount,
-        ...(scheduledForFormatted ? { scheduledFor: scheduledForFormatted } : {}),
+        ...(scheduledForIso ? { scheduledFor: scheduledForIso } : {}),
       },
     });
 
     return NextResponse.json({ url: session.url });
-  } catch (error: any) {
+  } catch (error) {
+    // Validation problems get a helpful message; everything else gets a generic
+    // one. Echoing error.message here leaked Stripe/Prisma internals (and once,
+    // schema details) to whoever poked the endpoint.
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.issues[0]?.message || "Invalid order data." },
+        { status: 400 }
+      );
+    }
     console.error("Checkout API error:", error);
     return NextResponse.json(
-      { error: error.message || "Checkout failed. Please try again." },
+      { error: "Checkout failed. Please try again." },
       { status: 500 }
     );
   }

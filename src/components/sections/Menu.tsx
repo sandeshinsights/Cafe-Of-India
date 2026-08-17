@@ -11,15 +11,11 @@ import {
   Clock,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+// Shared with the checkout API so the displayed surcharge and the charged
+// surcharge can't drift apart.
+import { PROTEIN_OPTIONS } from "@/lib/pricing";
 
 /* ─── constants ─── */
-
-const PROTEIN_OPTIONS = [
-  { name: "Chicken", surcharge: 0.0 },
-  { name: "Mutton", surcharge: 2.0 },
-  { name: "Lamb", surcharge: 2.0 },
-  { name: "Shrimp", surcharge: 2.0 },
-];
 
 function isDinnerCategory(name: string): boolean {
   return name.toLowerCase() === "dinner";

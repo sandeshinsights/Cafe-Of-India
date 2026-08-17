@@ -155,6 +155,64 @@ export function formatScheduledPickup(dateStr: string, timeStr: string): string 
 }
 
 /**
+ * Convert a scheduled ET date+time to a UTC ISO-8601 string.
+ * Input:  "2026-06-19", "16:00"  (4:00 PM Eastern)
+ * Output: "2026-06-19T20:00:00.000Z"  (during EDT)
+ *
+ * This is what gets STORED in Order.scheduledFor. It used to hold the
+ * human-readable output of formatScheduledPickup ("Thursday, June 19 at
+ * 4:00 PM"), which `new Date()` cannot parse — so every consumer that treated
+ * scheduledFor as a date (Uber pickup_ready_dt, the dispatch cron's window
+ * query, the success page) silently misbehaved: scheduled delivery orders
+ * dispatched a courier immediately. Store machine time; format for humans
+ * only at display time (formatScheduledDisplay).
+ *
+ * DST note: the offset is derived at the target instant, so EDT/EST both work.
+ * The ambiguous 1-2 AM transition hours can't occur — ordering hours are
+ * 11:30-21:00.
+ */
+export function scheduledTimeToUtcIso(dateStr: string, timeStr: string): string {
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const [h, mi] = timeStr.split(":").map(Number);
+
+  // Guess: the desired wall-clock reading taken as if it were UTC.
+  const guess = new Date(Date.UTC(y, mo - 1, d, h, mi, 0));
+
+  // Render that instant on both a UTC clock and an ET clock, parse both in the
+  // server's local zone — the local-zone bias cancels, leaving the ET offset.
+  const utcView = new Date(guess.toLocaleString("en-US", { timeZone: "UTC" }));
+  const etView = new Date(guess.toLocaleString("en-US", { timeZone: TZ }));
+  const offsetMs = utcView.getTime() - etView.getTime();
+
+  return new Date(guess.getTime() + offsetMs).toISOString();
+}
+
+/**
+ * Format a stored scheduledFor value for humans, in Eastern Time.
+ * ISO input → "Thursday, June 19 at 4:00 PM". Unparseable input (legacy rows
+ * that stored the human-readable string directly) is returned as-is.
+ */
+export function formatScheduledDisplay(value: string | null | undefined): string {
+  if (!value) return "";
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+
+  const datePart = d.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    timeZone: TZ,
+  });
+  const timePart = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: TZ,
+  });
+  return `${datePart} at ${timePart}`;
+}
+
+/**
  * Server-side validation: is this scheduled date+time valid?
  * Accepts separate dateStr ("2026-06-19") and timeStr ("16:00")
  * to avoid timezone parsing issues with combined ISO strings.

@@ -5,14 +5,20 @@ export async function POST(req: NextRequest) {
   try {
     const { address, scheduledFor } = await req.json();
 
-    if (!address || address.trim().length < 10) {
+    if (typeof address !== "string" || address.trim().length < 10 || address.length > 300) {
       return NextResponse.json(
         { error: "Please enter a full street address" },
         { status: 400 }
       );
     }
 
-    const pickupReadyDt = scheduledFor ? new Date(scheduledFor).toISOString() : undefined;
+    // Only forward a parseable date — an invalid one would throw inside
+    // toISOString() and surface as a bogus "outside our delivery area" error.
+    let pickupReadyDt: string | undefined;
+    if (typeof scheduledFor === "string" && scheduledFor) {
+      const d = new Date(scheduledFor);
+      if (!isNaN(d.getTime())) pickupReadyDt = d.toISOString();
+    }
 
     const quote = await getUberQuote(
       "155 Main Street, Maynard, MA 01754",

@@ -15,7 +15,19 @@ interface VerifyResult {
   trackingUrl?: string;
   dropoffEta?: string;
   message?: string;
+  /** Courier dispatch has not concluded yet — poll, don't conclude. */
+  dispatchPending?: boolean;
 }
+
+/**
+ * When the Stripe webhook wins the fulfillment claim, this page can load while
+ * the webhook is still working — emails are spaced out and the Uber call takes a
+ * moment. During that gap the order genuinely has no courier yet, and the page
+ * used to read that as "manual delivery" and tell the customer so, permanently,
+ * because it only ever fetched once. So: poll while dispatch is unresolved.
+ */
+const POLL_INTERVAL_MS = 2000;
+const MAX_POLLS = 8; // ~16s, comfortably longer than a normal fulfillment pass
 
 export default function OrderSuccess() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -32,25 +44,51 @@ export default function OrderSuccess() {
       return;
     }
 
-    fetch("/api/verify-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sessionId }),
-    })
-      .then((res) => res.json())
-      .then((data: VerifyResult) => {
-        if (data.success) {
-          setStatus("success");
-          setOrderInfo(data);
-        } else {
-          setStatus("error");
-          setMessage(data.message || "Order verification failed.");
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const verify = async (attempt: number) => {
+      try {
+        const res = await fetch("/api/verify-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        const data: VerifyResult = await res.json();
+        if (cancelled) return;
+
+        if (!data.success) {
+          // Only the first call decides what the customer sees. A later poll
+          // failing must never replace a confirmed order with an error screen —
+          // the payment is already confirmed at that point.
+          if (attempt === 0) {
+            setStatus("error");
+            setMessage(data.message || "Order verification failed.");
+          }
+          return;
         }
-      })
-      .catch(() => {
+
+        setStatus("success");
+        setOrderInfo(data);
+
+        // The payment is confirmed either way — keep checking quietly in the
+        // background only until the delivery outcome is known.
+        if (data.dispatchPending && attempt + 1 < MAX_POLLS) {
+          timer = setTimeout(() => verify(attempt + 1), POLL_INTERVAL_MS);
+        }
+      } catch {
+        if (cancelled || attempt > 0) return;
         setStatus("error");
         setMessage("Network error. Please contact the restaurant.");
-      });
+      }
+    };
+
+    verify(0);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   if (status === "loading") {
@@ -103,6 +141,9 @@ export default function OrderSuccess() {
   const hasUberTracking = deliveryType === "asap" && !!orderInfo?.uberDeliveryId;
   const isScheduled = deliveryType === "scheduled";
   const isManual = deliveryType === "manual_fallback";
+  // No outcome yet — say nothing definite. Better to leave this on screen than to
+  // claim a manual delivery for an order whose driver is being assigned.
+  const isDispatchPending = !!orderInfo?.dispatchPending;
 
   const etaString = orderInfo?.dropoffEta
     ? new Date(orderInfo.dropoffEta).toLocaleTimeString("en-US", {
@@ -113,15 +154,22 @@ export default function OrderSuccess() {
       })
     : null;
 
-  const scheduledString = orderInfo?.scheduledFor
-    ? new Date(orderInfo.scheduledFor).toLocaleString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short",
-      })
+  // scheduledFor is a UTC ISO string; show it in restaurant-local time (ET)
+  // rather than the viewer's timezone. Guard against legacy rows that stored a
+  // human-readable string new Date() can't parse.
+  const scheduledDate = orderInfo?.scheduledFor ? new Date(orderInfo.scheduledFor) : null;
+  const scheduledString = scheduledDate
+    ? isNaN(scheduledDate.getTime())
+      ? orderInfo?.scheduledFor ?? null
+      : scheduledDate.toLocaleString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          timeZone: "America/New_York",
+          timeZoneName: "short",
+        })
     : null;
 
   return (
@@ -190,6 +238,20 @@ export default function OrderSuccess() {
                     </a>
                   )}
                 </div>
+              </>
+            )}
+
+            {/* DISPATCH PENDING — payment is confirmed, courier not resolved yet */}
+            {isDispatchPending && (
+              <>
+                <div className="flex items-center gap-2 mb-3">
+                  <Loader2 className="w-5 h-5 text-[#C4973B] animate-spin" />
+                  <span className="font-semibold text-[#5C1A1B]">Arranging your delivery</span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Your payment went through and the kitchen has your order. We&apos;re
+                  assigning a driver now — tracking will appear here in a moment.
+                </p>
               </>
             )}
 

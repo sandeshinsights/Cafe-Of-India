@@ -34,8 +34,13 @@ model Order {
   total           Float
   discountAmount  Float      @default(0) @map("discount_amount")
   stripeSessionId String     @unique @map("stripe_session_id")
-  status          String     @default("pending") // pending, paid, failed
+  status          String     @default("pending") // payment lifecycle ONLY: pending, paid, failed
   createdAt       DateTime   @default(now()) @map("created_at")
+  // Fulfillment tracking. fulfilledAt is the atomic idempotency claim — a non-null
+  // value means some path has already emailed/printed/dispatched this order.
+  // Never reuse `status` for this; it is the payment lifecycle only.
+  fulfilledAt     DateTime?  @map("fulfilled_at")
+  printedAt       DateTime?  @map("printed_at")
   promoCodeId     String?    @map("promo_code_id")
   promoCode       PromoCode? @relation(fields: [promoCodeId], references: [id])
   usages          PromoCodeUsage[]
@@ -48,6 +53,18 @@ model Order {
   deliveryFee       Float     @default(0) @map("delivery_fee")
   uberDeliveryId      String?   @map("uber_delivery_id")
   uberDeliveryStatus  String?   @map("uber_delivery_status")
+  // Coarse delivery state derived from Uber webhooks (DRIVER_ASSIGNED,
+  // OUT_FOR_DELIVERY, DELIVERED, DELIVERY_FAILED). These used to be written
+  // into `status`, which broke the fulfillment idempotency guard.
+  uberStatus          String?   @map("uber_status")
+  // Outcome of the courier dispatch attempt, for delivery orders only:
+  //   null         no attempt has concluded yet (fulfillment may still be running)
+  //   "dispatched" Uber accepted the delivery
+  //   "failed"     Uber refused / gave up — a human has to deliver this one
+  // The null-vs-"failed" distinction matters: without it the success page cannot
+  // tell "courier request still in flight" from "no courier is coming", and it
+  // told customers their order was a manual delivery while dispatch was pending.
+  dispatchState       String?   @map("dispatch_state")
   @@map("orders")
 }
 

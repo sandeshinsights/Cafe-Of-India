@@ -4,6 +4,8 @@ import { fulfillOrder } from "@/lib/order-fulfillment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -31,9 +33,20 @@ export async function POST(request: NextRequest) {
       console.log(`[stripe/webhook] Order ${result.orderId} fulfilled (alreadyFulfilled: ${!!result.alreadyFulfilled})`);
     } else {
       console.error(`[stripe/webhook] Fulfillment failed for ${session.id}:`, result.message);
+
+      // Stripe retries non-2xx responses, and the atomic fulfillment claim makes
+      // those retries safe — so hand transient failures back to Stripe instead of
+      // swallowing them. A blanket 200 here meant a paid order that failed to
+      // fulfill (DB down, schema drift) was dropped with no second attempt.
+      // Settled failures ("Payment not completed") stay 200: retrying is pointless.
+      if (result.retryable) {
+        return NextResponse.json(
+          { error: "Fulfillment failed, retry expected", message: result.message },
+          { status: 500 }
+        );
+      }
     }
   }
 
-  // Always return 200 — Stripe retries on non-2xx status
   return NextResponse.json({ received: true });
 }
