@@ -145,7 +145,6 @@
       "name": "Cafe Specials",
       "description": "Chef's signature creations",
       "items": [
-        { "id": "menu-64", "name": "Chicken Manchurian", "price": 10.99, "description": "Deep fried florets of cauliflower or chicken sauteed with chopped onion and garlic served in soy and chili sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-65", "name": "Gobi Manchurian", "price": 10.99, "description": "Deep fried florets of cauliflower or chicken sauteed with chopped onion and garlic served in soy and chili sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-66", "name": "Green Chili Chicken", "price": 18.99, "description": "Hot green chilis, green and red peppers, garam masala and ginger garlic sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-67", "name": "Chicken Mango", "price": 17.99, "description": "Chicken cooked in a creamy mango sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
