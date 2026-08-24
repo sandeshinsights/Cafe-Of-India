@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { sendCateringNotification } from "@/lib/email";
+import {
+  queueMetaCapiEvent,
+  getClientIp,
+  getClientUserAgent,
+} from "@/lib/meta-capi";
 
 /**
  * Zod Schema — validates catering form input
@@ -24,6 +29,15 @@ const cateringSchema = z.object({
     .max(500, "Maximum 500 guests"),
   eventDate: z.string().min(1, "Please select an event date"),
   message: z.string().max(1000, "Message is too long").optional(),
+  // Meta Pixel handoff — optional, never load-bearing. A missing block just
+  // means a lower-quality Lead event, never a rejected inquiry.
+  meta: z
+    .object({
+      eventId: z.string().max(100).optional(),
+      fbp: z.string().max(200).optional(),
+      fbc: z.string().max(400).optional(),
+    })
+    .optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -42,7 +56,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = result.data;
+    // `meta` is stripped out here so it never reaches Prisma or the email
+    // template — it is transport for the conversion event, not inquiry content.
+    const { meta, ...data } = result.data;
 
     // 3. Insert into database via Prisma
     await prisma.cateringInquiry.create({
@@ -64,7 +80,33 @@ try {
   console.error("Catering email failed:", err);
 }
 
-    // 5. Return success
+    // 5. Meta Lead (server copy). Deferred past the response by
+    //    queueMetaCapiEvent and error-swallowing by design — a Meta problem must
+    //    not turn a saved inquiry into a failure the customer sees.
+    if (meta?.eventId) {
+      queueMetaCapiEvent({
+        eventName: "Lead",
+        eventId: meta.eventId,
+        eventSourceUrl:
+          request.headers.get("referer") || process.env.NEXT_PUBLIC_BASE_URL,
+        userData: {
+          email: data.email,
+          phone: data.phone,
+          name: data.name,
+          fbp: meta.fbp,
+          fbc: meta.fbc,
+          clientIpAddress: getClientIp(request.headers),
+          clientUserAgent: getClientUserAgent(request.headers),
+        },
+        customData: {
+          content_name: "Catering Inquiry",
+          content_category: data.eventType,
+          currency: "USD",
+        },
+      });
+    }
+
+    // 6. Return success
     return NextResponse.json({
       success: true,
       message: "Thank you! We'll get back to you within 24 hours.",

@@ -6,6 +6,14 @@ import { useCart } from "@/context/CartContext";
 import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h, scheduledTimeToUtcIso } from "@/lib/ordering-hours";
 import { getDeliveryFee, getDeliveryQuote, isEligibleForDelivery, validateDeliveryAddress } from "@/lib/delivery";
 import TimeSlotPicker from "./TimeSlotPicker";
+// Meta Pixel — InitiateCheckout is sent from BOTH here and /api/checkout, so the
+// event id generated below has to travel with the request or Meta counts two.
+import {
+  trackMeta,
+  newMetaEventId,
+  getMetaBrowserIds,
+  toMetaContentId,
+} from "@/lib/meta-pixel";
 
 interface AppliedPromo {
   promoCodeId: string;
@@ -244,6 +252,31 @@ export default function CartDrawer() {
     setIsCheckingOut(true);
     setCheckoutError("");
 
+    // One id, two copies of the event: the browser's below and the server's in
+    // /api/checkout. Meta collapses them on (event_name, event_id).
+    const metaEventId = newMetaEventId();
+    const metaBrowserIds = getMetaBrowserIds();
+    const metaContents = items.map((ci) => ({
+      id: toMetaContentId(ci.id),
+      quantity: ci.quantity,
+      item_price: ci.price,
+    }));
+
+    trackMeta(
+      "InitiateCheckout",
+      {
+        content_ids: metaContents.map((c) => c.id),
+        contents: metaContents,
+        content_type: "product",
+        num_items: itemCount,
+        // Food revenue only — tax, tip and the delivery fee are pass-through and
+        // would inflate ROAS in Ads Manager. The server sends the same basis.
+        value: discountedSubtotal,
+        currency: "USD",
+      },
+      metaEventId
+    );
+
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -273,6 +306,13 @@ export default function CartDrawer() {
                 deliveryFee,
               }
             : {}),
+          // Meta: dedup id plus the browser's _fbp/_fbc, which the server has no
+          // other way to read for the InitiateCheckout and later Purchase events.
+          meta: {
+            eventId: metaEventId,
+            fbp: metaBrowserIds.fbp,
+            fbc: metaBrowserIds.fbc,
+          },
           ...(orderMode === "scheduled" && selectedDate && selectedTimeSlot
             ? {
                 scheduledDate: selectedDate.toLocaleDateString("en-CA", {

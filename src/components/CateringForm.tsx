@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
+// Meta Pixel — Lead is sent from here and from /api/catering under one event id.
+import { trackMeta, newMetaEventId, getMetaBrowserIds } from "@/lib/meta-pixel";
 
 export default function CateringForm() {
   const { catering } = getRestaurantData();
@@ -32,6 +34,10 @@ export default function CateringForm() {
     setStatus("loading");
     setErrorMsg("");
 
+    // Shared with the server copy of the event so Meta counts one lead, not two.
+    const metaEventId = newMetaEventId();
+    const metaBrowserIds = getMetaBrowserIds();
+
     try {
       const res = await fetch("/api/catering", {
         method: "POST",
@@ -39,6 +45,11 @@ export default function CateringForm() {
         body: JSON.stringify({
           ...form,
           guestCount: Number(form.guestCount),
+          meta: {
+            eventId: metaEventId,
+            fbp: metaBrowserIds.fbp,
+            fbc: metaBrowserIds.fbc,
+          },
         }),
       });
 
@@ -46,6 +57,18 @@ export default function CateringForm() {
 
       if (data.success) {
         setStatus("success");
+
+        // Fired only on a stored inquiry — a validation error or a dropped
+        // request is not a lead, and counting it would train Meta on noise.
+        trackMeta(
+          "Lead",
+          {
+            content_name: "Catering Inquiry",
+            content_category: form.eventType || undefined,
+            currency: "USD",
+          },
+          metaEventId
+        );
         setForm({
           name: "",
           email: "",

@@ -35,6 +35,9 @@ export default function PrivacyPage() {
             <p>
               We use the Device Information that we collect to help us screen for potential risk and fraud, and more generally to improve and optimize our website. If you submit a catering inquiry, we use your contact information solely to respond to your request. We do not sell, trade, or rent your personal information to third parties.
             </p>
+            <p className="mt-3">
+              To measure our advertising, we also share a limited set of information about completed orders, checkouts, and catering inquiries with Meta through its Conversions API. Contact details such as your name, email address, and phone number are irreversibly hashed on our servers before they are sent, so Meta receives a scrambled value it can only use to match against its own records &mdash; never your details in readable form. We do not send Meta the contents of your special instructions or catering message.
+            </p>
           </section>
 
           <section>
@@ -42,12 +45,24 @@ export default function PrivacyPage() {
             <p>
               We use cookies to track information about your visit to our website. We use Google Analytics to understand how visitors interact with our website. Google Analytics uses cookies to collect information such as how often users visit, what pages they visit, and what other sites they used prior to coming to our website. You can opt out of Google Analytics by installing the Google Analytics opt-out browser add-on or by declining our cookie consent banner.
             </p>
+            <p className="mt-3">
+              We also use the Meta Pixel (Facebook and Instagram) to measure the effectiveness of our advertising. The Meta Pixel sets cookies that record actions you take on this site &mdash; such as viewing a menu item, adding an item to your cart, starting checkout, completing an order, or submitting a catering inquiry &mdash; and reports them to Meta so we can understand which ads lead to orders and show relevant ads to people likely to be interested in our restaurant. You can control how Meta uses this information through your{" "}
+              <a
+                href="https://www.facebook.com/adpreferences"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-secondary underline hover:text-primary transition-colors"
+              >
+                Facebook Ad Preferences
+              </a>{" "}
+              and limit tracking through your browser or device settings.
+            </p>
           </section>
 
           <section>
             <h2 className="font-heading text-xl font-bold text-primary mb-3">4. Third-Party Services</h2>
             <p>
-              Our website may integrate with third-party services including Google Analytics for website analytics, Google Maps for directions, and social media platforms for sharing features. These services have their own privacy policies governing the use of your information.
+              Our website integrates with third-party services including Stripe for payment processing, Uber Direct for deliveries, Google Analytics for website analytics, Meta (Facebook and Instagram) for advertising measurement, Google Maps for directions, and social media platforms for sharing features. These services have their own privacy policies governing the use of your information.
             </p>
           </section>
 

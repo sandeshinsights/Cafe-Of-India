@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle, Home, Loader2, Truck, Clock, ExternalLink, Info } from "lucide-react";
+import { trackMeta } from "@/lib/meta-pixel";
 
 interface VerifyResult {
   success: boolean;
@@ -17,6 +18,13 @@ interface VerifyResult {
   message?: string;
   /** Courier dispatch has not concluded yet — poll, don't conclude. */
   dispatchPending?: boolean;
+  /** Figures for the browser half of the Meta Purchase event. */
+  purchase?: {
+    value: number;
+    currency: string;
+    contentIds: string[];
+    numItems: number;
+  };
 }
 
 /**
@@ -33,6 +41,9 @@ export default function OrderSuccess() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [message, setMessage] = useState("");
   const [orderInfo, setOrderInfo] = useState<VerifyResult | null>(null);
+  // This page polls while courier dispatch settles, so the Purchase event has to
+  // be fired at most once per mount — otherwise every poll re-reports the sale.
+  const purchaseTracked = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -70,6 +81,28 @@ export default function OrderSuccess() {
 
         setStatus("success");
         setOrderInfo(data);
+
+        // Meta Purchase, browser half. The server sent the same event under the
+        // same id from fulfillOrder(); Meta collapses the pair on
+        // (event_name, event_id), so the order id MUST stay the id on both
+        // sides. This copy exists for the cases the server one misses — and,
+        // conversely, it is why a customer who never reaches this page is still
+        // counted.
+        if (!purchaseTracked.current && data.orderId) {
+          purchaseTracked.current = true;
+          trackMeta(
+            "Purchase",
+            {
+              value: data.purchase?.value ?? 0,
+              currency: data.purchase?.currency ?? "USD",
+              content_type: "product",
+              content_ids: data.purchase?.contentIds ?? [],
+              num_items: data.purchase?.numItems ?? 1,
+              order_id: data.orderId,
+            },
+            data.orderId
+          );
+        }
 
         // The payment is confirmed either way — keep checking quietly in the
         // background only until the delivery outcome is known.

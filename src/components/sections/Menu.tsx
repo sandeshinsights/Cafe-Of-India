@@ -14,6 +14,9 @@ import { useCart } from "@/context/CartContext";
 // Shared with the checkout API so the displayed surcharge and the charged
 // surcharge can't drift apart.
 import { PROTEIN_OPTIONS } from "@/lib/pricing";
+// Meta Pixel — browser-only funnel events. ViewContent/AddToCart have no server
+// counterpart (there is no server route for them), so they carry no event id.
+import { trackMeta } from "@/lib/meta-pixel";
 
 /* ─── constants ─── */
 
@@ -67,14 +70,27 @@ export default function Menu() {
     setQuantity(1);
   }
 
-  function handleToggleExpand(itemId: string) {
-    if (expandedItemId === itemId) {
+  function handleToggleExpand(item: any, categoryName?: string) {
+    if (expandedItemId === item.id) {
       setExpandedItemId(null);
       resetForm();
-    } else {
-      setExpandedItemId(itemId);
-      resetForm();
+      return;
     }
+
+    setExpandedItemId(item.id);
+    resetForm();
+
+    // Opening the detail panel is the closest thing this menu has to viewing a
+    // product page — it is where the customer reads the description and picks
+    // options, so it is what Meta should see as ViewContent.
+    trackMeta("ViewContent", {
+      content_ids: [item.id],
+      content_name: item.name,
+      content_type: "product",
+      content_category: categoryName,
+      value: item.price,
+      currency: "USD",
+    });
   }
 
   function handleAddToCart(item: any, categoryName: string) {
@@ -98,6 +114,19 @@ export default function Menu() {
       spiceLevel: selectedSpice || undefined,
       specialInstructions: specialInstructions.trim() || undefined,
       quantity: quantity,
+    });
+
+    trackMeta("AddToCart", {
+      content_ids: [item.id],
+      content_name: item.name,
+      content_type: "product",
+      content_category: categoryName,
+      contents: [
+        { id: item.id, quantity, item_price: item.price + surcharge },
+      ],
+      num_items: quantity,
+      value: (item.price + surcharge) * quantity,
+      currency: "USD",
     });
 
     setExpandedItemId(null);
@@ -175,7 +204,7 @@ export default function Menu() {
               >
                 {/* header row */}
                 <button
-                  onClick={() => handleToggleExpand(item.id)}
+                  onClick={() => handleToggleExpand(item, activeCategory.name)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex-1 min-w-0">

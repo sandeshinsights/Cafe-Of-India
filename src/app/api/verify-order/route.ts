@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
       // Tells the success page the courier outcome is not settled yet, so it
       // polls instead of announcing a manual delivery.
       dispatchPending: result.dispatchPending,
+      // Values for the browser half of the Meta Purchase event. The page fires
+      // it with eventID = orderId, matching the server copy sent from
+      // fulfillOrder(), so Meta records one conversion rather than two.
+      purchase: result.purchase,
     });
   } catch (error) {
     console.error("Verify order error:", error);

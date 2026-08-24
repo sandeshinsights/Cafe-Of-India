@@ -13,6 +13,11 @@ import {
 import { DELIVERY_CONFIG } from "@/lib/delivery";
 import { getUberQuote } from "@/lib/uber-direct";
 import { getProteinSurcharge } from "@/lib/pricing";
+import {
+  queueMetaCapiEvent,
+  getClientIp,
+  getClientUserAgent,
+} from "@/lib/meta-capi";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-05-27.dahlia",
@@ -49,6 +54,16 @@ const checkoutSchema = z.object({
   deliveryApt: z.string().max(100).optional(),
   deliveryInstructions: z.string().max(300, "Delivery instructions are too long").optional(),
   deliveryFee: z.number().min(0).max(200).optional(),
+  // Meta Pixel handoff. Optional and never load-bearing: an old cached client,
+  // a blocked pixel, or a curl request simply produces a lower-quality
+  // conversion event, never a failed checkout.
+  meta: z
+    .object({
+      eventId: z.string().max(100).optional(),
+      fbp: z.string().max(200).optional(),
+      fbc: z.string().max(400).optional(),
+    })
+    .optional(),
 });
 
 function getMenuItemPrice(itemId: string): { price: number; category: string } | null {
@@ -66,7 +81,18 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount, isDelivery, deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee } = parsed;
+    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount, isDelivery, deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee, meta } = parsed;
+
+    // Meta attribution signals. IP and user-agent must be the CUSTOMER's, which
+    // is only true here — by the time fulfillment runs, the "client" is Stripe's
+    // webhook or our own cron. That is why they get carried on the session below
+    // rather than re-read later.
+    const metaFbp = meta?.fbp;
+    const metaFbc = meta?.fbc;
+    const metaClientIp = getClientIp(req.headers);
+    const metaClientUserAgent = getClientUserAgent(req.headers);
+    const metaSourceUrl =
+      req.headers.get("referer") || process.env.NEXT_PUBLIC_BASE_URL || undefined;
 
     // --- Handle ordering window vs scheduled time ---
     const hasScheduledDate = typeof scheduledDate === "string" && scheduledDate.trim() !== "";
@@ -251,6 +277,17 @@ export async function POST(req: NextRequest) {
       deliveryFeeAmount = serverFee;
     }
 
+    // Meta content ids are the stable menu item (first two dash-segments), not
+    // the composite cart line id, so audiences and reporting line up across
+    // orders — the same recovery getMenuItemPrice does for pricing.
+    const metaContents = sanitizedItems.map((item) => ({
+      id: String(item.id).split("-").slice(0, 2).join("-"),
+      quantity: item.quantity as number,
+      item_price: item.price as number,
+    }));
+    const metaContentIds = metaContents.map((c) => c.id);
+    const metaNumItems = metaContents.reduce((sum, c) => sum + c.quantity, 0);
+
     // 4. Calculate final totals with discount
     const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
     const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
@@ -321,6 +358,17 @@ export async function POST(req: NextRequest) {
         delivery_instructions: deliveryInstructions || "",
         delivery_fee: deliveryFeeAmount.toFixed(2),
         ...(scheduledForFormatted ? { scheduled_for: scheduledForFormatted } : {}),
+        // Meta attribution, parked on the session so fulfillOrder() can send a
+        // fully-matched Purchase event. Stripe metadata rather than an Order
+        // column deliberately: this is disposable marketing data and it is not
+        // worth a schema migration on the ordering flow (see CLAUDE.md on the
+        // two-step migrate-then-deploy cost). Stripe caps values at 500 chars.
+        ...(metaFbp ? { fb_fbp: metaFbp.slice(0, 500) } : {}),
+        ...(metaFbc ? { fb_fbc: metaFbc.slice(0, 500) } : {}),
+        ...(metaClientIp ? { fb_client_ip: metaClientIp.slice(0, 100) } : {}),
+        ...(metaClientUserAgent && metaClientUserAgent.length <= 500
+          ? { fb_client_ua: metaClientUserAgent }
+          : {}),
       },
     });
 
@@ -348,6 +396,36 @@ export async function POST(req: NextRequest) {
         ...(scheduledForIso ? { scheduledFor: scheduledForIso } : {}),
       },
     });
+
+    // 7. Meta InitiateCheckout (server copy). Runs after the response via
+    //    `after()`, so a slow Graph API call cannot delay the redirect to
+    //    Stripe. The browser fired the same event id; Meta dedups the pair.
+    if (meta?.eventId) {
+      queueMetaCapiEvent({
+        eventName: "InitiateCheckout",
+        eventId: meta.eventId,
+        eventSourceUrl: metaSourceUrl,
+        userData: {
+          email,
+          phone,
+          name,
+          fbp: metaFbp,
+          fbc: metaFbc,
+          clientIpAddress: metaClientIp,
+          clientUserAgent: metaClientUserAgent,
+        },
+        customData: {
+          // Same basis as the browser event and as Purchase: food revenue only,
+          // excluding tax, tip and the pass-through delivery fee.
+          value: discountedSubtotal,
+          currency: "USD",
+          content_type: "product",
+          content_ids: metaContentIds,
+          contents: metaContents,
+          num_items: metaNumItems,
+        },
+      });
+    }
 
     return NextResponse.json({ url: session.url });
   } catch (error) {

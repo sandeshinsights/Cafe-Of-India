@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { sendOrderNotification, sendCustomerConfirmation, sendOrderToPrinter } from "@/lib/email";
 import { createUberDelivery, getUberDeliveryStatus } from "@/lib/uber-direct";
+import { queueMetaCapiEvent } from "@/lib/meta-capi";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -40,6 +41,59 @@ export interface FulfillmentResult {
    * retries; the atomic claim makes those retries safe.
    */
   retryable?: boolean;
+  /**
+   * What the success page needs to fire the browser half of the Meta Purchase
+   * event. Returned on the already-fulfilled path too — the Stripe webhook
+   * usually wins the claim, so that is the path the customer's browser actually
+   * lands on. Purely informational; nothing in the ordering flow reads it.
+   */
+  purchase?: MetaPurchaseSummary;
+}
+
+/** Meta Purchase payload, derived from the stored cart snapshot. */
+export interface MetaPurchaseSummary {
+  value: number;
+  currency: "USD";
+  contentIds: string[];
+  contents: Array<{ id: string; quantity: number; item_price: number }>;
+  numItems: number;
+}
+
+/**
+ * Build the Meta Purchase payload from an order.
+ *
+ * `value` is food revenue — subtotal minus discount. Tax goes to the state, the
+ * tip goes to staff and the delivery fee goes to Uber, so folding them in would
+ * inflate ROAS in Ads Manager against money the restaurant never keeps. Change
+ * this one line to `order.total` if you would rather have Meta's reported
+ * revenue line up with Stripe deposits.
+ *
+ * Content ids are the stable menu item (first two dash-segments of the cart line
+ * id), matching what the browser sends, so audiences and any future catalog
+ * reconcile across orders.
+ */
+function buildPurchaseSummary(order: OrderRow): MetaPurchaseSummary {
+  const rawItems = Array.isArray(order.items)
+    ? (order.items as Array<Record<string, unknown>>)
+    : [];
+
+  const contents = rawItems.map((item) => ({
+    id: String(item.id ?? "").split("-").slice(0, 2).join("-"),
+    quantity: Number(item.quantity ?? 1),
+    item_price: Number(item.price ?? 0),
+  }));
+
+  const value = parseFloat(
+    (order.subtotal - (order.discountAmount ?? 0)).toFixed(2)
+  );
+
+  return {
+    value: value > 0 ? value : 0,
+    currency: "USD",
+    contentIds: contents.map((c) => c.id),
+    contents,
+    numItems: contents.reduce((sum, c) => sum + c.quantity, 0),
+  };
 }
 
 type OrderRow = NonNullable<Awaited<ReturnType<typeof prisma.order.findUnique>>>;
@@ -111,6 +165,7 @@ async function describeFulfilledOrder(order: OrderRow): Promise<FulfillmentResul
     trackingUrl,
     dropoffEta,
     dispatchPending,
+    purchase: buildPurchaseSummary(order),
     alreadyFulfilled: true,
   };
 }
@@ -311,6 +366,52 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       });
     }
 
+    // 9. Meta Purchase (server copy) — LAST, deliberately.
+    //
+    //    Everything above is operationally critical; this is marketing
+    //    telemetry. `queueMetaCapiEvent` defers the HTTP call past the response
+    //    and swallows its own errors, so it can neither delay the Stripe webhook
+    //    (which retries on a slow response) nor throw into the claim winner.
+    //
+    //    Note it therefore adds NO post-claim side effect the recovery sweep
+    //    needs to know about: a lost Meta event costs an ad-reporting row, not
+    //    an order. The customer's browser sends the same event id from the
+    //    success page, which covers most misses anyway.
+    const purchase = buildPurchaseSummary(order);
+    queueMetaCapiEvent({
+      eventName: "Purchase",
+      // The order id is the dedup key. The success page fires the browser copy
+      // with this exact value — change one side and Meta double-counts revenue.
+      eventId: order.id,
+      // Omitted rather than sent relative when the base URL is unset — Meta
+      // wants an absolute URL and a bare "/order/success" is worse than nothing.
+      eventSourceUrl: process.env.NEXT_PUBLIC_BASE_URL
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/order/success`
+        : undefined,
+      userData: {
+        email: order.email,
+        phone: order.phone,
+        name: order.name,
+        // Captured at checkout and parked on the Stripe session: at this point
+        // the caller is Stripe's webhook, so the live request headers describe
+        // Stripe, not the customer.
+        fbp: session.metadata?.fb_fbp,
+        fbc: session.metadata?.fb_fbc,
+        clientIpAddress: session.metadata?.fb_client_ip,
+        clientUserAgent: session.metadata?.fb_client_ua,
+      },
+      customData: {
+        value: purchase.value,
+        currency: purchase.currency,
+        content_type: "product",
+        content_ids: purchase.contentIds,
+        contents: purchase.contents,
+        num_items: purchase.numItems,
+        order_id: order.id,
+        delivery_category: isDelivery ? "home_delivery" : "in_store",
+      },
+    });
+
     return {
       success: true,
       orderId: order.id,
@@ -321,6 +422,7 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       uberDeliveryStatus,
       trackingUrl,
       dropoffEta,
+      purchase,
     };
   } catch (error) {
     // Anything landing here is infrastructure (Stripe unreachable, DB down, a
