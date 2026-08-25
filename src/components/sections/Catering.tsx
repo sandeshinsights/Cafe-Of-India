@@ -73,7 +73,7 @@ export default function Catering() {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 80vw"
-              priority={false}
+              loading="lazy"
             />
           </div>
         )}

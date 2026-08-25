@@ -50,7 +50,7 @@ export default function Specials() {
               Handpicked by Our Chef
             </span>
           </div>
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">
             Chef&apos;s Specials
           </h2>
           <p className="text-white/80 text-lg max-w-2xl mx-auto">
@@ -111,7 +111,7 @@ export default function Specials() {
                 )}
 
                 {/* Dish Name */}
-                <h3 className="font-heading text-2xl font-bold mb-2 group-hover:text-secondary transition-colors">
+                <h3 className="font-heading text-2xl font-bold mb-2 text-white group-hover:text-secondary transition-colors">
                   {special.name}
                 </h3>
 

@@ -27,22 +27,26 @@ export default function About() {
   const { about } = getRestaurantData();
 
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" className="py-20 sm:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Two-column: Text + Photo */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-16">
           {/* Left: Text */}
-          <div>
-            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-6">
+          <div className="reveal">
+            <p className="text-secondary text-sm font-medium tracking-[0.2em] uppercase mb-3">
+              Our Story
+            </p>
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-5">
               {about.headline}
             </h2>
+            <div className="w-16 h-px bg-secondary/60 mb-6" />
             <p className="text-text-light text-lg leading-relaxed">
               {about.description}
             </p>
           </div>
 
-                   {/* Right: Photo */}
+          {/* Right: Photo */}
           {about.image && (
             <div className="relative">
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
@@ -52,11 +56,14 @@ export default function About() {
                   fill
                   className="object-cover"
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
+                  loading="eager"
                 />
               </div>
-              {/* Decorative accent bar */}
-              <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-accent/20 rounded-2xl -z-10" />
+              {/* Decorative accent block. This used to be `bg-accent/20 -z-10`,
+                  which was invisible twice over: there is no `accent` colour in
+                  the theme, and a negative z-index painted it behind the
+                  section's own white background. Gold, and in front. */}
+              <div className="absolute -bottom-5 -right-5 w-28 h-28 rounded-2xl border-4 border-secondary/40 pointer-events-none" />
             </div>
           )}
         </div>
@@ -66,7 +73,7 @@ export default function About() {
           {about.highlights.map((card, index) => (
             <div
               key={index}
-              className="group bg-cream rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+              className="group bg-cream rounded-2xl p-8 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1 reveal"
             >
               {/* Icon */}
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-6 group-hover:bg-primary group-hover:text-white transition-colors duration-300">

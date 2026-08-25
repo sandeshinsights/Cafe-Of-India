@@ -30,7 +30,7 @@ export default function Contact() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">
             Visit Us
           </h2>
           <p className="text-white/80 text-lg">
@@ -62,7 +62,7 @@ export default function Contact() {
                 <MapPin className="w-5 h-5 text-secondary" />
               </div>
               <div>
-                <h3 className="font-heading text-xl font-bold mb-1">Address</h3>
+                <h3 className="font-heading text-xl font-bold mb-1 text-white">Address</h3>
                 <p className="text-white/80">{address.full}</p>
                 <a
                   href="https://maps.google.com/?q=155+Main+Street+Maynard+MA+01754"
@@ -82,7 +82,7 @@ export default function Contact() {
                 <Phone className="w-5 h-5 text-secondary" />
               </div>
               <div>
-                <h3 className="font-heading text-xl font-bold mb-1">Phone</h3>
+                <h3 className="font-heading text-xl font-bold mb-1 text-white">Phone</h3>
                 <a
                   href={`tel:${phone}`}
                   className="text-white/80 hover:text-secondary transition-colors"
@@ -98,7 +98,7 @@ export default function Contact() {
                 <Mail className="w-5 h-5 text-secondary" />
               </div>
               <div>
-                <h3 className="font-heading text-xl font-bold mb-1">Email</h3>
+                <h3 className="font-heading text-xl font-bold mb-1 text-white">Email</h3>
                 <a
                   href={`mailto:${email}`}
                   className="text-white/80 hover:text-secondary transition-colors"
@@ -114,7 +114,7 @@ export default function Contact() {
                 <Clock className="w-5 h-5 text-secondary" />
               </div>
               <div>
-                <h3 className="font-heading text-xl font-bold mb-2">Hours</h3>
+                <h3 className="font-heading text-xl font-bold mb-2 text-white">Hours</h3>
                 <div className="space-y-1">
                   {days.map((day) => (
                     <div key={day} className="flex justify-between text-sm text-white/80 gap-6">
@@ -128,7 +128,7 @@ export default function Contact() {
 
             {/* Service Areas */}
             <div>
-              <h3 className="font-heading text-xl font-bold mb-2">Service Areas</h3>
+              <h3 className="font-heading text-xl font-bold mb-2 text-white">Service Areas</h3>
               <p className="text-white/70 text-sm">
                 We serve the greater MetroWest area including:{" "}
                 <span className="text-secondary font-medium">

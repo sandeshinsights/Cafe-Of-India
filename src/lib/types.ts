@@ -36,12 +36,36 @@ export interface SectionConfig {
   enabled: boolean;
 }
 
+/**
+ * Which homepage sections render. Read by src/app/page.tsx.
+ *
+ * Deliberately separate from the behaviour flags below: a mistake here hides a
+ * band of the homepage, which is obvious and reversible. Nothing in this object
+ * may ever gate ordering, checkout, or fulfilment — a flag that can take the
+ * restaurant offline is not worth the convenience.
+ */
+export interface SectionFlags {
+  about: boolean;
+  gallery: boolean;
+  specials: boolean;
+  reviews: boolean;
+  catering: boolean;
+  faq: boolean;
+}
+
 export interface FeatureFlags {
+  /**
+   * Descriptive only — nothing reads these to switch behaviour. Both said
+   * `false` for months while online ordering and the catering form were live in
+   * production, which is the hazard of config nothing consumes. If you ever wire
+   * them up, wire them somewhere that failing closed is safe.
+   */
   onlineOrdering: boolean;
   cateringForm: boolean;
   newsletter: boolean;
   cookieConsent: boolean;
   analytics: boolean;
+  sections: SectionFlags;
 }
 
 export interface ThemeColors {

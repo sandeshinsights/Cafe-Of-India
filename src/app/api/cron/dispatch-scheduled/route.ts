@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { createUberDelivery } from "@/lib/uber-direct";
 import { sendOrderToPrinter, sendFulfillmentAlert, type StuckOrderReport } from "@/lib/email";
-import { isScheduledForLater } from "@/lib/order-fulfillment";
+import { fulfillOrder, isScheduledForLater } from "@/lib/order-fulfillment";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export const maxDuration = 60;
 
@@ -19,11 +22,134 @@ const RECOVERY_LOOKBACK_MS = 24 * 60 * 60 * 1000; // ignore anything older
 const RECOVERY_MIN_AGE_MS = 10 * 60 * 1000; // never touch an in-flight fulfillment
 const REDISPATCH_MAX_AGE_MS = 2 * 60 * 60 * 1000; // past this, a courier is pointless
 
+/**
+ * Pre-claim recovery tuning (see recoverUnclaimedOrders).
+ *
+ * Stripe expires an abandoned Checkout Session ~24h after creation, so a full
+ * day of lookback is enough to reach every row that can still be settled. The
+ * min age keeps the sweep off a checkout the customer is still filling in.
+ */
+const UNCLAIMED_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+const UNCLAIMED_MIN_AGE_MS = 15 * 60 * 1000;
+const UNCLAIMED_MAX_EXAMINED = 40; // one Stripe round-trip each; keep well inside maxDuration
+
 const SEND_SPACING_MS = 500; // Resend's default limit is 2 req/s
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const errMessage = (err: unknown) => (err instanceof Error ? err.message : String(err));
+
+/**
+ * Settle orders that never got past `pending` — the sweep's pre-claim half.
+ *
+ * recoverStuckOrders below can only see orders that were *claimed*: it filters on
+ * status "paid", which fulfillOrder() writes in the same statement as fulfilledAt.
+ * An order whose fulfillment never started is invisible to it. That happens when
+ * both triggers miss — Stripe never delivered checkout.session.completed AND the
+ * customer closed the tab before /order/success POSTed to /api/verify-order — and
+ * the result is the worst failure the system has: money taken, nothing printed,
+ * nobody alerted.
+ *
+ * Almost every pending row is something far more boring: an abandoned cart. The
+ * Order row is written when the Checkout Session is created, before the customer
+ * has typed a card number, so every bailed-out checkout leaves one behind. Only
+ * Stripe knows which is which, so ask it, one row at a time.
+ */
+async function recoverUnclaimedOrders(now: Date) {
+  const unclaimed = await prisma.order.findMany({
+    where: {
+      status: "pending",
+      createdAt: {
+        gte: new Date(now.getTime() - UNCLAIMED_LOOKBACK_MS),
+        lte: new Date(now.getTime() - UNCLAIMED_MIN_AGE_MS),
+      },
+    },
+    orderBy: { createdAt: "asc" },
+    take: UNCLAIMED_MAX_EXAMINED,
+  });
+
+  const reports: StuckOrderReport[] = [];
+  let fulfilled = 0;
+  let abandoned = 0;
+  let untouched = 0;
+
+  for (const order of unclaimed) {
+    let session: Stripe.Checkout.Session;
+    try {
+      session = await stripe.checkout.sessions.retrieve(order.stripeSessionId);
+    } catch (err) {
+      // Transient Stripe trouble. Leave the row pending and let the next run
+      // decide — guessing here would either abandon a paid order or fulfill an
+      // unpaid one.
+      console.error(`[cron/unclaimed] Stripe lookup failed for #${order.id}:`, errMessage(err));
+      untouched++;
+      continue;
+    }
+
+    if (session.payment_status === "paid") {
+      console.error(
+        `[cron/unclaimed] Order #${order.id} was PAID but never fulfilled — fulfilling now`
+      );
+
+      // fulfillOrder() is the whole job: atomic claim, kitchen slip, both emails,
+      // courier dispatch, Meta Purchase. It is idempotent and it is the same call
+      // the webhook would have made. Do not reimplement any of it here.
+      const result = await fulfillOrder(order.stripeSessionId);
+
+      if (result.success) {
+        fulfilled++;
+        reports.push({
+          orderId: order.id,
+          name: order.name,
+          phone: order.phone,
+          total: order.total,
+          fulfilledAt: order.createdAt,
+          problem:
+            "it was paid for but never reached the kitchen — no slip printed when the order came in",
+          action:
+            "the slip has just printed; check how late it is and call the customer before you start cooking",
+        });
+      } else {
+        reports.push({
+          orderId: order.id,
+          name: order.name,
+          phone: order.phone,
+          total: order.total,
+          fulfilledAt: order.createdAt,
+          problem: `it was paid for, and fulfilling it just failed again (${result.message ?? "unknown error"})`,
+          action: "write this order down from this email and call the customer",
+        });
+      }
+      await sleep(SEND_SPACING_MS);
+      continue;
+    }
+
+    if (session.status === "expired") {
+      // Abandoned cart: the customer never paid and never will. Settle the row so
+      // `pending` means "checkout in progress" rather than "nobody knows".
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "abandoned" },
+      });
+      abandoned++;
+      continue;
+    }
+
+    // Session still open (or an unpaid state Stripe has not settled). Not our
+    // business yet.
+    untouched++;
+  }
+
+  if (reports.length > 0) {
+    try {
+      await sendFulfillmentAlert(reports);
+    } catch (err) {
+      console.error("[cron/unclaimed] Alert email failed:", errMessage(err));
+    }
+  }
+
+  return { examined: unclaimed.length, fulfilled, abandoned, untouched };
+}
 
 /**
  * Find paid orders whose post-payment work never finished, fix what can be fixed
@@ -259,7 +385,16 @@ export async function GET(request: Request) {
     }
   }
 
-  // Second job on the same schedule: catch orders whose post-payment work died
+  // Second job: settle orders that never got past `pending`. Runs before the
+  // stuck sweep, and cannot collide with it — anything fulfilled here has a
+  // fulfilledAt of "just now", which the stuck sweep's 10-minute min-age window
+  // deliberately excludes.
+  const unclaimed = await recoverUnclaimedOrders(new Date());
+  if (unclaimed.examined > 0) {
+    console.log(`[cron/unclaimed] ${JSON.stringify(unclaimed)}`);
+  }
+
+  // Third job on the same schedule: catch orders whose post-payment work died
   // half-finished. Runs after the dispatch pass so a scheduled order dispatched
   // above is not also seen as stuck.
   const recovery = await recoverStuckOrders(new Date());
@@ -271,6 +406,7 @@ export async function GET(request: Request) {
     checkedAt: nowISO,
     ordersFound: pendingOrders.length,
     results,
+    unclaimed,
     recovery,
   });
 }

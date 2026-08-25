@@ -1,11 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle, Gift } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h, scheduledTimeToUtcIso } from "@/lib/ordering-hours";
 import { getDeliveryFee, getDeliveryQuote, isEligibleForDelivery, validateDeliveryAddress } from "@/lib/delivery";
 import TimeSlotPicker from "./TimeSlotPicker";
+import {
+  calculateFreeItemOffer,
+  type FreeItemOffer,
+  type FreeItem,
+} from "@/lib/free-item-offer";
 // Meta Pixel — InitiateCheckout is sent from BOTH here and /api/checkout, so the
 // event id generated below has to travel with the request or Meta counts two.
 import {
@@ -14,6 +19,80 @@ import {
   getMetaBrowserIds,
   toMetaContentId,
 } from "@/lib/meta-pixel";
+
+/**
+ * The spend-threshold offer, shown in the cart.
+ *
+ * Three states, and the middle one is the point of the whole feature: the
+ * customer has earned a free item but has not added it, so we say so and give
+ * them a one-tap way to claim it. Nothing is ever added to their cart for them.
+ */
+function FreeItemBanner({
+  offer,
+  onAdd,
+}: {
+  offer: FreeItemOffer;
+  onAdd: (item: FreeItem) => void;
+}) {
+  const claimed = offer.freeItems;
+  const unclaimed = offer.missingItems;
+
+  if (claimed.length === 0 && unclaimed.length === 0 && !offer.nextThreshold) {
+    return null;
+  }
+
+  const names = (list: FreeItem[]) => list.map((f) => f.name).join(" + ");
+
+  return (
+    <div className="space-y-2">
+      {claimed.length > 0 && (
+        <div className="flex items-start gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2">
+          <Gift className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+          <p className="text-xs text-green-800">
+            <span className="font-semibold">{names(claimed)}</span> on the house &mdash; $
+            {offer.discount.toFixed(2)} off your order.
+          </p>
+        </div>
+      )}
+
+      {unclaimed.length > 0 && (
+        <div className="rounded-lg bg-[#FBF8F1] border border-[#C4973B]/40 px-3 py-2">
+          <div className="flex items-start gap-2">
+            <Gift className="w-4 h-4 text-[#C4973B] shrink-0 mt-0.5" />
+            <p className="text-xs text-[#5C1A1B]">
+              You&rsquo;ve unlocked a free{" "}
+              <span className="font-semibold">{names(unclaimed)}</span>. Add
+              {unclaimed.length > 1 ? " them" : " it"} to your order to claim
+              {unclaimed.length > 1 ? " them" : " it"}.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {unclaimed.map((freeItem) => (
+              <button
+                key={freeItem.id}
+                type="button"
+                onClick={() => onAdd(freeItem)}
+                className="text-xs font-semibold px-3 py-1 rounded-full bg-[#C4973B] text-white hover:bg-[#b3872f] transition-colors"
+              >
+                Add {freeItem.name} &mdash; free
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {offer.nextThreshold !== null && offer.amountToNext > 0 && (
+        <p className="text-xs text-gray-500 px-1">
+          Spend ${offer.amountToNext.toFixed(2)} more to unlock a free{" "}
+          {offer.nextThreshold >= 100
+            ? "Vegetable Samosa + Mango Lassi"
+            : "Mango Lassi"}
+          .
+        </p>
+      )}
+    </div>
+  );
+}
 
 interface AppliedPromo {
   promoCodeId: string;
@@ -26,6 +105,7 @@ interface AppliedPromo {
 export default function CartDrawer() {
   const {
     items,
+    addItem,
     removeItem,
     updateQuantity,
     subtotal,
@@ -94,8 +174,25 @@ export default function CartDrawer() {
     }, 300);
   };
 
-  // Calculate discount
-  const discountAmount = appliedPromo
+  // Free-item offer, from the same module /api/checkout charges from. If these
+  // two ever disagree the customer is shown one number and billed another.
+  const freeItemOffer = useMemo(
+    () =>
+      calculateFreeItemOffer(
+        items.map((item) => ({
+          id: item.id,
+          price: item.price,
+          quantity: item.quantity,
+        }))
+      ),
+    [items]
+  );
+
+  // Calculate discount. The free item and a promo code do NOT stack — whichever
+  // saves more wins, which is exactly how checkout decides it. A promo code that
+  // loses stays applied in the UI but contributes nothing; the server does not
+  // consume it either, so it still works on a later order.
+  const promoDiscount = appliedPromo
     ? parseFloat(
         appliedPromo.discountType === "PERCENTAGE"
           ? (subtotal * appliedPromo.discountValue / 100).toFixed(2)
@@ -103,13 +200,42 @@ export default function CartDrawer() {
       )
     : 0;
 
+  const freeItemWins = freeItemOffer.discount > promoDiscount;
+  const discountAmount = freeItemWins ? freeItemOffer.discount : promoDiscount;
+  const discountLabel = freeItemWins
+    ? `Free ${freeItemOffer.freeItems.map((f) => f.name).join(" + ")}`
+    : appliedPromo?.message || "";
+  const hasDiscount = discountAmount > 0;
+
   const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
   const discountTax = parseFloat((discountedSubtotal * 0.07).toFixed(2));
   const discountTotal = parseFloat((discountedSubtotal + discountTax).toFixed(2));
 
-  const displaySubtotal = appliedPromo ? discountedSubtotal : subtotal;
-  const displayTax = appliedPromo ? discountTax : tax;
-  const displayTotal = appliedPromo ? discountTotal : total;
+  const displaySubtotal = hasDiscount ? discountedSubtotal : subtotal;
+  const displayTax = hasDiscount ? discountTax : tax;
+  const displayTotal = hasDiscount ? discountTotal : total;
+
+  // The review step shows totals before any promo code has been entered, so
+  // it reflects the free-item discount only.
+  const reviewSubtotal = parseFloat(
+    (subtotal - freeItemOffer.discount).toFixed(2)
+  );
+  const reviewTax = parseFloat((reviewSubtotal * 0.07).toFixed(2));
+  const reviewTotal = parseFloat((reviewSubtotal + reviewTax).toFixed(2));
+
+  /**
+   * Add a free item to the cart, only ever from an explicit tap on the banner.
+   * The composite id format is load-bearing — checkout recovers the menu id from
+   * the first two dash-segments — and these two items take no protein or spice
+   * choice, matching how Menu.tsx builds ids for option-less items.
+   */
+  function handleAddFreeItem(freeItem: FreeItem) {
+    addItem({
+      id: `${freeItem.id}-none-none-${Date.now()}`,
+      name: freeItem.name,
+      price: freeItem.price,
+    });
+  }
 
   // Calculate tip
   const tipAmount = selectedTip === "custom"
@@ -451,19 +577,34 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="p-4 border-t border-gray-200 space-y-3">
-                {/* Totals */}
+                {/* Spend-threshold free item */}
+                <FreeItemBanner offer={freeItemOffer} onAdd={handleAddFreeItem} />
+
+                {/* Totals. A promo code is not applied until the checkout step,
+                    so only the free-item discount can show here. */}
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span className={freeItemOffer.discount > 0 ? "line-through text-gray-400" : ""}>
+                      ${subtotal.toFixed(2)}
+                    </span>
                   </div>
+                  {freeItemOffer.discount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span className="flex items-center gap-1">
+                        <Gift className="w-3 h-3" />
+                        Free {freeItemOffer.freeItems.map((f) => f.name).join(" + ")}
+                      </span>
+                      <span>-${freeItemOffer.discount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-gray-600">
                     <span>Tax (7%)</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>${reviewTax.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-bold text-[#5C1A1B] text-base pt-1 border-t border-gray-200">
                     <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>${reviewTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -684,15 +825,15 @@ export default function CartDrawer() {
             <div className="space-y-1 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span className={appliedPromo ? "line-through text-gray-400" : ""}>
+                <span className={hasDiscount ? "line-through text-gray-400" : ""}>
                   ${subtotal.toFixed(2)}
                 </span>
               </div>
-              {appliedPromo && (
+              {hasDiscount && (
                 <div className="flex justify-between text-green-600">
                   <span className="flex items-center gap-1">
-                    <Tag className="w-3 h-3" />
-                    Discount ({appliedPromo.message})
+                    {freeItemWins ? <Gift className="w-3 h-3" /> : <Tag className="w-3 h-3" />}
+                    {freeItemWins ? discountLabel : `Discount (${discountLabel})`}
                   </span>
                   <span>-${discountAmount.toFixed(2)}</span>
                 </div>

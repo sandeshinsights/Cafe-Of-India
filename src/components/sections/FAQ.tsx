@@ -26,7 +26,7 @@ export default function FAQ() {
   };
 
   return (
-    <section id="faq" className="py-20 bg-cream-dark">
+    <section id="faq" className="py-20 sm:py-24 bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-12">

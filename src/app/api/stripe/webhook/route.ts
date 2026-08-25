@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
 import { fulfillOrder } from "@/lib/order-fulfillment";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -45,6 +46,30 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
+    }
+  }
+
+  // An abandoned checkout leaves a `pending` Order row behind: the row is written
+  // when the session is created, before the customer has typed a card number, and
+  // nothing else ever settles it. Stripe expires the session ~24h later, which is
+  // the signal that the sale is definitively not happening.
+  //
+  // Requires `checkout.session.expired` to be enabled on the webhook endpoint in
+  // the Stripe dashboard; without it the daily cron sweep still settles these,
+  // just a day later.
+  if (event.type === "checkout.session.expired") {
+    const session = event.data.object as Stripe.Checkout.Session;
+
+    // Scoped to rows that were never claimed. A paid order must never be
+    // relabelled by a stray expiry event, and `status` is the payment lifecycle
+    // only — this is a payment outcome, so it belongs here.
+    const settled = await prisma.order.updateMany({
+      where: { stripeSessionId: session.id, status: "pending", fulfilledAt: null },
+      data: { status: "abandoned" },
+    });
+
+    if (settled.count > 0) {
+      console.log(`[stripe/webhook] checkout.session.expired — marked ${session.id} abandoned`);
     }
   }
 

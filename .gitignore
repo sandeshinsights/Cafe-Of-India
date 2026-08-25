@@ -45,3 +45,6 @@ next-env.d.ts
 /src/generated/prisma
 
 .vercel
+
+# Pre-compression image originals (kept locally; git history has them too)
+image-originals/

@@ -7,28 +7,86 @@
   --color-secondary-light: #D4AD5B;
   --color-cream: #FBF8F1;
   --color-cream-dark: #F5F0E6;
+  /* Deep warm near-black for the gallery band. Distinct from --color-primary so
+     the two dark sections on the page do not read as the same block. */
+  --color-ink: #221518;
   --color-text-main: #2D2D2D;
   --color-text-light: #6B6B6B;
   --font-heading: "Playfair Display", Georgia, serif;
   --font-body: "Inter", system-ui, sans-serif;
+
+  /* Motion. Registered here so Tailwind generates animate-* utilities for them
+     (Tailwind v4 has no tailwind.config.js — the theme IS this block). Every
+     usage is behind the motion-safe: variant, so prefers-reduced-motion turns
+     all of it off. */
+  --animate-ken-burns: ken-burns 24s ease-in-out infinite alternate;
+  --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-html {
-  scroll-behavior: smooth;
+/* Slow drift across the hero photograph. Deliberately tiny — 4% over 24s reads
+   as the image being alive rather than as an effect. Panning as well as zooming
+   keeps a centred subject from sitting dead still. */
+@keyframes ken-burns {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.04) translate3d(-1%, -1%, 0);
+  }
 }
 
-body {
-  font-family: var(--font-body);
-  color: var(--color-text-main);
-  background-color: var(--color-cream);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Fade up. Used for the hero's staggered entrance and for scroll reveals. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(1.25rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
-  color: var(--color-primary);
-  line-height: 1.2;
+/* Scroll-driven reveal, CSS-only.
+   Guarded by @supports so browsers without scroll-driven animations (Firefox,
+   older Safari) simply render the content normally rather than being left with
+   an element stuck at opacity 0. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 25%;
+    }
+  }
+}
+
+/* These element defaults MUST live in @layer base.
+   Unlayered CSS beats every cascade layer, and Tailwind's utilities live in the
+   utilities layer — so as plain top-level rules these won `color` against any
+   text-* utility, no matter the specificity. That is why `text-white` on a
+   heading did nothing: every h1-h6 on the site rendered maroon, including the
+   headings in the two `bg-primary` sections (Specials, Contact), which put
+   maroon text on a maroon background. Inside @layer base, utilities win again
+   and the default still applies wherever no utility is set. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-main);
+    background-color: var(--color-cream);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-primary);
+    line-height: 1.2;
+  }
 }
 
 ::-webkit-scrollbar {

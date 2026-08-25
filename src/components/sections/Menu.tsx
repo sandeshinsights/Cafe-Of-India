@@ -136,7 +136,7 @@ export default function Menu() {
   /* ─── render ─── */
 
   return (
-    <section id="menu" className="py-16 px-4 bg-[#FBF8F1]">
+    <section id="menu" className="py-16 px-4 bg-cream">
       <div className="max-w-6xl mx-auto">
         {/* heading */}
         <div className="text-center mb-10">
@@ -157,7 +157,7 @@ export default function Menu() {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 1152px"
-              priority
+              loading="eager"
             />
           </div>
         )}

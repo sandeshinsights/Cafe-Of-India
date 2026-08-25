@@ -34,7 +34,13 @@ model Order {
   total           Float
   discountAmount  Float      @default(0) @map("discount_amount")
   stripeSessionId String     @unique @map("stripe_session_id")
-  status          String     @default("pending") // payment lifecycle ONLY: pending, paid, failed
+  // Payment lifecycle ONLY: pending, paid, abandoned, failed. "pending" means a
+  // Checkout Session exists and the customer has not finished paying — the row is
+  // written before payment, so an abandoned cart leaves one behind; the Stripe
+  // webhook's expiry handler and the cron's pre-claim sweep settle those to
+  // "abandoned". Only fulfillOrder() writes "paid", in the same statement as
+  // fulfilledAt, so the two can never disagree.
+  status          String     @default("pending")
   createdAt       DateTime   @default(now()) @map("created_at")
   // Fulfillment tracking. fulfilledAt is the atomic idempotency claim — a non-null
   // value means some path has already emailed/printed/dispatched this order.

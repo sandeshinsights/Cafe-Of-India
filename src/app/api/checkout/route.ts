@@ -13,6 +13,8 @@ import {
 import { DELIVERY_CONFIG } from "@/lib/delivery";
 import { getUberQuote } from "@/lib/uber-direct";
 import { getProteinSurcharge } from "@/lib/pricing";
+import { calculateFreeItemOffer } from "@/lib/free-item-offer";
+import { applyDiscountToLineItems } from "@/lib/stripe-line-items";
 import {
   queueMetaCapiEvent,
   getClientIp,
@@ -227,6 +229,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 2b. Spend-threshold free-item offer: $50 of qualifying food earns a free
+    //     Mango Lassi, $100 earns a free Vegetable Samosa and Mango Lassi. Only
+    //     items the customer already added are comped — nothing is added to the
+    //     cart for them — and the free items' own prices do not count toward the
+    //     threshold. Computed from the SAME sanitized server prices the charge is
+    //     built from, so the client cannot buy its way past a threshold.
+    //
+    //     Deliberately does NOT stack with a promo code. Order.discountAmount is
+    //     a single number and PromoCodeUsage bills its discount against the code,
+    //     so combining them would report free food as part of the promo's cost.
+    //     The customer gets whichever saves more; a promo code that loses is not
+    //     consumed (validPromoCodeId is cleared), so it still works next time.
+    const freeItemOffer = calculateFreeItemOffer(
+      sanitizedItems.map((item) => ({
+        id: String(item.id),
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+      }))
+    );
+
+    let discountLabel = promoDescription || "Promo";
+    const freeItemWon = freeItemOffer.discount > discountAmount;
+    if (freeItemWon) {
+      discountAmount = freeItemOffer.discount;
+      validPromoCodeId = null;
+      discountLabel = `Free ${freeItemOffer.freeItems.map((i) => i.name).join(" + ")}`;
+    }
+
+    // A discount can never exceed the food it applies to. Without this a
+    // percentage promo above 100 would push the Stripe total negative.
+    discountAmount = Math.min(discountAmount, subtotal);
+
     // 3. Delivery: enforce requirements and price the fee SERVER-SIDE.
     //    The client's deliveryFee is only the number the customer was shown;
     //    the charge comes from a fresh Uber quote. Minimum order and a real
@@ -288,25 +322,40 @@ export async function POST(req: NextRequest) {
     const metaContentIds = metaContents.map((c) => c.id);
     const metaNumItems = metaContents.reduce((sum, c) => sum + c.quantity, 0);
 
-    // 4. Calculate final totals with discount
+    // 4. Apply the discount to the Stripe line items FIRST, then build the
+    //    totals from what was actually taken off. Doing it in this order is what
+    //    keeps the stored order row equal to what Stripe charges — the helper can
+    //    differ from the requested discount by a cent or two on integer rounding,
+    //    and the row has to reflect the charge, not the intent.
+    if (discountAmount > 0) {
+      // Take the money off the comped items first, so Stripe's checkout page
+      // shows "Mango Lassi $0.00" rather than a mystery reduction on whatever
+      // happened to be first in the cart. This reorders only the view handed to
+      // the helper — lineItems keeps its cart order for Stripe, and the helper
+      // mutates the shared line-item objects either way.
+      const freeIds = new Set(freeItemOffer.freeItems.map((i) => i.name));
+      const discountTargets = freeItemWon
+        ? [
+            ...lineItems.filter((li) => freeIds.has(li.price_data?.product_data?.name ?? "")),
+            ...lineItems.filter((li) => !freeIds.has(li.price_data?.product_data?.name ?? "")),
+          ]
+        : lineItems;
+
+      const appliedCents = applyDiscountToLineItems(
+        discountTargets,
+        Math.round(discountAmount * 100),
+        discountLabel
+      );
+      discountAmount = parseFloat((appliedCents / 100).toFixed(2));
+    }
+
+    // 5. Calculate final totals with discount. Tax is charged on the discounted
+    //    subtotal; tip is never taxed.
     const discountedSubtotal = parseFloat((subtotal - discountAmount).toFixed(2));
     const taxRate = parseFloat(process.env.SALES_TAX_RATE || "0.07");
     const tax = parseFloat((discountedSubtotal * taxRate).toFixed(2));
     const tip = parseFloat((tipAmount || 0).toFixed(2));
     const total = parseFloat((discountedSubtotal + tax + tip + deliveryFeeAmount).toFixed(2));
-
-    // 4. Apply discount by reducing the first line item's price
-    if (discountAmount > 0) {
-      const discountCents = Math.round(discountAmount * 100);
-      const firstItem = lineItems[0];
-      if (firstItem?.price_data?.unit_amount) {
-        const currentAmount = firstItem.price_data.unit_amount;
-        const newAmount = Math.max(1, currentAmount - discountCents);
-        firstItem.price_data.unit_amount = newAmount;
-        const currentDesc = firstItem.price_data.product_data?.description || "";
-        firstItem.price_data.product_data!.description = `${currentDesc} | Promo: -$${discountAmount.toFixed(2)}`.trim();
-      }
-    }
 
     // Add tip as separate Stripe line item
     if (tip > 0) {
@@ -338,7 +387,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 5. Create Stripe Checkout Session
+    // 6. Create Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: lineItems,
@@ -372,7 +421,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 6. Save order to database. items is the sanitized snapshot (server
+    // 7. Save order to database. items is the sanitized snapshot (server
     //    prices), scheduledFor is machine time — see notes above.
     await prisma.order.create({
       data: {
@@ -397,7 +446,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 7. Meta InitiateCheckout (server copy). Runs after the response via
+    // 8. Meta InitiateCheckout (server copy). Runs after the response via
     //    `after()`, so a slow Graph API call cannot delay the redirect to
     //    Stripe. The browser fired the same event id; Meta dedups the pair.
     if (meta?.eventId) {
