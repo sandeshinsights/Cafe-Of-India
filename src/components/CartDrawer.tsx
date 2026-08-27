@@ -114,7 +114,6 @@ export default function CartDrawer() {
     itemCount,
     isCartOpen,
     closeCart,
-    clearCart,
   } = useCart();
 
   const [step, setStep] = useState<"review" | "fulfillment" | "checkout">("review");
@@ -452,7 +451,13 @@ export default function CartDrawer() {
 
       const data = await response.json();
       if (data.url) {
-        clearCart();
+        // The cart is deliberately NOT cleared here. Clearing before the
+        // redirect meant that backing out of Stripe — or any failed payment —
+        // dropped the customer on an empty cart and forced them to re-add every
+        // item, while /order/cancelled told them their cart was still saved.
+        // Real customers rebuilt whole orders by hand before paying, and the
+        // ones who gave up never showed up in the orders table at all.
+        // /order/success clears it once the payment is actually confirmed.
         window.location.href = data.url;
       } else {
         setCheckoutError(data.error || "Checkout failed. Please try again.");

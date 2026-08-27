@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle, Home, Loader2, Truck, Clock, ExternalLink, Info } from "lucide-react";
 import { trackMeta } from "@/lib/meta-pixel";
+import { useCart } from "@/context/CartContext";
 
 interface VerifyResult {
   success: boolean;
@@ -44,6 +45,11 @@ export default function OrderSuccess() {
   // This page polls while courier dispatch settles, so the Purchase event has to
   // be fired at most once per mount — otherwise every poll re-reports the sale.
   const purchaseTracked = useRef(false);
+  // Checkout no longer empties the cart on the way to Stripe, so that a customer
+  // who backs out still has their order. This page is where a confirmed payment
+  // retires it — once, for the same reason the Purchase event fires once.
+  const { clearCart } = useCart();
+  const cartCleared = useRef(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -81,6 +87,14 @@ export default function OrderSuccess() {
 
         setStatus("success");
         setOrderInfo(data);
+
+        // Payment is confirmed, so the cart has done its job. This runs after
+        // the provider has hydrated from localStorage (that read is synchronous
+        // on mount; this is downstream of a fetch), so the empty cart persists.
+        if (!cartCleared.current) {
+          cartCleared.current = true;
+          clearCart();
+        }
 
         // Meta Purchase, browser half. The server sent the same event under the
         // same id from fulfillOrder(); Meta collapses the pair on
@@ -122,7 +136,8 @@ export default function OrderSuccess() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+    // clearCart is a stable useCallback, so this effect still runs once.
+  }, [clearCart]);
 
   if (status === "loading") {
     return (
