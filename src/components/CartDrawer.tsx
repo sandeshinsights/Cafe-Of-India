@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle, Gift } from "lucide-react";
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowLeft, Truck, MapPin, Tag, XCircle, Gift, Info } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { isOrderingWindowOpen, getOrderingClosedReason, formatMinutesTo12h, scheduledTimeToUtcIso } from "@/lib/ordering-hours";
 import { getDeliveryFee, getDeliveryQuote, isEligibleForDelivery, validateDeliveryAddress } from "@/lib/delivery";
@@ -11,6 +11,7 @@ import {
   type FreeItemOffer,
   type FreeItem,
 } from "@/lib/free-item-offer";
+import { isOnlineOrderingEnabled } from "@/lib/data";
 // Meta Pixel — InitiateCheckout is sent from BOTH here and /api/checkout, so the
 // event id generated below has to travel with the request or Meta counts two.
 import {
@@ -114,6 +115,8 @@ export default function CartDrawer() {
     itemCount,
     isCartOpen,
     closeCart,
+    droppedItems,
+    dismissDroppedItems,
   } = useCart();
 
   const [step, setStep] = useState<"review" | "fulfillment" | "checkout">("review");
@@ -248,6 +251,7 @@ export default function CartDrawer() {
   const orderTotal = parseFloat((displayTotal + deliveryFee).toFixed(2));
   const finalTotal = parseFloat((orderTotal + tipAmount).toFixed(2));
 
+  const orderingEnabled = isOnlineOrderingEnabled();
   const orderingAvailable = isOrderingWindowOpen();
 
   // DELIVERY: Delivery eligibility check
@@ -512,6 +516,31 @@ export default function CartDrawer() {
         {/* Step 1: Cart items review + order timing choice */}
         {step === "review" && (
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+            {droppedItems.length > 0 && (
+              <div className="mx-4 mt-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                <p className="flex-1 text-xs text-amber-800">
+                  <span className="font-semibold">{droppedItems.join(", ")}</span>{" "}
+                  {droppedItems.length === 1 ? "is" : "are"} no longer on our menu, so
+                  we&rsquo;ve removed {droppedItems.length === 1 ? "it" : "them"} from
+                  your cart.
+                </p>
+                <button
+                  type="button"
+                  onClick={dismissDroppedItems}
+                  aria-label="Dismiss"
+                  className="shrink-0 rounded p-0.5 text-amber-600 hover:bg-amber-100"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
+
+            {items.length > 0 && (
+              <div className="sticky top-0 z-10 bg-[#FBF8F1] px-4 pt-4 pb-3 border-b border-gray-200">
+                <FreeItemBanner offer={freeItemOffer} onAdd={handleAddFreeItem} />
+              </div>
+            )}
             <div className="p-4 space-y-3">
               {items.length === 0 ? (
                 <div className="text-center py-16">
@@ -582,9 +611,6 @@ export default function CartDrawer() {
 
             {items.length > 0 && (
               <div className="p-4 border-t border-gray-200 space-y-3">
-                {/* Spend-threshold free item */}
-                <FreeItemBanner offer={freeItemOffer} onAdd={handleAddFreeItem} />
-
                 {/* Totals. A promo code is not applied until the checkout step,
                     so only the free-item discount can show here. */}
                 <div className="space-y-1 text-sm">
@@ -613,8 +639,26 @@ export default function CartDrawer() {
                   </div>
                 </div>
 
+                {/* Ordering switched off entirely. Shown instead of the hours
+                    notice, because "closed until 11:15" would be a lie and
+                    would send the customer to the scheduler, which is also
+                    off. */}
+                {!orderingEnabled && (
+                  <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-center space-y-1">
+                    <p className="font-semibold">Online ordering is paused</p>
+                    <p className="text-xs">
+                      We&rsquo;re not taking online orders at the moment. Please call us
+                      on{" "}
+                      <a href="tel:978-897-9227" className="underline font-medium">
+                        (978) 897-9227
+                      </a>{" "}
+                      and we&rsquo;ll take your order over the phone.
+                    </p>
+                  </div>
+                )}
+
                 {/* Outside ordering hours warning */}
-                {!orderingAvailable && (
+                {orderingEnabled && !orderingAvailable && (
                   <p className="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 text-center">
                     {getOrderingClosedReason()}. You can schedule for a later time.
                   </p>
@@ -634,7 +678,7 @@ export default function CartDrawer() {
                       name="orderMode"
                       checked={orderMode === "now"}
                       onChange={() => setOrderMode("now")}
-                      disabled={!orderingAvailable}
+                      disabled={!orderingEnabled || !orderingAvailable}
                       className="accent-[#5C1A1B]"
                     />
                     <div>
@@ -659,6 +703,7 @@ export default function CartDrawer() {
                       name="orderMode"
                       checked={orderMode === "scheduled"}
                       onChange={() => setOrderMode("scheduled")}
+                      disabled={!orderingEnabled}
                       className="accent-[#C4973B]"
                     />
                     <div>
@@ -681,11 +726,13 @@ export default function CartDrawer() {
                 {/* Continue button */}
                 <button
                   disabled={
+                    !orderingEnabled ||
                     (orderMode === "now" && !orderingAvailable) ||
                     (orderMode === "scheduled" && (!selectedDate || !selectedTimeSlot))
                   }
                   onClick={() => setStep("fulfillment")}
                   className={`w-full font-bold py-3 rounded-lg transition-colors ${
+                    !orderingEnabled ||
                     (orderMode === "now" && !orderingAvailable) ||
                     (orderMode === "scheduled" && (!selectedDate || !selectedTimeSlot))
                       ? "bg-gray-300 text-gray-500 cursor-not-allowed"

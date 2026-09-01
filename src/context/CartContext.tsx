@@ -8,6 +8,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
+import menuData from "@/data/menu.json";
 
 export interface CartItem {
   id: string;
@@ -33,9 +34,38 @@ interface CartContextType {
   isCartOpen: boolean;
   openCart: () => void;
   closeCart: () => void;
+  /** Names of saved items dropped on load because they left the menu. */
+  droppedItems: string[];
+  dismissDroppedItems: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
+
+/**
+ * Saved carts outlive the menu. They sit in localStorage indefinitely — one
+ * real order arrived carrying an item added 32 days earlier — so a dish taken
+ * off the menu leaves live carts pointing at something that no longer exists.
+ * Checkout then refuses the whole order with "Invalid item in cart", naming
+ * nothing, and the cart never repairs itself: the customer is stuck until they
+ * work out to clear it, which they won't.
+ *
+ * Chicken Manchurian (menu-64) was removed on 2026-08-18 and did exactly this.
+ *
+ * So the cart drops what the menu no longer has, on load, and says which.
+ */
+const KNOWN_MENU_IDS: ReadonlySet<string> = new Set(
+  menuData.categories.flatMap((category) => category.items.map((item) => item.id))
+);
+
+/** Composite cart ids look like `menu-25-Chicken-Mild-1788…`; the dish is the first two parts. */
+function baseMenuId(cartItemId: string): string {
+  return cartItemId.split("-").slice(0, 2).join("-");
+}
+
+function isStillOnMenu(item: unknown): boolean {
+  const id = (item as { id?: unknown } | null)?.id;
+  return typeof id === "string" && KNOWN_MENU_IDS.has(baseMenuId(id));
+}
 
 const TAX_RATE = 0.07;
 const STORAGE_KEY = "cafe-of-india-cart";
@@ -44,13 +74,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [droppedItems, setDroppedItems] = useState<string[]>([]);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) setItems(parsed);
+        if (Array.isArray(parsed)) {
+          const kept = parsed.filter(isStillOnMenu);
+          setItems(kept as CartItem[]);
+          if (kept.length !== parsed.length) {
+            setDroppedItems(
+              parsed
+                .filter((item) => !isStillOnMenu(item))
+                .map((item) =>
+                  typeof item?.name === "string" && item.name ? item.name : "An item"
+                )
+            );
+          }
+        }
       }
     } catch {}
     setLoaded(true);
@@ -87,6 +130,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
+  const dismissDroppedItems = useCallback(() => setDroppedItems([]), []);
   const openCart = useCallback(() => setIsCartOpen(true), []);
   const closeCart = useCallback(() => setIsCartOpen(false), []);
 
@@ -110,6 +154,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
         isCartOpen,
         openCart,
         closeCart,
+        droppedItems,
+        dismissDroppedItems,
       }}
     >
       {children}

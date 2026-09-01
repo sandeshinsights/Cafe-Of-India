@@ -14,6 +14,7 @@ import { DELIVERY_CONFIG } from "@/lib/delivery";
 import { getUberQuote } from "@/lib/uber-direct";
 import { getProteinSurcharge } from "@/lib/pricing";
 import { calculateFreeItemOffer } from "@/lib/free-item-offer";
+import { isOnlineOrderingEnabled } from "@/lib/data";
 import { applyDiscountToLineItems } from "@/lib/stripe-line-items";
 import {
   queueMetaCapiEvent,
@@ -24,6 +25,11 @@ import {
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-05-27.dahlia",
 });
+
+// Matches the webhook, verify-order and cron routes. Without it this route gets
+// the platform default, and a slow Uber quote or Stripe call reads to the
+// customer as their own connection failing mid-payment.
+export const maxDuration = 60;
 
 // Max lengths are deliberate: every string here ends up in email HTML, the
 // kitchen slip, and Stripe metadata (500-char cap per value) — unbounded input
@@ -80,6 +86,17 @@ function getMenuItemPrice(itemId: string): { price: number; category: string } |
 
 export async function POST(req: NextRequest) {
   try {
+    // The off switch is enforced here, not just in the UI. A disabled button is
+    // a suggestion; a saved cart, a stale tab, or a direct request all reach
+    // this route, and any of them would otherwise take money the kitchen is not
+    // going to cook.
+    if (!isOnlineOrderingEnabled()) {
+      return NextResponse.json(
+        { error: "Online ordering is paused right now. Please call the restaurant to place your order." },
+        { status: 503 }
+      );
+    }
+
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
@@ -137,7 +154,17 @@ export async function POST(req: NextRequest) {
     for (const item of items) {
       const menuItem = getMenuItemPrice(item.id);
       if (!menuItem || !menuItem.price) {
-        return NextResponse.json({ error: "Invalid item in cart." }, { status: 400 });
+        // Name it. The cart now self-heals on load, so reaching here means a tab
+        // left open since before the menu changed. "Invalid item in cart" told
+        // the customer nothing they could act on.
+        const label =
+          typeof item.name === "string" && item.name ? item.name : "An item";
+        return NextResponse.json(
+          {
+            error: `${label} is no longer available. Please remove it from your cart and try again.`,
+          },
+          { status: 400 }
+        );
       }
       // Protein surcharge, from the same shared table the menu UI displays.
       // Only the Dinner category offers a protein choice.

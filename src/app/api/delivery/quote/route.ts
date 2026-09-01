@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUberQuote } from "@/lib/uber-direct";
 
+// This route waits on Uber's quote API, which is the slowest external call in
+// the ordering flow and the one that blocks the address form.
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     const { address, scheduledFor } = await req.json();
