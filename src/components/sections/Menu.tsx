@@ -207,6 +207,17 @@ export default function Menu() {
                   onClick={() => handleToggleExpand(item, activeCategory.name)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
                 >
+                  {item.image && (
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 shrink-0 mr-3 rounded-lg overflow-hidden bg-gray-100">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-[#5C1A1B] text-base truncate">
                       {item.name}

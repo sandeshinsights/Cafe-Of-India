@@ -6,7 +6,7 @@
       "name": "Hot Appetizers",
       "description": "Crispy, flavorful starters fresh from our kitchen",
       "items": [
-        { "id": "menu-1", "name": "Vegetable Samosa", "price": 7.99, "description": "Light spicy turnovers stuffed with potatoes and green peas.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-1", "name": "Vegetable Samosa", "price": 7.99, "description": "Light spicy turnovers stuffed with potatoes and green peas.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-1-vegetable-samosa.jpg" },
         { "id": "menu-2", "name": "Lamb Samosa", "price": 9.99, "description": "Light spicy turnovers with minced lamb and spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-3", "name": "Gobi 65", "price": 10.99, "description": "A southern delight, battered cauliflower florets sauteed with spice chili garlic sauce", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-4", "name": "Paneer Pakoras", "price": 8.99, "description": "Fresh home made cheese, deep fried in spicy chickpea batter.", "tags": ["Vegetarian"], "badge": "", "image": "" },
@@ -29,7 +29,7 @@
         { "id": "menu-109", "name": "Veg MOMO (Fry)", "price": 13.99, "description": "Crispy fried vegetable dumplings served with dipping sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-110", "name": "Veg MOMO (Steamed)", "price": 13.99, "description": "Steamed vegetable dumplings served with dipping sauce.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-111", "name": "Chicken MOMO (Fry)", "price": 14.99, "description": "Crispy fried chicken dumplings served with dipping sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
-        { "id": "menu-112", "name": "Chicken MOMO (Steamed)", "price": 14.99, "description": "Steamed chicken dumplings served with dipping sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-112", "name": "Chicken MOMO (Steamed)", "price": 14.99, "description": "Steamed chicken dumplings served with dipping sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "/images/dishes/momo-steamed.jpg" },
         { "id": "menu-113", "name": "Veg Chow Mein (Nepali Flavor)", "price": 11.99, "description": "Stir-fried noodles with fresh vegetables in Nepali-style spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-114", "name": "Chicken Chow Mein (Nepali Flavor)", "price": 12.99, "description": "Stir-fried noodles with chicken and vegetables in Nepali-style spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" }
       ]
@@ -71,7 +71,7 @@
       "name": "Dinner",
       "description": "Classic Indian dinner entrées served with basmati rice and chutney",
       "items": [
-        { "id": "menu-25", "name": "Tikka Masala", "price": 18.99, "description": "Served with basmati rice & chutney. Tomato & Light Cream sauce with herbs and spices.", "tags": ["Gluten Free", "Nut Free"], "badge": "", "image": "" },
+        { "id": "menu-25", "name": "Tikka Masala", "price": 18.99, "description": "Served with basmati rice & chutney. Tomato & Light Cream sauce with herbs and spices.", "tags": ["Gluten Free", "Nut Free"], "badge": "", "image": "/images/dishes/menu-25-tikka-masala.jpg" },
         { "id": "menu-26", "name": "Curry", "price": 18.99, "description": "Home style roasted cumin, garlic, onion, sauce.", "tags": ["Gluten Free", "Dairy Free", "Nut Free"], "badge": "", "image": "" },
         { "id": "menu-27", "name": "Saag", "price": 18.99, "description": "Fresh Chopped spinach with ginger, garlic, onion and sauce.", "tags": ["Gluten Free"], "badge": "", "image": "" },
         { "id": "menu-28", "name": "Korma", "price": 18.99, "description": "Mild cream sauce with nuts and raisins.", "tags": ["Gluten Free"], "badge": "", "image": "" },
@@ -94,7 +94,7 @@
       "description": "Authentic vegetarian dishes served with basmati rice and chutneys",
       "items": [
         { "id": "menu-33", "name": "Aloo Mutter", "price": 16.99, "description": "Fresh green peas cooked in a delicately spiced sauce with potato balls. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
-        { "id": "menu-34", "name": "Saag Paneer", "price": 16.99, "description": "Cubes of home made cheese cooked with fresh spinach and spices. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "" },
+        { "id": "menu-34", "name": "Saag Paneer", "price": 16.99, "description": "Cubes of home made cheese cooked with fresh spinach and spices. Served with basmati rice and chutneys. Gluten free.", "tags": ["Vegetarian", "Gluten Free"], "badge": "", "image": "/images/dishes/menu-34-saag-paneer.jpg" },
         { "id": "menu-35", "name": "Shahi Aloo Gobhi", "price": 16.99, "description": "Cauliflower and potatoes cooked with tomato, onion, herbs and spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
         { "id": "menu-36", "name": "Baingan Bhartha", "price": 16.99, "description": "An eggplant specialty baked over open flame, mashed, then sauteed with onions, tomato, garlic, ginger and other spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
         { "id": "menu-37", "name": "Aloo Palak", "price": 16.99, "description": "Fresh spinach, potato balls and freshly ground garlic, ginger and exotic spices. Served with basmati rice and chutneys. Gluten free. Vegan.", "tags": ["Vegetarian", "Vegan", "Gluten Free"], "badge": "", "image": "" },
@@ -151,7 +151,8 @@
         { "id": "menu-68", "name": "Lamb Mushroom", "price": 19.99, "description": "Lamb cubes cooked with ginger, garlic and spinach.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-69", "name": "Lamb Roganjosh", "price": 19.99, "description": "Lamb cooked in yogurt, cardamom saffron curry sauce, Kashmiri style. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
         { "id": "menu-70", "name": "Goan Shrimp Curry", "price": 20.99, "description": "Gluten free. Shrimp cooked Goan Style with coconut milk and curry leaves.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
-        { "id": "menu-71", "name": "Coconut Chicken", "price": 17.99, "description": "Gluten free. Boneless chicken pieces cooked in a mild coconut cream sauce.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" }
+        { "id": "menu-71", "name": "Coconut Chicken", "price": 17.99, "description": "Gluten free. Boneless chicken pieces cooked in a mild coconut cream sauce.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "/images/dishes/menu-71-coconut-chicken.jpg" },
+        { "id": "menu-115", "name": "Butter Chicken", "price": 17.99, "description": "Boneless tandoori chicken simmered in a creamy tomato and butter sauce.", "tags": ["Non-Vegetarian"], "badge": "", "image": "/images/dishes/menu-115-butter-chicken.jpg" }
       ]
     },
     {
@@ -159,10 +160,10 @@
       "name": "Breads / Naan",
       "description": "Freshly baked in our tandoor clay oven",
       "items": [
-        { "id": "menu-72", "name": "Plain Naan", "price": 4.95, "description": "Leavened, fine flour handmade bread.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-72", "name": "Plain Naan", "price": 4.95, "description": "Leavened, fine flour handmade bread.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-72-plain-naan.jpg" },
         { "id": "menu-73", "name": "Plain Paratha", "price": 5.99, "description": "Multi-layered whole wheat bread, cooked with butter on a griddle.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-74", "name": "Chapati", "price": 4.99, "description": "Thin, unleavened bread, cooked on a griddle served with or without butter.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
-        { "id": "menu-75", "name": "Garlic Naan", "price": 5.95, "description": "Unleavened white flour bread stuffed with chopped fresh garlic and coriander and baked in our tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-75", "name": "Garlic Naan", "price": 5.95, "description": "Unleavened white flour bread stuffed with chopped fresh garlic and coriander and baked in our tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-75-garlic-naan.jpg" },
         { "id": "menu-76", "name": "Green Chilli Naan", "price": 5.99, "description": "Naan stuffed with onions and green chilies.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-77", "name": "Keema Naan", "price": 5.99, "description": "White flour bread stuffed with spices and minced lamb.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-78", "name": "Tandoori Roti", "price": 4.95, "description": "Round shaped whole wheat bread baked in a clay oven. No dairy.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
@@ -210,7 +211,7 @@
         { "id": "menu-99", "name": "Tea", "price": 2.99, "description": "Hot Indian tea.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-100", "name": "Masala Tea", "price": 3.99, "description": "Darjeeling tea made with flavorful spices and milk boiled together in water.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-101", "name": "Sweet Lassi", "price": 5.99, "description": "Sweet yogurt drink blended smooth.", "tags": ["Vegetarian"], "badge": "", "image": "" },
-        { "id": "menu-102", "name": "Mango Lassi", "price": 5.99, "description": "A delicious sweet yogurt shake with rose water.", "tags": ["Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-102", "name": "Mango Lassi", "price": 5.99, "description": "A delicious sweet yogurt shake with rose water.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-102-mango-lassi.jpg" },
         { "id": "menu-103", "name": "Strawberry Lassi", "price": 5.99, "description": "Fresh strawberry yogurt drink.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-104", "name": "Salty Lassi", "price": 5.99, "description": "Traditional salty yogurt drink with spices.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-105", "name": "Fruit Juice", "price": 3.99, "description": "Fresh fruit juice.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
