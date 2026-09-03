@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { getMenuData } from "@/lib/data";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { getMenuData, getMenuItemSlug } from "@/lib/data";
 import Image from "next/image";
 import {
   ShoppingCart,
@@ -9,6 +9,7 @@ import {
   Minus,
   ChevronRight,
   Clock,
+  Link2,
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 // Shared with the checkout API so the displayed surcharge and the charged
@@ -54,6 +55,79 @@ export default function Menu() {
   const [selectedSpice, setSelectedSpice] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [quantity, setQuantity] = useState(1);
+
+  /* shareable-link copy feedback, keyed by menu item id */
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  /* ─── deep link ─── */
+  // A shareable per-dish page (/menu/butter-chicken) links here as
+  // /?item=menu-115#menu. Open that dish on arrival: switch to its category,
+  // expand it, then let the effect below scroll to it once it has rendered.
+  // Runs once; an unknown id is ignored.
+  const pendingScrollId = useRef<string | null>(null);
+  const deepLinkHandled = useRef(false);
+  useEffect(() => {
+    if (deepLinkHandled.current) return;
+    deepLinkHandled.current = true;
+
+    const wanted = new URLSearchParams(window.location.search).get("item");
+    if (!wanted) return;
+
+    const cat = categories.find((c: { items?: { id: string }[] }) =>
+      c.items?.some((i) => i.id === wanted)
+    );
+    if (!cat) return;
+    const target = cat.items.find((i: { id: string }) => i.id === wanted);
+
+    pendingScrollId.current = wanted;
+    // Deferred a frame so the state updates land as their own render pass
+    // rather than cascading straight off this effect.
+    const raf = requestAnimationFrame(() => {
+      setSelectedCategory(cat.id);
+      setExpandedItemId(wanted);
+    });
+
+    if (target) {
+      trackMeta("ViewContent", {
+        content_ids: [target.id],
+        content_name: target.name,
+        content_type: "product",
+        content_category: cat.name,
+        value: target.price,
+        currency: "USD",
+      });
+    }
+
+    return () => cancelAnimationFrame(raf);
+  }, [categories]);
+
+  // Scroll to the deep-linked dish once its category has rendered and the node
+  // exists — deterministic, unlike a fixed timeout that can fire too early on a
+  // slow render.
+  useEffect(() => {
+    const id = pendingScrollId.current;
+    if (!id || expandedItemId !== id) return;
+    const el = document.getElementById(`menu-item-${id}`);
+    if (!el) return;
+    pendingScrollId.current = null;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [expandedItemId, selectedCategory]);
+
+  function handleCopyLink(id: string) {
+    const url = `${window.location.origin}/menu/${getMenuItemSlug(id) ?? id}`;
+    navigator.clipboard
+      ?.writeText(url)
+      .then(() => {
+        setCopiedId(id);
+        setTimeout(
+          () => setCopiedId((current) => (current === id ? null : current)),
+          2000
+        );
+      })
+      .catch(() => {
+        /* clipboard blocked (insecure context, denied permission) — no-op */
+      });
+  }
 
   /* derived */
   const activeCategory = useMemo(
@@ -200,7 +274,8 @@ export default function Menu() {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                id={`menu-item-${item.id}`}
+                className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden scroll-mt-24"
               >
                 {/* header row */}
                 <button
@@ -374,6 +449,18 @@ export default function Menu() {
                     >
                       <ShoppingCart className="w-4 h-4" />
                       Add to Cart
+                    </button>
+
+                    {/* Shareable link to this dish */}
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(item.id)}
+                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#5C1A1B] transition-colors"
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                      {copiedId === item.id
+                        ? "Link copied"
+                        : "Copy shareable link"}
                     </button>
                   </div>
                 )}

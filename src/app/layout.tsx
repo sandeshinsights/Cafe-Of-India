@@ -11,6 +11,13 @@ import "./globals.css";
 const seo = getSeoData();
 
 export const metadata: Metadata = {
+  // Makes every relative canonical / Open Graph URL below (and on the per-dish
+  // pages under /menu/[slug]) resolve against the canonical production domain.
+  // Without it Next falls back to localhost and warns at build time. Uses
+  // seo.canonicalUrl (same source as robots.ts / sitemap.ts) rather than
+  // NEXT_PUBLIC_BASE_URL so a preview deploy still points shares at the real
+  // site and a malformed env var can't throw here.
+  metadataBase: new URL(seo.canonicalUrl),
   title: seo.siteTitle,
   description: seo.siteDescription,
   keywords: seo.keywords,
