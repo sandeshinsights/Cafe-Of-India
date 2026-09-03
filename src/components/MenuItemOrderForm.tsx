@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingCart, Plus, Minus } from "lucide-react";
+import { ShoppingCart, Plus, Minus, AlertCircle } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 // Shared with the checkout API so the displayed surcharge and the charged
 // surcharge can't drift apart.
@@ -217,7 +217,13 @@ export default function MenuItemOrderForm({
       </div>
 
       {/* Add to cart */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
+        {!canAdd && missing && (
+          <p className="flex items-center gap-2 text-sm font-semibold text-[#5C1A1B] bg-[#C4973B]/15 border border-[#C4973B]/40 rounded-lg px-3 py-2.5">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            {missing}
+          </p>
+        )}
         <button
           type="button"
           onClick={handleAdd}
@@ -231,9 +237,6 @@ export default function MenuItemOrderForm({
           <ShoppingCart className="w-4 h-4" />
           Add to Cart
         </button>
-        {!canAdd && missing && (
-          <p className="text-xs text-gray-500">{missing}</p>
-        )}
       </div>
     </div>
   );
