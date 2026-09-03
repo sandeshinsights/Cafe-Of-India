@@ -8,14 +8,16 @@ import {
   getRestaurantData,
 } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
+import MenuItemOrderForm from "@/components/MenuItemOrderForm";
 
 /**
  * Shareable per-dish page: `/menu/butter-chicken` → Butter Chicken.
  *
- * Its whole job is to give a social post (Facebook, Instagram, WhatsApp) a link
- * that unfurls with the dish name, price and description in the preview, and a
- * landing page whose one real action is "Add to your order" — which hands off to
- * the homepage menu via `/?item=<id>#menu`, where <Menu> opens that exact dish.
+ * Its job is to give a social post (Facebook, Instagram, WhatsApp) a link that
+ * unfurls with the dish name and description, and a landing page where the
+ * customer can pick their options and add to the cart right here — same
+ * `<MenuItemOrderForm>` the homepage menu uses, so the cart line and the
+ * checkout price stay identical. Adding opens the cart drawer.
  *
  * The URL slug comes from the dish name (see `slugMaps` in lib/data.ts). Photos
  * / generated Open Graph image cards are a separate, later job; for now every
@@ -78,7 +80,6 @@ export default async function MenuItemPage({ params }: Props) {
 
   const { item, category } = found;
   const restaurant = getRestaurantData();
-  const orderHref = `/?item=${item.id}#menu`;
 
   return (
     <div className="min-h-screen bg-cream pt-28 pb-16 px-4">
@@ -138,20 +139,16 @@ export default async function MenuItemPage({ params }: Props) {
               </p>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <Link
-                href={orderHref}
-                className="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-light text-white px-6 py-3 rounded-full font-semibold transition-colors"
-              >
-                Add to your order
-              </Link>
-              <Link
-                href="/#menu"
-                className="inline-flex items-center justify-center gap-2 border-2 border-primary text-primary hover:bg-primary hover:text-white px-6 py-3 rounded-full font-semibold transition-colors"
-              >
-                Browse full menu
-              </Link>
+            <div className="border-t border-gray-100 pt-4">
+              <MenuItemOrderForm item={item} categoryName={category.name} />
             </div>
+
+            <Link
+              href="/#menu"
+              className="inline-flex items-center gap-1 text-sm text-primary hover:underline pt-1"
+            >
+              Browse the full menu &rarr;
+            </Link>
 
             <p className="text-sm text-text-light pt-2">
               {`${restaurant.name} · ${restaurant.address.full} · Pickup & delivery`}

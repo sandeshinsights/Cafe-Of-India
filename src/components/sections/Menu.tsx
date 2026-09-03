@@ -2,47 +2,21 @@
 
 import { useState, useMemo, useEffect, useRef } from "react";
 import { getMenuData, getMenuItemSlug } from "@/lib/data";
+import type { MenuItem, MenuCategory } from "@/lib/types";
 import Image from "next/image";
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  ChevronRight,
-  Clock,
-  Link2,
-} from "lucide-react";
+import { ShoppingCart, ChevronRight, Clock, Link2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
-// Shared with the checkout API so the displayed surcharge and the charged
-// surcharge can't drift apart.
-import { PROTEIN_OPTIONS } from "@/lib/pricing";
-// Meta Pixel — browser-only funnel events. ViewContent/AddToCart have no server
-// counterpart (there is no server route for them), so they carry no event id.
+// Meta Pixel — browser-only funnel event. ViewContent has no server counterpart.
 import { trackMeta } from "@/lib/meta-pixel";
-
-/* ─── constants ─── */
-
-function isDinnerCategory(name: string): boolean {
-  return name.toLowerCase() === "dinner";
-}
-
-function isSpicyCategory(name: string): boolean {
-  const spicy = [
-    "Dinner",
-    "Indo Chinese",
-    "Vegetarian",
-    "Rice Specialties",
-    "Tandoori Specials",
-    "Cafe Specials",
-  ];
-  return spicy.some((c) => c.toLowerCase() === name.toLowerCase());
-}
+// The pick-options-and-add form, shared with the standalone /menu/<slug> page.
+import MenuItemOrderForm from "@/components/MenuItemOrderForm";
 
 /* ─── component ─── */
 
 export default function Menu() {
   const menuData = getMenuData();
   const categories = menuData.categories;
-  const { addItem, itemCount, openCart } = useCart();
+  const { itemCount, openCart } = useCart();
 
   /* state */
   const [selectedCategory, setSelectedCategory] = useState(
@@ -50,20 +24,15 @@ export default function Menu() {
   );
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
-  /* item-level form state */
-  const [selectedProtein, setSelectedProtein] = useState("");
-  const [selectedSpice, setSelectedSpice] = useState("");
-  const [specialInstructions, setSpecialInstructions] = useState("");
-  const [quantity, setQuantity] = useState(1);
-
   /* shareable-link copy feedback, keyed by menu item id */
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   /* ─── deep link ─── */
-  // A shareable per-dish page (/menu/butter-chicken) links here as
-  // /?item=menu-115#menu. Open that dish on arrival: switch to its category,
-  // expand it, then let the effect below scroll to it once it has rendered.
-  // Runs once; an unknown id is ignored.
+  // Open a specific dish on arrival when the URL carries ?item=menu-115 (with
+  // or without #menu): switch to its category, expand it, then let the effect
+  // below scroll to it once it has rendered. The per-dish pages now add to the
+  // cart themselves, but external ?item= links (and any shared before that
+  // change) still land here. Runs once; an unknown id is ignored.
   const pendingScrollId = useRef<string | null>(null);
   const deepLinkHandled = useRef(false);
   useEffect(() => {
@@ -73,11 +42,11 @@ export default function Menu() {
     const wanted = new URLSearchParams(window.location.search).get("item");
     if (!wanted) return;
 
-    const cat = categories.find((c: { items?: { id: string }[] }) =>
+    const cat = categories.find((c) =>
       c.items?.some((i) => i.id === wanted)
     );
     if (!cat) return;
-    const target = cat.items.find((i: { id: string }) => i.id === wanted);
+    const target = cat.items.find((i) => i.id === wanted);
 
     pendingScrollId.current = wanted;
     // Deferred a frame so the state updates land as their own render pass
@@ -131,28 +100,19 @@ export default function Menu() {
 
   /* derived */
   const activeCategory = useMemo(
-    () => categories.find((cat: { id: string }) => cat.id === selectedCategory),
+    () => categories.find((cat) => cat.id === selectedCategory),
     [categories, selectedCategory]
   );
 
   /* ─── helpers ─── */
 
-  function resetForm() {
-    setSelectedProtein("");
-    setSelectedSpice("");
-    setSpecialInstructions("");
-    setQuantity(1);
-  }
-
-  function handleToggleExpand(item: any, categoryName?: string) {
+  function handleToggleExpand(item: MenuItem, categoryName?: string) {
     if (expandedItemId === item.id) {
       setExpandedItemId(null);
-      resetForm();
       return;
     }
 
     setExpandedItemId(item.id);
-    resetForm();
 
     // Opening the detail panel is the closest thing this menu has to viewing a
     // product page — it is where the customer reads the description and picks
@@ -165,46 +125,6 @@ export default function Menu() {
       value: item.price,
       currency: "USD",
     });
-  }
-
-  function handleAddToCart(item: any, categoryName: string) {
-    const isDin = isDinnerCategory(categoryName);
-    const isSpicy = isSpicyCategory(categoryName);
-
-    if (isDin && !selectedProtein) return;
-    if (isSpicy && !selectedSpice) return;
-
-    const proteinObj = isDin
-      ? PROTEIN_OPTIONS.find((p) => p.name === selectedProtein)
-      : null;
-    const surcharge = proteinObj ? proteinObj.surcharge : 0;
-
-    addItem({
-      id: `${item.id}-${selectedProtein || "none"}-${selectedSpice || "none"}-${Date.now()}`,
-      name: selectedProtein ? `${selectedProtein} ${item.name}` : item.name,
-      price: item.price + surcharge,
-      protein: selectedProtein || undefined,
-      surcharge: surcharge || undefined,
-      spiceLevel: selectedSpice || undefined,
-      specialInstructions: specialInstructions.trim() || undefined,
-      quantity: quantity,
-    });
-
-    trackMeta("AddToCart", {
-      content_ids: [item.id],
-      content_name: item.name,
-      content_type: "product",
-      content_category: categoryName,
-      contents: [
-        { id: item.id, quantity, item_price: item.price + surcharge },
-      ],
-      num_items: quantity,
-      value: (item.price + surcharge) * quantity,
-      currency: "USD",
-    });
-
-    setExpandedItemId(null);
-    resetForm();
   }
 
   /* ─── render ─── */
@@ -238,13 +158,12 @@ export default function Menu() {
 
         {/* category tabs */}
         <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {categories.map((cat: any) => (
+          {categories.map((cat: MenuCategory) => (
             <button
               key={cat.id}
               onClick={() => {
                 setSelectedCategory(cat.id);
                 setExpandedItemId(null);
-                resetForm();
               }}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
@@ -264,12 +183,8 @@ export default function Menu() {
 
         {/* items list */}
         <div className="space-y-3">
-          {activeCategory?.items?.map((item: any) => {
+          {activeCategory?.items?.map((item: MenuItem) => {
             const isExpanded = expandedItemId === item.id;
-            const isDin = isDinnerCategory(activeCategory.name);
-            const isSpicy = isSpicyCategory(activeCategory.name);
-            const canAdd =
-              (!isDin || selectedProtein) && (!isSpicy || selectedSpice);
 
             return (
               <div
@@ -324,132 +239,11 @@ export default function Menu() {
                       </p>
                     )}
 
-                    {/* Choose Style (Dinner only) */}
-                    {isDin && (
-                      <div>
-                        <p className="text-sm font-semibold text-[#5C1A1B] mb-2">
-                          Choose Style <span className="text-red-500">*</span>
-                        </p>
-                        <div className="grid grid-cols-2 gap-2">
-                          {PROTEIN_OPTIONS.map((p) => (
-                            <button
-                              key={p.name}
-                              type="button"
-                              onClick={() => setSelectedProtein(p.name)}
-                              className={`px-3 py-2 rounded-lg text-sm border transition-all ${
-                                selectedProtein === p.name
-                                  ? "border-[#5C1A1B] bg-[#5C1A1B]/10 text-[#5C1A1B] font-medium"
-                                  : "border-gray-200 text-gray-700 hover:border-gray-300"
-                              }`}
-                            >
-                              {p.name}
-                              {p.surcharge > 0 && (
-                                <span className="text-xs text-[#C4973B] ml-1">
-                                  +${p.surcharge.toFixed(2)}
-                                </span>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Spicy Level (6 categories) */}
-                    {isSpicy && (
-                      <div>
-                        <p className="text-sm font-semibold text-[#5C1A1B] mb-2">
-                          Spicy Level <span className="text-red-500">*</span>
-                        </p>
-                        <div className="flex gap-2">
-                          {["Mild", "Medium", "Spicy"].map((level) => (
-                            <button
-                              key={level}
-                              type="button"
-                              onClick={() => setSelectedSpice(level)}
-                              className={`flex-1 px-3 py-2 rounded-lg text-sm border transition-all ${
-                                selectedSpice === level
-                                  ? "border-[#5C1A1B] bg-[#5C1A1B]/10 text-[#5C1A1B] font-medium"
-                                  : "border-gray-200 text-gray-700 hover:border-gray-300"
-                              }`}
-                            >
-                              {level}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Special Instructions */}
-                    <div>
-                      <p className="text-sm font-semibold text-[#5C1A1B] mb-2">
-                        Special Instructions
-                      </p>
-                      <textarea
-                        value={specialInstructions}
-                        onChange={(e) =>
-                          setSpecialInstructions(e.target.value)
-                        }
-                        placeholder="Any allergies or preferences?"
-                        rows={2}
-                        className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#C4973B]/50 focus:border-[#C4973B]"
-                      />
-                    </div>
-
-                    {/* Quantity */}
-                    <div>
-                      <p className="text-sm font-semibold text-[#5C1A1B] mb-2">
-                        Quantity
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setQuantity((q) => Math.max(1, q - 1))
-                          }
-                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="text-sm font-medium w-8 text-center">
-                          {quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setQuantity((q) => q + 1)}
-                          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
-                        {selectedProtein && (
-                          <span className="text-sm text-[#C4973B] font-medium ml-2">
-                            Total: $                             {(
-                              (item.price +
-                                (PROTEIN_OPTIONS.find(
-                                  (p) => p.name === selectedProtein
-                                )?.surcharge || 0)) *
-                              quantity
-                            ).toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Add to cart */}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleAddToCart(item, activeCategory.name)
-                      }
-                      disabled={!canAdd}
-                      className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                        canAdd
-                          ? "bg-[#5C1A1B] text-white hover:bg-[#7A2526] shadow-sm"
-                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
-                    </button>
+                    <MenuItemOrderForm
+                      item={item}
+                      categoryName={activeCategory.name}
+                      onAdded={() => setExpandedItemId(null)}
+                    />
 
                     {/* Shareable link to this dish */}
                     <button
