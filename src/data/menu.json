@@ -130,7 +130,7 @@
       "name": "Tandoori Specials",
       "description": "Traditional clay oven specialties served with onions, potatoes, broccoli, peppers and basmati rice",
       "items": [
-        { "id": "menu-56", "name": "Malai Chicken Kabab", "price": 19.99, "description": "Boneless chicken marinated with nuts and mild tandoor spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
+        { "id": "menu-56", "name": "Malai Chicken Kabab", "price": 19.99, "description": "Boneless chicken marinated with nuts and mild tandoor spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "/images/dishes/menu-56-malai-chicken-kabab.jpg" },
         { "id": "menu-57", "name": "Tandoori Chicken", "price": 19.99, "description": "Tender chicken, marinated in yogurt and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "/images/dishes/menu-57-tandoori-chicken.jpg" },
         { "id": "menu-58", "name": "Chicken Tikka Kabab", "price": 19.99, "description": "Boneless white meat chicken cubes marinated in yogurt and freshly ground spices.", "tags": ["Non-Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-59", "name": "Seekh Kabab", "price": 21.99, "description": "Finely minced lamb, seasoned with chopped onions, herbs and spices. Served with onions, potatoes, broccoli and peppers with side of basmati rice. Gluten free.", "tags": ["Non-Vegetarian", "Gluten Free"], "badge": "", "image": "" },
