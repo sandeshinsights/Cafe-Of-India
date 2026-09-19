@@ -1,28 +1,78 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { getMenuData, getMenuItemSlug } from "@/lib/data";
+import { getMenuData, getMenuItem, getMenuItemSlug } from "@/lib/data";
 import type { MenuItem, MenuCategory } from "@/lib/types";
 import Image from "next/image";
-import { ShoppingCart, ChevronRight, Clock, Link2 } from "lucide-react";
+import { ShoppingCart, ChevronRight, Clock, Link2, Search, X, Gift } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { ORDERING_CONFIG, formatMinutesTo12h } from "@/lib/ordering-hours";
+import { OFFER_TIERS } from "@/lib/free-item-offer";
 // Meta Pixel — browser-only funnel event. ViewContent has no server counterpart.
 import { trackMeta } from "@/lib/meta-pixel";
 // The pick-options-and-add form, shared with the standalone /menu/<slug> page.
 import MenuItemOrderForm from "@/components/MenuItemOrderForm";
+
+/* ─── display-only copy derived from the real config ─── */
+
+// "Online ordering until 8:45 PM" — read from the same ORDERING_CONFIG checkout
+// enforces. This line used to be hand-written as "Pickup only · Last order at
+// 7:00 PM", which was wrong twice: delivery is live, and the window runs later.
+const [endH, endM] = ORDERING_CONFIG.orderingEnds.split(":").map(Number);
+const ORDERING_ENDS_LABEL = formatMinutesTo12h(endH * 60 + endM);
+
+// The spend-threshold offer, lowest tier first, with dish names looked up from
+// menu.json. Advertising only: what is actually comped is decided by
+// free-item-offer.ts at checkout, which this reads its tiers from.
+const OFFER_LINES = [...OFFER_TIERS]
+  .sort((a, b) => a.threshold - b.threshold)
+  .map((tier) => ({
+    threshold: tier.threshold,
+    names: tier.itemIds
+      .map((id) => getMenuItem(id)?.item.name)
+      .filter((n): n is string => Boolean(n)),
+  }))
+  .filter((line) => line.names.length > 0);
 
 /* ─── component ─── */
 
 export default function Menu() {
   const menuData = getMenuData();
   const categories = menuData.categories;
-  const { itemCount, openCart } = useCart();
+  const { itemCount, subtotal, openCart } = useCart();
+
+  /* category strip: keep the active tab in view, and bring the list back up
+     to the top when switching categories from far down the page */
+  const tabStripRef = useRef<HTMLDivElement>(null);
+  const listTopRef = useRef<HTMLDivElement>(null);
+
+  /* The floating cart stays out of the way while the hero fills the screen:
+     on phones it spans the width and would sit on top of the hero's own
+     buttons, and the header already shows the cart count up there.
+     null until the observer first reports, and the bar shows only on an
+     explicit false, so it never flashes over the hero on load. That relies on
+     the hero existing, which page.tsx guarantees (it is not switchable). */
+  const [heroInView, setHeroInView] = useState<boolean | null>(null);
+  useEffect(() => {
+    const hero = document.getElementById("hero");
+    if (!hero) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroInView(entry.intersectionRatio > 0.5),
+      { threshold: [0, 0.5, 1] }
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
 
   /* state */
   const [selectedCategory, setSelectedCategory] = useState(
     categories[0]?.id || ""
   );
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
+
+  /* menu search — filters across every category, not just the selected one */
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   /* shareable-link copy feedback, keyed by menu item id */
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -82,6 +132,32 @@ export default function Menu() {
     el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [expandedItemId, selectedCategory]);
 
+  // On phones the category strip is one horizontally scrolling row; keep the
+  // selected tab centred in it (including after a deep link switches it).
+  // Scrolls only the strip, never the page.
+  useEffect(() => {
+    const strip = tabStripRef.current;
+    const tab = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!strip || !tab || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollTo({
+      left: tab.offsetLeft - strip.clientWidth / 2 + tab.clientWidth / 2,
+      behavior: "smooth",
+    });
+  }, [selectedCategory]);
+
+  function handleSelectCategory(id: string) {
+    setSelectedCategory(id);
+    setExpandedItemId(null);
+    // The strip is sticky, so it can be tapped from far down a long category.
+    // Bring the new list's top up under it rather than leaving the customer
+    // mid-page in a list they have not seen.
+    const top = listTopRef.current;
+    const stripBottom = tabStripRef.current?.getBoundingClientRect().bottom ?? 0;
+    if (top && top.getBoundingClientRect().top < stripBottom) {
+      top.scrollIntoView({ block: "start" });
+    }
+  }
+
   function handleCopyLink(id: string) {
     const url = `${window.location.origin}/menu/${getMenuItemSlug(id) ?? id}`;
     navigator.clipboard
@@ -103,6 +179,47 @@ export default function Menu() {
     () => categories.find((cat) => cat.id === selectedCategory),
     [categories, selectedCategory]
   );
+
+  const trimmedQuery = searchQuery.trim();
+  const isSearching = trimmedQuery !== "";
+
+  // The rows to render, each tagged with the category it lives in. That name is
+  // not just a label: MenuItemOrderForm uses it to decide whether a protein
+  // (Dinner) and a spice level are required, so a search result must carry its
+  // own category — never the one selected in the nav — or a Dinner dish found
+  // by search could be added to the cart with no protein.
+  const visibleItems = useMemo<{ item: MenuItem; categoryName: string }[]>(() => {
+    if (!isSearching) {
+      if (!activeCategory) return [];
+      return (activeCategory.items ?? []).map((item) => ({
+        item,
+        categoryName: activeCategory.name,
+      }));
+    }
+    const q = trimmedQuery.toLowerCase();
+    return categories.flatMap((cat) =>
+      (cat.items ?? [])
+        .filter(
+          (item) =>
+            item.name.toLowerCase().includes(q) ||
+            (item.description ?? "").toLowerCase().includes(q)
+        )
+        .map((item) => ({ item, categoryName: cat.name }))
+    );
+  }, [isSearching, trimmedQuery, activeCategory, categories]);
+
+  // Collapse any open dish whenever the query changes. Done here rather than in
+  // an effect so it lands in the same render as the new results. The search
+  // never touches selectedCategory, so clearing it restores the prior category.
+  function handleSearchChange(value: string) {
+    setSearchQuery(value);
+    setExpandedItemId(null);
+  }
+
+  function handleClearSearch() {
+    handleSearchChange("");
+    searchInputRef.current?.focus();
+  }
 
   /* ─── helpers ─── */
 
@@ -133,12 +250,17 @@ export default function Menu() {
     <section id="menu" className="py-16 px-4 bg-cream">
       <div className="max-w-6xl mx-auto">
         {/* heading */}
+        {/* Same eyebrow + gold rule treatment as the other section headings. */}
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#5C1A1B] mb-3">
+          <p className="text-secondary text-sm font-medium tracking-[0.2em] uppercase mb-3">
+            Order Online
+          </p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4">
             Our Menu
           </h2>
-          <p className="text-[#C4973B] text-lg">
-            Authentic Indian flavors, made fresh daily
+          <div className="w-16 h-px bg-secondary/60 mx-auto mb-4" />
+          <p className="text-text-light text-lg">
+            Authentic Indian &amp; Nepali flavors, made fresh daily &middot; pickup or delivery
           </p>
         </div>
 
@@ -156,34 +278,101 @@ export default function Menu() {
           </div>
         )}
 
-        {/* category tabs */}
-        <div className="flex flex-wrap gap-2 mb-8 justify-center">
-          {categories.map((cat: MenuCategory) => (
+        {/* spend-threshold offer — until now only visible inside the cart */}
+        {OFFER_LINES.length > 0 && (
+          <div className="max-w-2xl mx-auto mb-6 flex items-start gap-3 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm text-primary">
+            <Gift className="w-5 h-5 shrink-0 text-secondary mt-0.5" />
+            <div>
+              {OFFER_LINES.map((line) => (
+                <p key={line.threshold} className="font-semibold">
+                  Spend ${line.threshold}, get a free {line.names.join(" + ")}
+                </p>
+              ))}
+              <p className="text-text-light mt-0.5">
+                Add it to your cart and it comes off at checkout.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* search */}
+        <div className="relative max-w-md mx-auto mb-6">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search dishes"
+            aria-label="Search the menu"
+            className="w-full rounded-full bg-white border border-primary/20 pl-11 pr-11 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/30 [&::-webkit-search-cancel-button]:appearance-none"
+          />
+          {searchQuery && (
             <button
-              key={cat.id}
-              onClick={() => {
-                setSelectedCategory(cat.id);
-                setExpandedItemId(null);
-              }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === cat.id
-                  ? "bg-[#5C1A1B] text-white"
-                  : "bg-white text-[#5C1A1B] border border-[#5C1A1B]/20 hover:bg-[#5C1A1B]/5"
-              }`}
+              type="button"
+              onClick={handleClearSearch}
+              aria-label="Clear search"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
             >
-              {cat.name}
+              <X className="w-4 h-4" />
             </button>
-          ))}
+          )}
         </div>
 
-        {/* category title */}
-        <h3 className="text-xl font-semibold text-[#5C1A1B] mb-6">
-          {activeCategory?.name}
-        </h3>
+        {/* category tabs — hidden while searching, since results span them all */}
+        {/* Sticky under the header, so switching category never means scrolling
+            back up. On phones it is one swipeable row: fifteen wrapped pills
+            used to fill most of the first screen before a single dish. */}
+        {!isSearching && (
+          <div
+            ref={tabStripRef}
+            className="sticky top-20 z-20 -mx-4 px-4 py-3 mb-6 bg-cream/95 backdrop-blur-sm flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:justify-center md:overflow-visible"
+          >
+            {categories.map((cat: MenuCategory) => (
+              <button
+                key={cat.id}
+                onClick={() => handleSelectCategory(cat.id)}
+                aria-pressed={selectedCategory === cat.id}
+                className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === cat.id
+                    ? "bg-primary text-white"
+                    : "bg-white text-primary border border-primary/20 hover:bg-primary/5"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* scroll target for handleSelectCategory; the margin clears the fixed
+            header plus the sticky category strip (one row on phones, up to two
+            wrapped rows on desktop) */}
+        <div ref={listTopRef} className="scroll-mt-40 md:scroll-mt-52" />
+
+        {/* category title, or search results + count */}
+        {isSearching ? (
+          <div className="mb-6">
+            <h3 className="text-xl font-semibold text-primary">
+              Search results
+            </h3>
+            <p className="text-sm text-gray-500 mt-1" aria-live="polite">
+              {visibleItems.length === 0
+                ? `No dishes match “${trimmedQuery}”.`
+                : visibleItems.length === 1
+                  ? `1 dish matches “${trimmedQuery}”.`
+                  : `${visibleItems.length} dishes match “${trimmedQuery}”.`}
+            </p>
+          </div>
+        ) : (
+          <h3 className="text-xl font-semibold text-primary mb-6">
+            {activeCategory?.name}
+          </h3>
+        )}
 
         {/* items list */}
         <div className="space-y-3">
-          {activeCategory?.items?.map((item: MenuItem) => {
+          {visibleItems.map(({ item, categoryName }) => {
             const isExpanded = expandedItemId === item.id;
 
             return (
@@ -194,7 +383,7 @@ export default function Menu() {
               >
                 {/* header row */}
                 <button
-                  onClick={() => handleToggleExpand(item, activeCategory.name)}
+                  onClick={() => handleToggleExpand(item, categoryName)}
                   className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
                 >
                   {item.image && (
@@ -209,7 +398,12 @@ export default function Menu() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-[#5C1A1B] text-base truncate">
+                    {isSearching && (
+                      <p className="text-xs uppercase tracking-wide text-secondary font-semibold">
+                        {categoryName}
+                      </p>
+                    )}
+                    <h4 className="font-semibold text-primary text-base truncate">
                       {item.name}
                     </h4>
                     {item.description && (
@@ -219,7 +413,7 @@ export default function Menu() {
                     )}
                   </div>
                   <div className="flex items-center gap-3 ml-3 shrink-0">
-                    <span className="font-bold text-[#C4973B]">
+                    <span className="font-bold text-secondary">
                       ${item.price.toFixed(2)}
                     </span>
                     <ChevronRight
@@ -241,7 +435,7 @@ export default function Menu() {
 
                     <MenuItemOrderForm
                       item={item}
-                      categoryName={activeCategory.name}
+                      categoryName={categoryName}
                       onAdded={() => setExpandedItemId(null)}
                     />
 
@@ -249,7 +443,7 @@ export default function Menu() {
                     <button
                       type="button"
                       onClick={() => handleCopyLink(item.id)}
-                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-[#5C1A1B] transition-colors"
+                      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-primary transition-colors"
                     >
                       <Link2 className="w-3.5 h-3.5" />
                       {copiedId === item.id
@@ -263,26 +457,37 @@ export default function Menu() {
           })}
         </div>
 
-        {/* pickup notice */}
+        {/* ordering notice */}
         <div className="mt-8 text-center text-sm text-gray-500 flex items-center justify-center gap-2">
           <Clock className="w-4 h-4" />
-          Pickup only &middot; 7% MA tax &middot; Last order at 7:00 PM
+          Pickup &amp; delivery &middot; 7% MA tax &middot; Online ordering until{" "}
+          {ORDERING_ENDS_LABEL}
         </div>
       </div>
 
-      {/* Floating Cart Button */}
-      <button
-        onClick={openCart}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-2 bg-[#5C1A1B] text-white px-5 py-3 rounded-full shadow-lg hover:bg-[#7A2526] transition-all hover:scale-105"
-      >
-        <ShoppingCart className="w-5 h-5" />
-        Cart
-        {itemCount > 0 && (
-          <span className="bg-[#C4973B] text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold">
-            {itemCount > 99 ? "99+" : itemCount}
+      {/* Floating cart. Shown only once something is in the cart — an empty
+          "Cart" pill floating over the hero was noise, and the header keeps a
+          cart button either way. Carries the running subtotal so it reads as
+          the next step, and spans the width on phones where it is the thumb's
+          natural target. The subtotal is pre-tax, and labelled so. */}
+      {itemCount > 0 && heroInView === false && (
+        <button
+          onClick={openCart}
+          className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:bottom-6 sm:right-6 z-40 flex items-center justify-between sm:justify-start gap-3 bg-primary text-white pl-5 pr-4 py-3 rounded-full shadow-lg shadow-black/20 hover:bg-primary-light transition-all sm:hover:scale-105"
+        >
+          <span className="flex items-center gap-2 font-semibold">
+            <ShoppingCart className="w-5 h-5" />
+            View cart
+            <span className="bg-secondary text-white text-xs min-w-6 h-6 px-1.5 rounded-full flex items-center justify-center font-bold">
+              {itemCount > 99 ? "99+" : itemCount}
+            </span>
           </span>
-        )}
-      </button>
+          <span className="text-sm text-white/90">
+            ${subtotal.toFixed(2)}
+            <span className="text-white/60 text-xs"> + tax</span>
+          </span>
+        </button>
+      )}
     </section>
   );
 }

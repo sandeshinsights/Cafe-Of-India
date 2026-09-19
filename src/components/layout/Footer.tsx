@@ -1,6 +1,10 @@
-import { Phone, Mail, MapPin, Clock, ExternalLink } from "lucide-react";
-import { getSiteConfig, getRestaurantData } from "@/lib/data";
-import { joinNatural } from "@/lib/utils";
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { getSiteConfig, getRestaurantData, getNavigation } from "@/lib/data";
+import {
+  directionsUrl,
+  sameHoursEveryDay,
+  WEEK_DAYS,
+} from "@/lib/utils";
 
 /**
  * Footer Component
@@ -21,10 +25,7 @@ export default function Footer() {
   const { address, phone, phoneDisplay, email, hours, social, name } =
     getRestaurantData();
 
-  const days = [
-    "monday", "tuesday", "wednesday", "thursday",
-    "friday", "saturday", "sunday"
-  ];
+  const dailyHours = sameHoursEveryDay(hours);
 
   return (
     <footer className="bg-primary text-white">
@@ -51,7 +52,7 @@ export default function Footer() {
                 {email}
               </a>
               <a
-                href="https://maps.google.com/?q=155+Main+Street+Maynard+MA+01754"
+                href={directionsUrl(address.full)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-start gap-3 text-white/90 hover:text-secondary transition-colors"
@@ -66,18 +67,20 @@ export default function Footer() {
           <div>
             <h4 className="font-heading text-xl font-bold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              {["Home", "About", "Menu", "Catering", "Contact"].map(
-                (link) => (
-                  <li key={link}>
-                    <a
-                      href={`#${link.toLowerCase()}`}
-                      className="text-white/80 hover:text-secondary transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                )
-              )}
+              {/* Same list as the header nav (site-config.json), rather than a
+                  hardcoded copy — that copy linked "Home" to a #home anchor that
+                  never existed, and bare "#..." links go nowhere off the
+                  homepage, hence the "/" prefix. */}
+              {getNavigation().map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="text-white/80 hover:text-secondary transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
             </ul>
 
             {/* Social Links */}
@@ -114,18 +117,29 @@ export default function Footer() {
           {/* Column 3: Hours */}
           <div>
             <h4 className="font-heading text-xl font-bold mb-4">Hours</h4>
-            <div className="space-y-2">
-              {days.map((day) => (
-                <div
-                  key={day}
-                  className="flex items-center gap-3 text-white/80"
-                >
-                  <Clock className="w-4 h-4 flex-shrink-0 text-secondary" />
-                  <span className="capitalize w-24">{day}</span>
-                  <span>{hours[day]}</span>
-                </div>
-              ))}
-            </div>
+            {dailyHours ? (
+              <div className="flex items-start gap-3 text-white/80">
+                <Clock className="w-4 h-4 flex-shrink-0 text-secondary mt-1" />
+                <p>
+                  Open daily
+                  <br />
+                  <span className="text-white font-medium">{dailyHours}</span>
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {WEEK_DAYS.map((day) => (
+                  <div
+                    key={day}
+                    className="flex items-center gap-3 text-white/80"
+                  >
+                    <Clock className="w-4 h-4 flex-shrink-0 text-secondary" />
+                    <span className="capitalize w-24">{day}</span>
+                    <span>{hours[day]}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

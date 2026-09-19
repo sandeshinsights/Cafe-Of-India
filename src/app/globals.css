@@ -12,8 +12,10 @@
   --color-ink: #221518;
   --color-text-main: #2D2D2D;
   --color-text-light: #6B6B6B;
-  --font-heading: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", system-ui, sans-serif;
+  /* The font files come from next/font in layout.tsx, which sets these two
+     variables on <html>. */
+  --font-heading: var(--font-playfair), Georgia, serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
 
   /* Motion. Registered here so Tailwind generates animate-* utilities for them
      (Tailwind v4 has no tailwind.config.js — the theme IS this block). Every
@@ -21,6 +23,15 @@
      all of it off. */
   --animate-ken-burns: ken-burns 24s ease-in-out infinite alternate;
   --animate-rise: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Horizontal scroll strips (the menu's category row on phones) — still
+   swipeable and keyboard-scrollable, just without a scrollbar under the pills. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Slow drift across the hero photograph. Deliberately tiny — 4% over 24s reads

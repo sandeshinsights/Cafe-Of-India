@@ -1,6 +1,8 @@
-import { Phone, UtensilsCrossed } from "lucide-react";
+import { Phone, UtensilsCrossed, Star, Bike } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
+import { mapsSearchUrl } from "@/lib/utils";
 import HeroBackdrop, { type HeroImage } from "@/components/HeroBackdrop";
+import OpenStatus from "@/components/OpenStatus";
 
 /**
  * Hero Section
@@ -8,23 +10,27 @@ import HeroBackdrop, { type HeroImage } from "@/components/HeroBackdrop";
  * WHAT IT DOES:
  * - Full-width banner at the top of the homepage
  * - Large headline + subheadline from restaurant.json
- * - Two CTA buttons: "View Menu" (scrolls down) and "Call to Order" (calls phone)
+ * - Two CTA buttons: "Order Online" (scrolls to the menu) and "Call to Order"
+ * - A trust row under them: Google rating, live open/closed status, and
+ *   pickup & delivery — the three things a hungry visitor checks first
  * - Slowly crossfading, gently zooming background behind a dark scrim
  */
 
 /**
- * Backdrop frames. The first is the dedicated hero shot; the other two are
- * gallery photographs, reused so the hero has something to move between without
- * adding weight — they are already downloaded further down the page.
+ * Backdrop frames — real photographs only: our own dining room, then two of
+ * our dishes. The previous frames were AI-generated food shots, which read as
+ * stock the moment anyone looks closely. These three are also the highest-
+ * resolution real photos we have, which matters at full-screen width; the
+ * dish frames are reused elsewhere on the page, so they add no extra weight.
  */
 const backdrop: HeroImage[] = [
-  { src: "/images/hero/hero-bg.jpg", alt: "Cafe of India dining room" },
-  { src: "/images/gallery/gallery-1.jpg", alt: "" },
-  { src: "/images/gallery/gallery-8.jpg", alt: "" },
+  { src: "/images/about/restaurant-interior.jpg", alt: "Cafe of India dining room" },
+  { src: "/images/dishes/menu-115-butter-chicken.jpg", alt: "" },
+  { src: "/images/dishes/momo-steamed.jpg", alt: "" },
 ];
 
 export default function Hero() {
-  const { hero, phone } = getRestaurantData();
+  const { hero, phone, rating, name, address } = getRestaurantData();
 
   return (
     // pb is larger than pt so the centred content sits slightly high, leaving
@@ -42,7 +48,7 @@ export default function Hero() {
         <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-8 motion-safe:animate-rise [animation-delay:100ms]">
           <UtensilsCrossed className="w-4 h-4 text-secondary" />
           <span className="text-sm font-medium tracking-wide uppercase">
-            Authentic Indian Cuisine
+            Authentic Indian &amp; Nepali Cuisine
           </span>
         </div>
 
@@ -75,6 +81,27 @@ export default function Hero() {
             <Phone className="w-5 h-5" />
             {hero.ctaSecondary}
           </a>
+        </div>
+
+        {/* Trust row */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/85 motion-safe:animate-rise [animation-delay:600ms]">
+          <a
+            href={mapsSearchUrl(`${name}, ${address.full}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-white transition-colors"
+          >
+            <Star className="w-4 h-4 fill-secondary text-secondary" />
+            <span className="font-semibold text-white">{rating.value}</span>
+            <span>· {rating.count} {rating.source} reviews</span>
+          </a>
+          <span className="hidden sm:inline text-white/30" aria-hidden="true">|</span>
+          <OpenStatus />
+          <span className="hidden sm:inline text-white/30" aria-hidden="true">|</span>
+          <span className="inline-flex items-center gap-1.5">
+            <Bike className="w-4 h-4 text-secondary" />
+            Pickup &amp; Delivery
+          </span>
         </div>
       </div>
 

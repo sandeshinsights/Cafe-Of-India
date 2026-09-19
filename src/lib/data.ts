@@ -143,3 +143,30 @@ export function isOnlineOrderingEnabled(): boolean {
   if (flag === "true" || flag === "1" || flag === "yes" || flag === "on") return false;
   return getSiteConfig().features.onlineOrdering !== false;
 }
+
+/**
+ * The nav links from site-config.json, minus any that point at a homepage
+ * section switched off in `features.sections` — hiding a section must not leave
+ * a dead link behind in the header or footer. Anchors are returned as "/#menu"
+ * rather than "#menu": both render on every page, and a bare "#menu" does
+ * nothing on /menu/<slug> or /privacy. On the homepage "/#menu" is still an
+ * in-page scroll.
+ */
+export function getNavigation(): { label: string; href: string }[] {
+  const flags: Record<string, boolean | undefined> = {
+    ...getSiteConfig().features.sections,
+  };
+  return getSiteConfig()
+    .navigation.filter(
+      (item) => !item.href.startsWith("#") || flags[item.href.slice(1)] !== false
+    )
+    .map((item) => ({
+      label: item.label,
+      href: item.href.startsWith("#") ? `/${item.href}` : item.href,
+    }));
+}
+
+/** "#menu" -> "/#menu", for the same reason as getNavigation. */
+export function toHomeAnchor(href: string): string {
+  return href.startsWith("#") ? `/${href}` : href;
+}

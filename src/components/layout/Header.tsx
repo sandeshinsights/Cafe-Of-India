@@ -2,26 +2,72 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Phone, Menu, X, ShoppingBag } from "lucide-react";
-import { getSiteConfig, getRestaurantData } from "@/lib/data";
+import { Phone, Menu, X, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import {
+  getSiteConfig,
+  getRestaurantData,
+  getNavigation,
+  toHomeAnchor,
+} from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
+
+/**
+ * Site header.
+ *
+ * The primary button is "Order Online" (→ the menu), not a phone call: this is
+ * an online-ordering site, and the phone number used to be the only CTA in the
+ * header. The number is still one tap away — a secondary link on desktop and a
+ * second button in the mobile menu.
+ *
+ * Nav links come from getNavigation() as "/#menu"-style hrefs, so they work
+ * from every page the header renders on, not just the homepage.
+ */
+
+// Static JSON, so computed once.
+const navItems = getNavigation();
+const { ctaButton } = getSiteConfig();
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeHref, setActiveHref] = useState<string | null>(null);
   const { itemCount, openCart } = useCart();
+
+  const { name, phone, phoneDisplay } = getRestaurantData();
 
   useEffect(() => {
     function handleScroll() {
       setScrolled(window.scrollY > 20);
     }
-    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const { navigation, ctaButton } = getSiteConfig();
-  const { name } = getRestaurantData();
+  // Scroll-spy: underline the nav link for the section in the middle of the
+  // screen. A thin band at mid-viewport means exactly one section is "current"
+  // at a time, however tall the sections are. EVERY homepage section is
+  // observed, not just the linked ones: sections with no nav link (hero,
+  // gallery, reviews, FAQ) then clear the underline instead of leaving the
+  // previous section's link lit while the customer reads something else.
+  useEffect(() => {
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>("main section[id]")
+    );
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) setActiveHref(`/#${entry.target.id}`);
+        }
+      },
+      { rootMargin: "-50% 0px -50% 0px" }
+    );
+    sections.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <header
@@ -34,28 +80,47 @@ export default function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
+          {/* Logo. A <span>, not an <h1>: the hero headline is the page's h1,
+              and two h1s on every page muddies both SEO and screen readers. */}
           <Link href="/" className="flex-shrink-0">
-            <h1 className="font-heading text-2xl md:text-3xl font-bold text-primary">
+            <span className="font-heading text-2xl md:text-3xl font-bold text-primary">
               {name}
-            </h1>
+            </span>
           </Link>
 
           {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="text-text-main hover:text-primary font-medium transition-colors duration-200"
-              >
-                {item.label}
-              </a>
-            ))}
+            {navItems.map((item) => {
+              const active = activeHref === item.href;
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "location" : undefined}
+                  className={cn(
+                    "relative font-medium transition-colors duration-200 py-1",
+                    "after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-secondary after:transition-transform after:duration-300 after:origin-left",
+                    active
+                      ? "text-primary after:scale-x-100"
+                      : "text-text-main hover:text-primary after:scale-x-0"
+                  )}
+                >
+                  {item.label}
+                </a>
+              );
+            })}
           </nav>
 
           {/* Cart + CTA + Mobile Toggle */}
           <div className="flex items-center space-x-3">
+            <a
+              href={`tel:${phone}`}
+              className="hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-text-main hover:text-primary transition-colors"
+            >
+              <Phone className="w-4 h-4" />
+              {phoneDisplay}
+            </a>
+
             <button
               onClick={openCart}
               className="relative p-2 text-primary hover:bg-primary/10 rounded-full transition-colors"
@@ -70,10 +135,10 @@ export default function Header() {
             </button>
 
             <a
-              href={ctaButton.href}
+              href={toHomeAnchor(ctaButton.href)}
               className="hidden md:inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-full font-semibold transition-colors duration-200"
             >
-              <Phone className="w-4 h-4" />
+              <UtensilsCrossed className="w-4 h-4" />
               {ctaButton.label}
             </a>
 
@@ -81,6 +146,7 @@ export default function Header() {
               onClick={() => setMobileOpen(!mobileOpen)}
               className="md:hidden p-2 text-primary"
               aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
             >
               {mobileOpen ? (
                 <X className="w-6 h-6" />
@@ -96,23 +162,38 @@ export default function Header() {
       {mobileOpen && (
         <div className="md:hidden bg-white border-t border-cream-dark shadow-lg">
           <nav className="px-4 py-4 space-y-3">
-            {navigation.map((item) => (
+            {navItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className="block text-text-main hover:text-primary font-medium py-2 transition-colors"
+                className={cn(
+                  "block font-medium py-2 transition-colors",
+                  activeHref === item.href
+                    ? "text-primary"
+                    : "text-text-main hover:text-primary"
+                )}
               >
                 {item.label}
               </a>
             ))}
-            <a
-              href={ctaButton.href}
-              className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-full font-semibold mt-4 transition-colors"
-            >
-              <Phone className="w-4 h-4" />
-              {ctaButton.label}
-            </a>
+            <div className="grid grid-cols-2 gap-3 pt-2">
+              <a
+                href={toHomeAnchor(ctaButton.href)}
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 bg-primary text-white px-4 py-3 rounded-full font-semibold transition-colors"
+              >
+                <UtensilsCrossed className="w-4 h-4" />
+                {ctaButton.label}
+              </a>
+              <a
+                href={`tel:${phone}`}
+                className="flex items-center justify-center gap-2 border border-primary/30 text-primary px-4 py-3 rounded-full font-semibold transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                Call Us
+              </a>
+            </div>
           </nav>
         </div>
       )}

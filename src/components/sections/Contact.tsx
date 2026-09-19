@@ -1,6 +1,11 @@
 import { Phone, Mail, MapPin, Clock, Navigation } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
-import { joinNatural } from "@/lib/utils";
+import {
+  joinNatural,
+  directionsUrl,
+  sameHoursEveryDay,
+  WEEK_DAYS,
+} from "@/lib/utils";
 
 /**
  * Contact Section
@@ -20,10 +25,7 @@ export default function Contact() {
   const { address, phone, phoneDisplay, email, hours, geo, serviceAreas } =
     getRestaurantData();
 
-  const days = [
-    "monday", "tuesday", "wednesday", "thursday",
-    "friday", "saturday", "sunday"
-  ];
+  const dailyHours = sameHoursEveryDay(hours);
 
   return (
     <section id="contact" className="py-20 bg-primary text-white">
@@ -65,7 +67,7 @@ export default function Contact() {
                 <h3 className="font-heading text-xl font-bold mb-1 text-white">Address</h3>
                 <p className="text-white/80">{address.full}</p>
                 <a
-                  href="https://maps.google.com/?q=155+Main+Street+Maynard+MA+01754"
+                  href={directionsUrl(address.full)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-secondary hover:text-secondary-light transition-colors mt-2 text-sm font-medium"
@@ -115,14 +117,21 @@ export default function Contact() {
               </div>
               <div>
                 <h3 className="font-heading text-xl font-bold mb-2 text-white">Hours</h3>
-                <div className="space-y-1">
-                  {days.map((day) => (
-                    <div key={day} className="flex justify-between text-sm text-white/80 gap-6">
-                      <span className="capitalize">{day}</span>
-                      <span>{hours[day]}</span>
-                    </div>
-                  ))}
-                </div>
+                {dailyHours ? (
+                  <p className="text-white/80">
+                    Open daily &middot;{" "}
+                    <span className="text-white font-medium">{dailyHours}</span>
+                  </p>
+                ) : (
+                  <div className="space-y-1">
+                    {WEEK_DAYS.map((day) => (
+                      <div key={day} className="flex justify-between text-sm text-white/80 gap-6">
+                        <span className="capitalize">{day}</span>
+                        <span>{hours[day]}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

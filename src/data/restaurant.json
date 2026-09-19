@@ -44,7 +44,7 @@
   "hero": {
     "headline": "Experience the Flavors of India & Nepal",
     "subheadline": "Authentic Indian and Nepali cuisine made with fresh ingredients and traditional recipes, served with warmth in the heart of Maynard.",
-    "ctaPrimary": "View Our Menu",
+    "ctaPrimary": "Order Online",
     "ctaSecondary": "Call to Order"
   },
   "about": {
@@ -101,7 +101,7 @@
     }
   ],
   "catering": {
-    "banner": "/images/catering/catering-banner.jpg",
+    "banner": "/images/catering/catering-buffet.jpg",
     "headline": "Catering Services",
     "description": "Let Cafe of India bring the vibrant flavors of India and Nepal to your next event. We offer full-service catering for weddings, corporate events, birthday parties, and more. Our catering team works with you to create a custom menu that fits your taste and budget.",
     "eventTypes": [
@@ -329,6 +329,11 @@
         "priceLarge": 180
       }
     ],
+    "customMenuNote": {
+      "headline": "Don't see what you're looking for?",
+      "text": "We also prepare dishes beyond what's listed here — tell us what you'd like in the form below and we'll customize the menu for your event.",
+      "cta": "Tell us what you'd like"
+    },
     "minOrder": 150,
     "advanceNotice": "At least 48 hours notice required for all catering orders"
   },

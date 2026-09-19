@@ -1,5 +1,5 @@
 {
-  "banner": "/images/menu/menu-banner.jpg",
+  "banner": "/images/dishes/momo-steamed.jpg",
   "categories": [
     {
       "id": "category-1",
@@ -160,7 +160,7 @@
       "name": "Breads / Naan",
       "description": "Freshly baked in our tandoor clay oven",
       "items": [
-        { "id": "menu-72", "name": "Plain Naan", "price": 4.95, "description": "Leavened, fine flour handmade bread.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-72-plain-naan.jpg" },
+        { "id": "menu-72", "name": "Plain Naan", "price": 4.95, "description": "Leavened, fine flour handmade bread.", "tags": ["Vegetarian"], "badge": "" },
         { "id": "menu-73", "name": "Plain Paratha", "price": 5.99, "description": "Multi-layered whole wheat bread, cooked with butter on a griddle.", "tags": ["Vegetarian"], "badge": "", "image": "" },
         { "id": "menu-74", "name": "Chapati", "price": 4.99, "description": "Thin, unleavened bread, cooked on a griddle served with or without butter.", "tags": ["Vegetarian", "Vegan"], "badge": "", "image": "" },
         { "id": "menu-75", "name": "Garlic Naan", "price": 5.95, "description": "Unleavened white flour bread stuffed with chopped fresh garlic and coriander and baked in our tandoor.", "tags": ["Vegetarian"], "badge": "", "image": "/images/dishes/menu-75-garlic-naan.jpg" },

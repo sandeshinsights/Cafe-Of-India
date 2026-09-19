@@ -1,6 +1,6 @@
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, ExternalLink } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
-import { getStars } from "@/lib/utils";
+import { getStars, mapsSearchUrl } from "@/lib/utils";
 
 /**
  * Reviews Section
@@ -14,10 +14,14 @@ import { getStars } from "@/lib/utils";
  * - Light background alternating from dark specials section
  * - Quote icon decoration on each card
  * - Gold stars for ratings
+ * - Phones: a swipeable row (scroll-snap) instead of four stacked cards, which
+ *   was several screens of scrolling for four quotes
+ * - A link out to the full set of reviews on Google, so four hand-picked
+ *   quotes read as a sample rather than the whole story
  */
 
 export default function Reviews() {
-  const { testimonials, rating } = getRestaurantData();
+  const { testimonials, rating, name, address } = getRestaurantData();
 
   return (
     <section id="reviews" className="py-20 bg-white">
@@ -27,7 +31,7 @@ export default function Reviews() {
           <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-4">
             What Our Guests Say
           </h2>
-          <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mb-4">
             {/* Stars */}
             <div className="flex gap-1">
               {getStars(rating.value).map((star, i) => (
@@ -44,18 +48,18 @@ export default function Reviews() {
             <span className="text-text-main font-bold text-xl">
               {rating.value}
             </span>
-            <span className="text-text-light text-lg">
+            <span className="text-text-light text-lg whitespace-nowrap">
               ({rating.count} reviews on {rating.source})
             </span>
           </div>
         </div>
 
         {/* Testimonial Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="-mx-4 px-4 flex gap-4 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-2 md:mx-0 md:px-0 md:grid md:grid-cols-2 md:gap-8 md:overflow-visible md:pb-0">
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-cream rounded-2xl p-8 relative hover:shadow-lg transition-shadow duration-300"
+              className="bg-cream rounded-2xl p-6 sm:p-8 relative hover:shadow-lg transition-shadow duration-300 shrink-0 w-[85%] snap-center md:w-auto"
             >
               {/* Quote Icon */}
               <Quote className="w-8 h-8 text-secondary/30 absolute top-6 right-6" />
@@ -92,6 +96,19 @@ export default function Reviews() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Link out to every review */}
+        <div className="text-center mt-10">
+          <a
+            href={mapsSearchUrl(`${name}, ${address.full}`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 border border-primary/20 text-primary hover:bg-primary hover:text-white px-6 py-3 rounded-full font-semibold transition-colors"
+          >
+            Read all {rating.count} reviews on {rating.source}
+            <ExternalLink className="w-4 h-4" />
+          </a>
         </div>
       </div>
     </section>

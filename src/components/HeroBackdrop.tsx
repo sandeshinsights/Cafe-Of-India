@@ -70,8 +70,10 @@ export default function HeroBackdrop({ images }: { images: HeroImage[] }) {
       ))}
 
       {/* Readability scrim. Deeper top and bottom so the header and the scroll
-          cue keep contrast over a bright photo. */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+          cue keep contrast over a bright photo. The middle is darker than it
+          once was: the real dish photos (pale momo dough, a white bowl on
+          marble) are much lighter than the moody AI shots they replaced. */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/70" />
       {/* Warm tint, so the photography sits in the same family as the brand
           maroon and gold instead of reading as a cold stock image. */}
       <div className="absolute inset-0 bg-[#5C1A1B]/10 mix-blend-multiply" />

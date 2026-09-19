@@ -1,14 +1,6 @@
 {
   "navigation": [
     {
-      "label": "Home",
-      "href": "#hero"
-    },
-    {
-      "label": "About",
-      "href": "#about"
-    },
-    {
       "label": "Menu",
       "href": "#menu"
     },
@@ -17,13 +9,21 @@
       "href": "#specials"
     },
     {
+      "label": "About",
+      "href": "#about"
+    },
+    {
       "label": "Catering",
       "href": "#catering"
+    },
+    {
+      "label": "Visit Us",
+      "href": "#contact"
     }
   ],
   "ctaButton": {
-    "label": "Order Now",
-    "href": "tel:978-897-9227"
+    "label": "Order Online",
+    "href": "#menu"
   },
   "footer": {
     "copyright": "Cafe of India. All Rights Reserved.",

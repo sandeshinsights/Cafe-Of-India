@@ -16,17 +16,18 @@ import GalleryGrid, { type GalleryImage } from "@/components/GalleryGrid";
  * practice; a photograph of a dining room the customer will never walk into is
  * not. The section copy talks about the food for the same reason.
  *
- * The two dropped files are still in public/images/gallery/ — unreferenced, and
- * safe to delete or replace with real photographs of the restaurant.
+ * Those six were then replaced too: they were AI-generated, and looked it. The
+ * grid now shows our own dish photographs, the same ones the menu uses. Indices
+ * 0 and 3 are the wide tiles (see WIDE_TILES), so they hold landscape shots.
  */
 
 const galleryImages: GalleryImage[] = [
-  { src: "/images/gallery/gallery-1.jpg", alt: "Thali platter with curries, rice and breads" },
-  { src: "/images/gallery/gallery-2.jpg", alt: "Garlic naan, fresh from the tandoor" },
-  { src: "/images/gallery/gallery-3.jpg", alt: "Chicken tikka masala in a clay pot" },
-  { src: "/images/gallery/gallery-8.jpg", alt: "Tandoori mixed grill platter" },
-  { src: "/images/gallery/gallery-4.jpg", alt: "Vegetable samosa and pakora platter" },
-  { src: "/images/gallery/gallery-6.jpg", alt: "Mango lassi and gulab jamun" },
+  { src: "/images/dishes/menu-56-malai-chicken-kabab.jpg", alt: "Malai chicken kabab, sizzling from the tandoor" },
+  { src: "/images/dishes/menu-1-vegetable-samosa.jpg", alt: "Vegetable samosas" },
+  { src: "/images/dishes/menu-57-tandoori-chicken.jpg", alt: "Tandoori chicken on a sizzler plate" },
+  { src: "/images/dishes/menu-115-butter-chicken.jpg", alt: "Butter chicken" },
+  { src: "/images/dishes/menu-25-tikka-masala.jpg", alt: "Tikka masala" },
+  { src: "/images/dishes/menu-75-garlic-naan.jpg", alt: "Garlic naan" },
 ];
 
 export default function Gallery() {

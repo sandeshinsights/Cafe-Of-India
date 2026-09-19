@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PartyPopper, Users, Building2, Cake, GraduationCap, CalendarHeart, Phone, DollarSign, ChevronDown } from "lucide-react";
+import { PartyPopper, Users, Building2, Cake, CalendarHeart, Phone, DollarSign, ChevronDown, ChefHat, ArrowDown } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 import CateringForm from "@/components/CateringForm";
@@ -83,7 +83,7 @@ export default function Catering() {
           {catering.eventTypes.map((event) => (
             <div
               key={event}
-              className="bg-white rounded-xl p-5 text-center hover:shadow-md transition-shadow duration-200 border border-gray-100"
+              className="reveal bg-white rounded-xl p-5 text-center hover:shadow-md transition-shadow duration-200 border border-gray-100"
             >
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-3">
                 {eventIcons[event] || <PartyPopper className="w-6 h-6" />}
@@ -137,17 +137,36 @@ export default function Catering() {
                             className="bg-cream/60 rounded-lg p-4 border border-gray-100 hover:shadow-sm transition-shadow"
                           >
                             <h5 className="font-semibold text-text-main mb-2">{item.name}</h5>
+                            {/* A size row only when that size has a price. Some
+                                items come in one size only, and rendering both
+                                rows unconditionally printed "$NaN". */}
                             <div className="space-y-1 text-sm">
-                              <div className="flex justify-between text-text-light">
-                                <span>Small Tray</span>
-                                <span className="font-semibold text-primary">{formatPrice(item.priceSmall)}</span>
-                              </div>
-                              <p className="text-text-light text-xs">{item.servesSmall}</p>
-                              <div className="flex justify-between text-text-light pt-1 border-t border-gray-50">
-                                <span>Large Tray</span>
-                                <span className="font-semibold text-primary">{formatPrice(item.priceLarge)}</span>
-                              </div>
-                              <p className="text-text-light text-xs">{item.servesLarge}</p>
+                              {item.priceSmall != null && (
+                                <>
+                                  <div className="flex justify-between text-text-light">
+                                    <span>{item.priceLarge != null ? "Small Tray" : "Price"}</span>
+                                    <span className="font-semibold text-primary">{formatPrice(item.priceSmall)}</span>
+                                  </div>
+                                  {item.servesSmall && (
+                                    <p className="text-text-light text-xs">{item.servesSmall}</p>
+                                  )}
+                                </>
+                              )}
+                              {item.priceLarge != null && (
+                                <>
+                                  <div
+                                    className={`flex justify-between text-text-light ${
+                                      item.priceSmall != null ? "pt-1 border-t border-gray-50" : ""
+                                    }`}
+                                  >
+                                    <span>Large Tray</span>
+                                    <span className="font-semibold text-primary">{formatPrice(item.priceLarge)}</span>
+                                  </div>
+                                  {item.servesLarge && (
+                                    <p className="text-text-light text-xs">{item.servesLarge}</p>
+                                  )}
+                                </>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -158,6 +177,30 @@ export default function Catering() {
               );
             })}
           </div>
+
+          {/* The list is not the limit — point people at the quote form. */}
+          {catering.customMenuNote && (
+            <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 rounded-xl border border-secondary/30 bg-secondary/10 p-5 sm:p-6">
+              <div className="flex items-start gap-3 flex-1">
+                <ChefHat className="w-6 h-6 shrink-0 text-secondary mt-0.5" />
+                <div>
+                  <p className="font-heading text-lg font-bold text-primary">
+                    {catering.customMenuNote.headline}
+                  </p>
+                  <p className="text-text-light mt-1">
+                    {catering.customMenuNote.text}
+                  </p>
+                </div>
+              </div>
+              <a
+                href="#catering-quote"
+                className="shrink-0 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary-light text-white px-5 py-2.5 rounded-full font-semibold transition-colors"
+              >
+                {catering.customMenuNote.cta}
+                <ArrowDown className="w-4 h-4" />
+              </a>
+            </div>
+          )}
         </div>
 
         {/* Info Cards */}
@@ -174,8 +217,12 @@ export default function Catering() {
           </div>
         </div>
 
-        {/* Catering Inquiry Form */}
-        <div className="bg-white rounded-2xl p-6 md:p-10 shadow-lg border border-gray-100">
+        {/* Catering Inquiry Form. scroll-mt clears the fixed header when the
+            custom-menu note's button jumps here. */}
+        <div
+          id="catering-quote"
+          className="scroll-mt-24 bg-white rounded-2xl p-6 md:p-10 shadow-lg border border-gray-100"
+        >
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl font-heading font-bold text-primary text-center mb-2">
               Request a Quote

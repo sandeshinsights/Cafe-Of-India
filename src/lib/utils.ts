@@ -81,3 +81,34 @@ export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   return text.slice(0, maxLength).trim() + "...";
 }
+/**
+ * Google Maps directions to an address. Built from restaurant.json rather than
+ * hardcoded, so an address change is one edit instead of a hunt through
+ * components.
+ */
+export function directionsUrl(address: string): string {
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`;
+}
+
+/**
+ * Google Maps search for a place — for "name, full address" this lands on the
+ * business listing, which is where its reviews live.
+ */
+export function mapsSearchUrl(query: string): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/** Monday-first, matching the keys of restaurant.json `hours`. */
+export const WEEK_DAYS = [
+  "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+] as const;
+
+/**
+ * The hours string if every day is the same, else null. Lets the hours blocks
+ * say "Open daily · 11:30 AM - 9:00 PM" instead of seven identical rows, while
+ * still falling back to the full table the moment any day differs.
+ */
+export function sameHoursEveryDay(hours: Record<string, string>): string | null {
+  const first = hours[WEEK_DAYS[0]];
+  return WEEK_DAYS.every((day) => hours[day] === first) ? first : null;
+}

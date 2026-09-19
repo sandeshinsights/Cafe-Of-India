@@ -62,8 +62,10 @@ export default function About() {
               {/* Decorative accent block. This used to be `bg-accent/20 -z-10`,
                   which was invisible twice over: there is no `accent` colour in
                   the theme, and a negative z-index painted it behind the
-                  section's own white background. Gold, and in front. */}
-              <div className="absolute -bottom-5 -right-5 w-28 h-28 rounded-2xl border-4 border-secondary/40 pointer-events-none" />
+                  section's own white background. Gold, and in front.
+                  Only -right-3 on phones: -right-5 (20px) overran the 16px
+                  page gutter and made the whole page scroll sideways. */}
+              <div className="absolute -bottom-5 -right-3 sm:-right-5 w-28 h-28 rounded-2xl border-4 border-secondary/40 pointer-events-none" />
             </div>
           )}
         </div>

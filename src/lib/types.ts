@@ -164,14 +164,28 @@ export interface CateringFormField {
   options?: string[];
 }
 
+/**
+ * Every tray field is optional because the real data uses them that way: some
+ * items only come one size (Naan by the 10, Samosa each, Lamb Curry full tray
+ * only). Typing them as required hid that, and the missing prices rendered as
+ * "$NaN".
+ */
 export interface CateringMenuItem {
   id: string;
   name: string;
   category: string;
-  priceSmall: number;
-  priceLarge: number;
-  servesSmall: string;
-  servesLarge: string;
+  priceSmall?: number;
+  priceLarge?: number;
+  servesSmall?: string;
+  servesLarge?: string;
+}
+
+/** The "we cook beyond this list" note under the catering menu. */
+export interface CateringCustomMenuNote {
+  headline: string;
+  text: string;
+  /** Label for the button that jumps to the quote form. */
+  cta: string;
 }
 
 export interface CateringContent {
@@ -181,6 +195,7 @@ export interface CateringContent {
   eventTypes: string[];
   formFields: CateringFormField[];
   menu: CateringMenuItem[];
+  customMenuNote?: CateringCustomMenuNote;
   minOrder: number;
   advanceNotice: string;
 }
