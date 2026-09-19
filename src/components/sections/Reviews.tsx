@@ -8,7 +8,7 @@ import { getStars, mapsSearchUrl } from "@/lib/utils";
  * WHAT IT DOES:
  * - Displays 4 customer testimonials from restaurant.json
  * - Each card shows: customer name, star rating, review text, source
- * - Shows overall restaurant rating (4.7/5, 120 reviews) at the top
+ * - Shows overall restaurant rating (from restaurant.json) at the top
  * 
  * VISUAL:
  * - Light background alternating from dark specials section

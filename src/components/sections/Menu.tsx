@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { getMenuData, getMenuItem, getMenuItemSlug } from "@/lib/data";
 import type { MenuItem, MenuCategory } from "@/lib/types";
 import Image from "next/image";
-import { ShoppingCart, ChevronRight, Clock, Link2, Search, X, Gift } from "lucide-react";
+import { ShoppingCart, ChevronLeft, ChevronRight, Clock, Link2, Search, X, Gift } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { ORDERING_CONFIG, formatMinutesTo12h } from "@/lib/ordering-hours";
 import { OFFER_TIERS } from "@/lib/free-item-offer";
@@ -132,19 +132,6 @@ export default function Menu() {
     el.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [expandedItemId, selectedCategory]);
 
-  // On phones the category strip is one horizontally scrolling row; keep the
-  // selected tab centred in it (including after a deep link switches it).
-  // Scrolls only the strip, never the page.
-  useEffect(() => {
-    const strip = tabStripRef.current;
-    const tab = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (!strip || !tab || strip.scrollWidth <= strip.clientWidth) return;
-    strip.scrollTo({
-      left: tab.offsetLeft - strip.clientWidth / 2 + tab.clientWidth / 2,
-      behavior: "smooth",
-    });
-  }, [selectedCategory]);
-
   function handleSelectCategory(id: string) {
     setSelectedCategory(id);
     setExpandedItemId(null);
@@ -182,6 +169,82 @@ export default function Menu() {
 
   const trimmedQuery = searchQuery.trim();
   const isSearching = trimmedQuery !== "";
+
+  // The category strip is one horizontally scrolling row; keep the selected
+  // tab centred in it — after a deep link switches it, and when the strip
+  // remounts after a search is cleared (it comes back scrolled to the start).
+  // Scrolls only the strip, never the page.
+  useEffect(() => {
+    const strip = tabStripRef.current;
+    const tab = strip?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!strip || !tab || strip.scrollWidth <= strip.clientWidth) return;
+    strip.scrollTo({
+      left: tab.offsetLeft - strip.clientWidth / 2 + tab.clientWidth / 2,
+      behavior: "smooth",
+    });
+  }, [selectedCategory, isSearching]);
+
+  // Where the category strip is scrolled to. Drives the arrow buttons, the
+  // edge fades and the progress bar under the row — together they tell
+  // visitors the row scrolls, which a bare overflow row with a hidden
+  // scrollbar never did. Re-subscribes when the strip remounts after a search
+  // is cleared. thumbSize/thumbOffset are percentages of the track.
+  const [stripScroll, setStripScroll] = useState({
+    overflow: false,
+    left: false,
+    right: false,
+    thumbSize: 100,
+    thumbOffset: 0,
+  });
+  useEffect(() => {
+    const strip = tabStripRef.current;
+    if (!strip) return;
+    const update = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = strip;
+      const max = scrollWidth - clientWidth;
+      const next = {
+        overflow: max > 2,
+        // 2px of slack: fractional widths can leave scrollLeft a hair short of max.
+        left: scrollLeft > 2,
+        right: scrollLeft < max - 2,
+        thumbSize: (clientWidth / scrollWidth) * 100,
+        thumbOffset: (scrollLeft / scrollWidth) * 100,
+      };
+      setStripScroll((prev) =>
+        prev.overflow === next.overflow &&
+        prev.left === next.left &&
+        prev.right === next.right &&
+        Math.abs(prev.thumbSize - next.thumbSize) < 0.1 &&
+        Math.abs(prev.thumbOffset - next.thumbOffset) < 0.1
+          ? prev
+          : next
+      );
+    };
+    // ResizeObserver reports once on observe, which sets the initial state.
+    const observer = new ResizeObserver(update);
+    observer.observe(strip);
+    strip.addEventListener("scroll", update, { passive: true });
+    return () => {
+      observer.disconnect();
+      strip.removeEventListener("scroll", update);
+    };
+  }, [isSearching]);
+
+  function scrollStrip(direction: -1 | 1) {
+    const strip = tabStripRef.current;
+    if (!strip) return;
+    strip.scrollBy({ left: direction * strip.clientWidth * 0.7, behavior: "smooth" });
+  }
+
+  // Click or drag on the progress bar scrolls the strip, centring the view on
+  // the pointer — on a desktop mouse the bar is what people reach for.
+  function scrubStrip(e: React.PointerEvent<HTMLDivElement>) {
+    const strip = tabStripRef.current;
+    if (!strip) return;
+    const track = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - track.left) / track.width));
+    strip.scrollLeft = ratio * strip.scrollWidth - strip.clientWidth / 2;
+  }
 
   // The rows to render, each tagged with the category it lives in. That name is
   // not just a label: MenuItemOrderForm uses it to decide whether a protein
@@ -321,34 +384,101 @@ export default function Menu() {
 
         {/* category tabs — hidden while searching, since results span them all */}
         {/* Sticky under the header, so switching category never means scrolling
-            back up. On phones it is one swipeable row: fifteen wrapped pills
-            used to fill most of the first screen before a single dish. */}
+            back up. One horizontally scrolling row at every width, inside a
+            card with a progress bar under it: fifteen wrapped pills used to
+            fill most of the first screen before a single dish. */}
         {!isSearching && (
-          <div
-            ref={tabStripRef}
-            className="sticky top-20 z-20 -mx-4 px-4 py-3 mb-6 bg-cream/95 backdrop-blur-sm flex gap-2 overflow-x-auto no-scrollbar md:flex-wrap md:justify-center md:overflow-visible"
-          >
-            {categories.map((cat: MenuCategory) => (
-              <button
-                key={cat.id}
-                onClick={() => handleSelectCategory(cat.id)}
-                aria-pressed={selectedCategory === cat.id}
-                className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat.id
-                    ? "bg-primary text-white"
-                    : "bg-white text-primary border border-primary/20 hover:bg-primary/5"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+          <div className="sticky top-20 z-20 -mx-4 px-4 py-3 mb-6 bg-cream/95 backdrop-blur-sm">
+            <div className="rounded-2xl border border-primary/10 bg-white shadow-sm overflow-hidden">
+              <div className="relative">
+                {/* scroller — `relative` so each tab's offsetLeft is measured
+                    against it (the centring effect above relies on that) */}
+                <div
+                  ref={tabStripRef}
+                  className="relative overflow-x-auto no-scrollbar px-3 pt-3 pb-2"
+                >
+                  {/* w-max + mx-auto: centred when the row fits, scrollable when not */}
+                  <div className="flex gap-1 w-max mx-auto">
+                    {categories.map((cat: MenuCategory) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleSelectCategory(cat.id)}
+                        aria-pressed={selectedCategory === cat.id}
+                        className={`shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                          selectedCategory === cat.id
+                            ? "bg-primary text-white shadow-sm"
+                            : "text-gray-600 hover:text-primary hover:bg-primary/5"
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {stripScroll.left && (
+                  <>
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-linear-to-r from-white to-transparent" />
+                    <button
+                      type="button"
+                      onClick={() => scrollStrip(-1)}
+                      aria-label="Scroll categories left"
+                      className="absolute left-2 top-[calc(50%+2px)] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white text-primary border border-primary/20 shadow-md hover:bg-primary hover:text-white transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+                {stripScroll.right && (
+                  <>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-linear-to-l from-white to-transparent" />
+                    <button
+                      type="button"
+                      onClick={() => scrollStrip(1)}
+                      aria-label="Scroll categories right"
+                      className="absolute right-2 top-[calc(50%+2px)] -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full bg-white text-primary border border-primary/20 shadow-md hover:bg-primary hover:text-white transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* progress bar: thumb width = share of the row in view, position =
+                  how far along it is. Decorative for screen readers (the tabs
+                  and arrows carry the semantics); taller invisible hit area so
+                  it is easy to grab. */}
+              {stripScroll.overflow && (
+                <div
+                  aria-hidden="true"
+                  onPointerDown={(e) => {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    scrubStrip(e);
+                  }}
+                  onPointerMove={(e) => {
+                    if (e.currentTarget.hasPointerCapture(e.pointerId)) scrubStrip(e);
+                  }}
+                  className="mx-4 pt-1 pb-3 cursor-pointer touch-none"
+                >
+                  <div className="relative h-1.5 rounded-full bg-primary/10">
+                    <div
+                      className="absolute inset-y-0 rounded-full bg-primary/70"
+                      style={{
+                        width: `${stripScroll.thumbSize}%`,
+                        left: `${stripScroll.thumbOffset}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* scroll target for handleSelectCategory; the margin clears the fixed
             header plus the sticky category strip (one row on phones, up to two
             wrapped rows on desktop) */}
-        <div ref={listTopRef} className="scroll-mt-40 md:scroll-mt-52" />
+        <div ref={listTopRef} className="scroll-mt-48" />
 
         {/* category title, or search results + count */}
         {isSearching ? (
