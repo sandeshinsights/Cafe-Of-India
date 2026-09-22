@@ -1,4 +1,4 @@
-import { Phone, UtensilsCrossed, Star, Bike, BadgeCheck } from "lucide-react";
+import { Phone, UtensilsCrossed, Star, Bike } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
 import { mapsSearchUrl } from "@/lib/utils";
 import HeroBackdrop, { type HeroImage } from "@/components/HeroBackdrop";
@@ -14,11 +14,11 @@ import HalalSeal from "@/components/HalalSeal";
  * - Two CTA buttons: "Order Online" (scrolls to the menu) and "Call to Order"
  * - A trust row under them: Google rating, live open/closed status, and
  *   pickup & delivery
- * - 100% halal, said twice and loudly, because for the guests who need it, it
- *   decides whether they order at all: in the top badge (the first line anyone
- *   reads) and as a turning seal with the Arabic حلال (beside the headline on
- *   wide screens, in the bottom-right corner otherwise). A small
- *   chip in the trust row was tried first and read as fine print.
+ * - 100% halal, shown as a turning seal with the Arabic حلال (beside the
+ *   headline on wide screens, in the bottom-right corner otherwise). For the
+ *   guests who need it, it decides whether they order at all. Two earlier
+ *   tries were dropped: a small chip in the trust row read as fine print, and
+ *   a split top badge read awkwardly (see the badge comment below).
  * - Slowly crossfading, gently zooming background behind a dark scrim
  */
 
@@ -36,7 +36,7 @@ const backdrop: HeroImage[] = [
 ];
 
 export default function Hero() {
-  const { hero, phone, rating, name, address, halal } = getRestaurantData();
+  const { hero, phone, rating, name, address } = getRestaurantData();
 
   return (
     // pb is larger than pt so the centred content sits slightly high, leaving
@@ -50,16 +50,14 @@ export default function Hero() {
 
       {/* Content */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 text-center text-white">
-        {/* Badge — two halves, so "100% Halal" sits in the very first line
-            anyone reads, in its own green, instead of down in the small print. */}
-        <div className="inline-flex items-stretch rounded-full border border-white/25 overflow-hidden backdrop-blur-sm mb-8 text-xs sm:text-sm font-semibold tracking-wide uppercase motion-safe:animate-rise [animation-delay:100ms]">
-          <span className="flex items-center gap-2 bg-white/10 pl-4 pr-3 sm:pl-5 py-2">
-            <UtensilsCrossed className="hidden sm:block w-4 h-4 text-secondary" />
-            Authentic Indian &amp; Nepali
-          </span>
-          <span className="flex items-center gap-1.5 bg-emerald-600 text-white pl-3 pr-4 sm:pr-5 py-2">
-            <BadgeCheck className="w-4 h-4" />
-            {halal.badge}
+        {/* Badge. Deliberately just the cuisine: a split "…Nepali | 100% Halal"
+            version was tried and dropped — shortening the phrase to fit left it
+            unfinished, and a solid green half clashed with the hero's glass
+            styling. The halal seal carries that message here instead. */}
+        <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-8 motion-safe:animate-rise [animation-delay:100ms]">
+          <UtensilsCrossed className="w-4 h-4 text-secondary" />
+          <span className="text-sm font-medium tracking-wide uppercase">
+            Authentic Indian &amp; Nepali Cuisine
           </span>
         </div>
 
