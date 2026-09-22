@@ -88,8 +88,12 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* Desktop Nav — from lg (1024px). Logo + five links + cart + the
+              Order Online button do not fit narrower: at 768-1023px labels like
+              "Visit Us" wrapped onto two lines, so those widths use the
+              compact header and the menu button instead. The phone number
+              joins only from xl, where there is room for it too. */}
+          <nav className="hidden lg:flex items-center space-x-5 xl:space-x-8">
             {navItems.map((item) => {
               const active = activeHref === item.href;
               return (
@@ -98,7 +102,7 @@ export default function Header() {
                   href={item.href}
                   aria-current={active ? "location" : undefined}
                   className={cn(
-                    "relative font-medium transition-colors duration-200 py-1",
+                    "relative whitespace-nowrap font-medium transition-colors duration-200 py-1",
                     "after:absolute after:left-0 after:right-0 after:-bottom-0.5 after:h-0.5 after:rounded-full after:bg-secondary after:transition-transform after:duration-300 after:origin-left",
                     active
                       ? "text-primary after:scale-x-100"
@@ -115,7 +119,7 @@ export default function Header() {
           <div className="flex items-center space-x-3">
             <a
               href={`tel:${phone}`}
-              className="hidden lg:inline-flex items-center gap-1.5 text-sm font-medium text-text-main hover:text-primary transition-colors"
+              className="hidden xl:inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-text-main hover:text-primary transition-colors"
             >
               <Phone className="w-4 h-4" />
               {phoneDisplay}
@@ -136,7 +140,7 @@ export default function Header() {
 
             <a
               href={toHomeAnchor(ctaButton.href)}
-              className="hidden md:inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-white px-6 py-2.5 rounded-full font-semibold transition-colors duration-200"
+              className="hidden lg:inline-flex items-center gap-2 whitespace-nowrap bg-primary hover:bg-primary-light text-white px-5 xl:px-6 py-2.5 rounded-full font-semibold transition-colors duration-200"
             >
               <UtensilsCrossed className="w-4 h-4" />
               {ctaButton.label}
@@ -144,7 +148,7 @@ export default function Header() {
 
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 text-primary"
+              className="lg:hidden p-2 text-primary"
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
             >
@@ -160,7 +164,7 @@ export default function Header() {
 
       {/* Mobile Nav */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-cream-dark shadow-lg">
+        <div className="lg:hidden bg-white border-t border-cream-dark shadow-lg">
           <nav className="px-4 py-4 space-y-3">
             {navItems.map((item) => (
               <a

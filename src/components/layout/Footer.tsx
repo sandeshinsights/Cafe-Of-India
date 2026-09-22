@@ -1,5 +1,6 @@
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { getSiteConfig, getRestaurantData, getNavigation } from "@/lib/data";
+import HalalBadge from "@/components/HalalBadge";
 import {
   directionsUrl,
   sameHoursEveryDay,
@@ -35,7 +36,8 @@ export default function Footer() {
           {/* Column 1: Restaurant Info */}
           <div>
             <h3 className="font-heading text-2xl font-bold mb-4">{name}</h3>
-            <p className="text-white/80 mb-6">{footer.tagline}</p>
+            <p className="text-white/80 mb-4">{footer.tagline}</p>
+            <HalalBadge tone="dark" className="mb-6" />
             <div className="space-y-3">
               <a
                 href={`tel:${phone}`}

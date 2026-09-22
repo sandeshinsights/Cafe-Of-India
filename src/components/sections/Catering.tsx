@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PartyPopper, Users, Building2, Cake, CalendarHeart, Phone, DollarSign, ChevronDown, ChefHat, ArrowDown } from "lucide-react";
+import HalalSeal from "@/components/HalalSeal";
 import { getRestaurantData } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 import CateringForm from "@/components/CateringForm";
@@ -33,7 +34,7 @@ const eventIcons: Record<string, React.ReactNode> = {
 };
 
 export default function Catering() {
-  const { catering, phone } = getRestaurantData();
+  const { catering, phone, halal } = getRestaurantData();
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   // Group catering menu items by category
@@ -204,7 +205,14 @@ export default function Catering() {
         </div>
 
         {/* Info Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {/* Halal first: for weddings, Eid gatherings and community events it
+              is often the deciding question, asked before price. */}
+          <div className="bg-white rounded-xl p-6 border border-emerald-600/20 text-center">
+            <HalalSeal className="w-16 h-16 mx-auto mb-3" />
+            <h4 className="font-heading text-lg font-bold text-primary mb-1">{halal.badge}</h4>
+            <p className="text-text-light">Every tray, every event. {halal.short}</p>
+          </div>
           <div className="bg-white rounded-xl p-6 border border-gray-100 text-center">
             <DollarSign className="w-8 h-8 text-secondary mx-auto mb-3" />
             <h4 className="font-heading text-lg font-bold text-primary mb-1">Minimum Order</h4>

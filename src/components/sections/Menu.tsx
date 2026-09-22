@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { getMenuData, getMenuItem, getMenuItemSlug } from "@/lib/data";
+import {
+  getMenuData,
+  getMenuItem,
+  getMenuItemSlug,
+  getRestaurantData,
+} from "@/lib/data";
 import type { MenuItem, MenuCategory } from "@/lib/types";
 import Image from "next/image";
 import { ShoppingCart, ChevronLeft, ChevronRight, Clock, Link2, Search, X, Gift } from "lucide-react";
@@ -12,6 +17,7 @@ import { OFFER_TIERS } from "@/lib/free-item-offer";
 import { trackMeta } from "@/lib/meta-pixel";
 // The pick-options-and-add form, shared with the standalone /menu/<slug> page.
 import MenuItemOrderForm from "@/components/MenuItemOrderForm";
+import HalalBadge from "@/components/HalalBadge";
 
 /* ─── display-only copy derived from the real config ─── */
 
@@ -33,6 +39,8 @@ const OFFER_LINES = [...OFFER_TIERS]
       .filter((n): n is string => Boolean(n)),
   }))
   .filter((line) => line.names.length > 0);
+
+const HALAL_SHORT = getRestaurantData().halal.short;
 
 /* ─── component ─── */
 
@@ -325,6 +333,12 @@ export default function Menu() {
           <p className="text-text-light text-lg">
             Authentic Indian &amp; Nepali flavors, made fresh daily &middot; pickup or delivery
           </p>
+          {/* Said again here because the menu is where people decide — and a
+              customer who arrives on #menu from an ad never saw the hero. */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+            <HalalBadge size="md" />
+            <span className="text-sm text-text-light">{HALAL_SHORT}</span>
+          </div>
         </div>
 
         {/* menu banner */}

@@ -205,6 +205,21 @@ export interface FaqItem {
   answer: string;
 }
 
+/**
+ * The restaurant's halal commitment. One source for every place the site says
+ * it (hero, About, menu, catering, dish pages, footer, FAQ), so the claim can
+ * never read differently in two places.
+ */
+export interface HalalContent {
+  /** Short chip text, e.g. "100% Halal". */
+  badge: string;
+  headline: string;
+  /** The full statement, for the About section. */
+  description: string;
+  /** One-line version, for tight spots (menu, catering, dish pages). */
+  short: string;
+}
+
 export interface RestaurantData {
   name: string;
   tagline: string;
@@ -217,6 +232,7 @@ export interface RestaurantData {
   geo: Geo;
   rating: Rating;
   hero: HeroContent;
+  halal: HalalContent;
   about: AboutContent;
   testimonials: Testimonial[];
   catering: CateringContent;

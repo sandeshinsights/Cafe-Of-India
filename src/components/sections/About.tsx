@@ -1,6 +1,7 @@
 import { Award, Leaf, Heart, Users } from "lucide-react";
 import Image from "next/image";
 import { getRestaurantData } from "@/lib/data";
+import HalalSeal from "@/components/HalalSeal";
 
 /**
  * About Section
@@ -24,7 +25,7 @@ const iconMap: Record<string, React.ReactNode> = {
 };
 
 export default function About() {
-  const { about } = getRestaurantData();
+  const { about, halal } = getRestaurantData();
 
   return (
     <section id="about" className="py-20 sm:py-24 bg-white">
@@ -44,6 +45,20 @@ export default function About() {
             <p className="text-text-light text-lg leading-relaxed">
               {about.description}
             </p>
+
+            {/* Halal promise — the full statement lives here, in the story,
+                where people come to learn what kind of place this is. */}
+            <div className="mt-8 flex items-center gap-5 rounded-2xl border border-emerald-600/20 bg-emerald-50/70 p-5">
+              <HalalSeal className="w-20 h-20 sm:w-24 sm:h-24" />
+              <div>
+                <h3 className="font-heading text-xl font-bold text-emerald-900">
+                  {halal.headline}
+                </h3>
+                <p className="text-emerald-900/80 mt-1 leading-relaxed">
+                  {halal.description}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Right: Photo */}

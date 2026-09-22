@@ -47,6 +47,12 @@
     "ctaPrimary": "Order Online",
     "ctaSecondary": "Call to Order"
   },
+  "halal": {
+    "badge": "100% Halal",
+    "headline": "100% Halal, Every Dish",
+    "description": "Everything that leaves our kitchen is 100% halal. All of our chicken, lamb and goat is halal, and there is no pork on our menu, so you can order, dine in or book catering with complete peace of mind.",
+    "short": "All of our chicken, lamb and goat is halal. No pork, ever."
+  },
   "about": {
     "headline": "Welcome to Cafe of India",
     "description": "Nestled in the charming town of Maynard, Massachusetts, Cafe of India brings you the rich and diverse flavors of authentic Indian and Nepali cuisine. Our chefs use traditional recipes passed down through generations, combined with the freshest ingredients, to create dishes that delight every palate. Whether you're a longtime lover of Indian and Nepali food or trying it for the first time, our warm and inviting atmosphere makes every visit a memorable experience.",
@@ -338,6 +344,10 @@
     "advanceNotice": "At least 48 hours notice required for all catering orders"
   },
   "faq": [
+    {
+      "question": "Is your food halal?",
+      "answer": "Yes, 100%. All of our chicken, lamb and goat is halal, and there is no pork on our menu. That applies to everything we serve: dine-in, pickup, delivery and catering. If you have any other dietary requirements, just let us know when you order."
+    },
     {
       "question": "Do you offer vegetarian and vegan options?",
       "answer": "Yes! We have an extensive vegetarian menu with over 20 dishes. Many of our dishes can be prepared vegan upon request. Please inform your server about any dietary restrictions and our chefs will be happy to accommodate."

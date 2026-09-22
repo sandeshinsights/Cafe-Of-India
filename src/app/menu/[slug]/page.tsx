@@ -9,6 +9,7 @@ import {
 } from "@/lib/data";
 import { formatPrice } from "@/lib/utils";
 import MenuItemOrderForm from "@/components/MenuItemOrderForm";
+import HalalBadge from "@/components/HalalBadge";
 
 /**
  * Shareable per-dish page: `/menu/butter-chicken` → Butter Chicken.
@@ -44,9 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // 100+ page titles and leave stale prices in already-scraped social cards
   // until they re-fetch. It lives in the page body instead.
   const title = `${item.name} | ${restaurant.name}`;
-  const description =
+  // Ends with the halal line: this is the text a WhatsApp/Facebook share
+  // unfurls with, and for many of the people it reaches, it is the first
+  // question they would ask.
+  const baseDescription =
     item.description ||
     `Order ${item.name} for pickup or delivery from ${restaurant.name}, ${restaurant.address.city}, ${restaurant.address.state}.`;
+  const description = `${baseDescription} ${restaurant.halal.badge}.`;
   const url = `/menu/${slug}`;
 
   return {
@@ -120,18 +125,19 @@ export default async function MenuItemPage({ params }: Props) {
               </span>
             </div>
 
-            {item.tags?.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {item.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="text-xs px-2 py-1 rounded-full bg-primary/5 text-primary border border-primary/10"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
+            {/* Halal chip on every dish — the whole kitchen is halal, and a
+                shared dish link is often someone's first look at us. */}
+            <div className="flex flex-wrap items-center gap-2">
+              <HalalBadge />
+              {item.tags?.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-1 rounded-full bg-primary/5 text-primary border border-primary/10"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
 
             {item.description && (
               <p className="text-text-light leading-relaxed">
