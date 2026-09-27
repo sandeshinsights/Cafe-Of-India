@@ -72,6 +72,16 @@ const checkoutSchema = z.object({
       fbc: z.string().max(400).optional(),
     })
     .optional(),
+  // Google Ads click ids (gclid, or gbraid/wbraid on some iOS traffic). Same
+  // rules as `meta`: optional, and only ever sent when the visitor accepted
+  // the cookie banner.
+  google: z
+    .object({
+      gclid: z.string().max(200).optional(),
+      gbraid: z.string().max(200).optional(),
+      wbraid: z.string().max(200).optional(),
+    })
+    .optional(),
 });
 
 function getMenuItemPrice(itemId: string): { price: number; category: string } | null {
@@ -100,7 +110,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const parsed = checkoutSchema.parse(body);
 
-    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount, isDelivery, deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee, meta } = parsed;
+    const { name, email, phone, items, promoCodeId, scheduledDate, scheduledTime, tipAmount, isDelivery, deliveryAddress, deliveryApt, deliveryInstructions, deliveryFee, meta, google } = parsed;
 
     // Meta attribution signals. IP and user-agent must be the CUSTOMER's, which
     // is only true here — by the time fulfillment runs, the "client" is Stripe's
@@ -445,6 +455,12 @@ export async function POST(req: NextRequest) {
         ...(metaClientUserAgent && metaClientUserAgent.length <= 500
           ? { fb_client_ua: metaClientUserAgent }
           : {}),
+        // Google Ads click ids, same reasoning. Nothing reads these yet: they
+        // are what an offline-conversion upload (Stripe export → Google Ads)
+        // needs to credit an order the browser tag missed.
+        ...(google?.gclid ? { g_gclid: google.gclid } : {}),
+        ...(google?.gbraid ? { g_gbraid: google.gbraid } : {}),
+        ...(google?.wbraid ? { g_wbraid: google.wbraid } : {}),
       },
     });
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Cookie, X } from "lucide-react";
+import { loadGoogleTag, captureGoogleClickIds } from "@/lib/google-tag";
 
 /**
  * Cookie Consent Banner
@@ -9,14 +10,16 @@ import { Cookie, X } from "lucide-react";
  * WHAT IT DOES:
  * - Shows a banner at the bottom of the page on first visit
  * - Asks the user to accept cookies (required for GA4 compliance)
- * - If accepted: stores preference in localStorage and loads GA4
- * - If declined: stores preference and does NOT load GA4
+ * - If accepted: stores preference in localStorage and loads the Google tag
+ *   (GA4 + Google Ads — see src/lib/google-tag.ts)
+ * - If declined: stores preference and loads nothing from Google
  * - Remembers the choice — never shows again after selection
  * 
  * WHY "use client":
  * - Uses useState and useEffect for browser-side logic
  * - Reads/writes localStorage
- * - Manages GA4 script loading dynamically
+ * - Triggers the Google tag, which is gated on this choice. The Meta Pixel is
+ *   NOT gated on it (see MetaPixel.tsx).
  */
 
 export default function CookieConsent() {
@@ -28,37 +31,18 @@ export default function CookieConsent() {
     if (consent === null) {
       setShow(true);
     } else if (consent === "accepted") {
-      loadGA4();
+      loadGoogleTag();
     }
+    // Always runs: before consent it only notes an ad-click id in memory, so a
+    // visitor who accepts a few pages later is still attributed.
+    captureGoogleClickIds();
   }, []);
-
-  const loadGA4 = () => {
-    // Load Google Analytics 4 dynamically
-    // Replace G-XXXXXXXXXX with your real GA4 ID in Phase 1 Step 6
-    const gaId = process.env.NEXT_PUBLIC_GA_ID;
-    if (!gaId || gaId === "G-XXXXXXXXXX") return;
-
-    // Load gtag.js script
-    const script = document.createElement("script");
-    script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Initialize gtag
-    const inlineScript = document.createElement("script");
-    inlineScript.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '${gaId}', { anonymize_ip: true });
-    `;
-    document.head.appendChild(inlineScript);
-  };
 
   const handleAccept = () => {
     localStorage.setItem("cookie-consent", "accepted");
     setShow(false);
-    loadGA4();
+    loadGoogleTag();
+    captureGoogleClickIds();
   };
 
   const handleDecline = () => {

@@ -5,6 +5,7 @@ import { Send, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { getRestaurantData } from "@/lib/data";
 // Meta Pixel — Lead is sent from here and from /api/catering under one event id.
 import { trackMeta, newMetaEventId, getMetaBrowserIds } from "@/lib/meta-pixel";
+import { trackGoogleLead } from "@/lib/google-tag";
 
 export default function CateringForm() {
   const { catering } = getRestaurantData();
@@ -69,6 +70,7 @@ export default function CateringForm() {
           },
           metaEventId
         );
+        trackGoogleLead({ eventType: form.eventType });
         setForm({
           name: "",
           email: "",

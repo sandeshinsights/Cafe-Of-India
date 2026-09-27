@@ -10,6 +10,7 @@ import {
 import { formatPrice } from "@/lib/utils";
 import MenuItemOrderForm from "@/components/MenuItemOrderForm";
 import HalalBadge from "@/components/HalalBadge";
+import TrackItemView from "@/components/TrackItemView";
 
 /**
  * Shareable per-dish page: `/menu/butter-chicken` → Butter Chicken.
@@ -147,6 +148,12 @@ export default async function MenuItemPage({ params }: Props) {
 
             <div className="border-t border-gray-100 pt-4">
               <MenuItemOrderForm item={item} categoryName={category.name} />
+              <TrackItemView
+                id={item.id}
+                name={item.name}
+                category={category.name}
+                price={item.price}
+              />
             </div>
 
             <Link

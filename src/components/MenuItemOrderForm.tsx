@@ -8,6 +8,7 @@ import { useCart } from "@/context/CartContext";
 import { PROTEIN_OPTIONS } from "@/lib/pricing";
 // Meta Pixel — browser-only funnel event. AddToCart has no server counterpart.
 import { trackMeta } from "@/lib/meta-pixel";
+import { trackGoogle } from "@/lib/google-tag";
 import type { MenuItem } from "@/lib/types";
 
 /* ─── which categories need which choice ─── */
@@ -101,6 +102,20 @@ export default function MenuItemOrderForm({
       num_items: quantity,
       value: (item.price + surcharge) * quantity,
       currency: "USD",
+    });
+    trackGoogle("add_to_cart", {
+      currency: "USD",
+      value: (item.price + surcharge) * quantity,
+      items: [
+        {
+          item_id: item.id,
+          item_name: item.name,
+          item_category: categoryName,
+          item_variant: selectedProtein || undefined,
+          price: item.price + surcharge,
+          quantity,
+        },
+      ],
     });
 
     setSelectedProtein("");

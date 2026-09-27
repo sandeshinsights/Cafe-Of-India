@@ -20,6 +20,14 @@ import {
   getMetaBrowserIds,
   toMetaContentId,
 } from "@/lib/meta-pixel";
+// Google (GA4 + Ads) — consent-gated inside the module, so these are no-ops for
+// visitors who declined the cookie banner.
+import {
+  trackGoogle,
+  toGoogleItemId,
+  getGoogleClickIds,
+  rememberCheckoutContact,
+} from "@/lib/google-tag";
 
 /**
  * The spend-threshold offer, shown in the cart.
@@ -406,6 +414,18 @@ export default function CartDrawer() {
       metaEventId
     );
 
+    trackGoogle("begin_checkout", {
+      currency: "USD",
+      value: discountedSubtotal,
+      items: items.map((ci) => ({
+        item_id: toGoogleItemId(ci.id),
+        item_name: ci.name,
+        price: ci.price,
+        quantity: ci.quantity,
+      })),
+    });
+    const googleClickIds = getGoogleClickIds();
+
     try {
       const response = await fetch("/api/checkout", {
         method: "POST",
@@ -442,6 +462,11 @@ export default function CartDrawer() {
             fbp: metaBrowserIds.fbp,
             fbc: metaBrowserIds.fbc,
           },
+          // Google Ads click id, parked on the Stripe session so a paid order
+          // can be tied back to the ad click later. Empty without consent.
+          ...(Object.values(googleClickIds).some(Boolean)
+            ? { google: googleClickIds }
+            : {}),
           ...(orderMode === "scheduled" && selectedDate && selectedTimeSlot
             ? {
                 scheduledDate: selectedDate.toLocaleDateString("en-CA", {
@@ -462,6 +487,12 @@ export default function CartDrawer() {
         // Real customers rebuilt whole orders by hand before paying, and the
         // ones who gave up never showed up in the orders table at all.
         // /order/success clears it once the payment is actually confirmed.
+        // Enhanced conversions: the success page hands these (hashed by gtag)
+        // to Google Ads with the purchase, then deletes them.
+        rememberCheckoutContact({
+          email: customerEmail.trim(),
+          phone: customerPhone.trim(),
+        });
         window.location.href = data.url;
       } else {
         setCheckoutError(data.error || "Checkout failed. Please try again.");

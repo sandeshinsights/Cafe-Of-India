@@ -15,6 +15,7 @@ import { ORDERING_CONFIG, formatMinutesTo12h } from "@/lib/ordering-hours";
 import { OFFER_TIERS } from "@/lib/free-item-offer";
 // Meta Pixel — browser-only funnel event. ViewContent has no server counterpart.
 import { trackMeta } from "@/lib/meta-pixel";
+import { trackGoogle } from "@/lib/google-tag";
 // The pick-options-and-add form, shared with the standalone /menu/<slug> page.
 import MenuItemOrderForm from "@/components/MenuItemOrderForm";
 import HalalBadge from "@/components/HalalBadge";
@@ -122,6 +123,19 @@ export default function Menu() {
         content_category: cat.name,
         value: target.price,
         currency: "USD",
+      });
+      trackGoogle("view_item", {
+        currency: "USD",
+        value: target.price,
+        items: [
+          {
+            item_id: target.id,
+            item_name: target.name,
+            item_category: cat.name,
+            price: target.price,
+            quantity: 1,
+          },
+        ],
       });
     }
 
@@ -304,7 +318,7 @@ export default function Menu() {
 
     // Opening the detail panel is the closest thing this menu has to viewing a
     // product page — it is where the customer reads the description and picks
-    // options, so it is what Meta should see as ViewContent.
+    // options, so it is what Meta should see as ViewContent (and GA4 as view_item).
     trackMeta("ViewContent", {
       content_ids: [item.id],
       content_name: item.name,
@@ -312,6 +326,19 @@ export default function Menu() {
       content_category: categoryName,
       value: item.price,
       currency: "USD",
+    });
+    trackGoogle("view_item", {
+      currency: "USD",
+      value: item.price,
+      items: [
+        {
+          item_id: item.id,
+          item_name: item.name,
+          item_category: categoryName,
+          price: item.price,
+          quantity: 1,
+        },
+      ],
     });
   }
 

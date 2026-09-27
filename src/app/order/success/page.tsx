@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle, Home, Loader2, Truck, Clock, ExternalLink, Info } from "lucide-react";
 import { trackMeta } from "@/lib/meta-pixel";
+import { trackGooglePurchaseOnce } from "@/lib/google-tag";
 import { useCart } from "@/context/CartContext";
 
 interface VerifyResult {
@@ -24,6 +25,7 @@ interface VerifyResult {
     value: number;
     currency: string;
     contentIds: string[];
+    contents?: Array<{ id: string; quantity: number; item_price: number }>;
     numItems: number;
   };
 }
@@ -116,6 +118,19 @@ export default function OrderSuccess() {
             },
             data.orderId
           );
+
+          // Google (GA4 purchase + Ads conversion). Browser-only, keyed on the
+          // same order id as transaction_id, and guarded per order inside the
+          // helper so a refresh of this page is not a second sale.
+          trackGooglePurchaseOnce({
+            orderId: data.orderId,
+            value: data.purchase?.value ?? 0,
+            items: (data.purchase?.contents ?? []).map((c) => ({
+              item_id: c.id,
+              price: c.item_price,
+              quantity: c.quantity,
+            })),
+          });
         }
 
         // The payment is confirmed either way — keep checking quietly in the
