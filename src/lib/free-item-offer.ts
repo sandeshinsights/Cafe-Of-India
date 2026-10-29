@@ -44,17 +44,13 @@ export interface OfferTier {
 /**
  * Highest threshold first — `calculateFreeItemOffer` takes the first tier the
  * customer reaches and stops.
+ *
+ * Empty = offer switched off (menu banner, cart nudges and checkout discount all
+ * disappear). The previous tiers were:
+ *   { threshold: 100, itemIds: [FREE_ITEM_IDS.vegetableSamosa, FREE_ITEM_IDS.mangoLassi] },
+ *   { threshold: 50,  itemIds: [FREE_ITEM_IDS.mangoLassi] },
  */
-export const OFFER_TIERS: OfferTier[] = [
-  {
-    threshold: 100,
-    itemIds: [FREE_ITEM_IDS.vegetableSamosa, FREE_ITEM_IDS.mangoLassi],
-  },
-  {
-    threshold: 50,
-    itemIds: [FREE_ITEM_IDS.mangoLassi],
-  },
-];
+export const OFFER_TIERS: OfferTier[] = [];
 
 /** A cart line, as either half of the app has it. */
 export interface OfferCartLine {
