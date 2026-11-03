@@ -229,9 +229,22 @@ export async function POST(req: NextRequest) {
         where: { id: promoCodeId },
       });
 
+      // A code applied in the cart can expire or be switched off before the
+      // customer pays. Stop and say so: they were shown the discount, and
+      // ignoring the code here would charge full price with no explanation.
+      if (promo && !promo.active) {
+        return NextResponse.json(
+          { error: "This promo code is no longer active. Please remove it to continue." },
+          { status: 400 }
+        );
+      }
+
       if (promo && promo.active) {
         if (promo.expiresAt && new Date() > promo.expiresAt) {
-          // silently ignore expired
+          return NextResponse.json(
+            { error: "This promo code has expired. Please remove it to continue." },
+            { status: 400 }
+          );
         } else if (promo.maxTotalUses && promo.usedCount >= promo.maxTotalUses) {
           // silently ignore max reached
         } else {

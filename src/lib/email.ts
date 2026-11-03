@@ -105,6 +105,7 @@ interface OrderEmailData {
   subtotal: number;
   tax: number;
   total: number;
+  discountAmount?: number;
   scheduledFor?: string;
   tipAmount?: number;
   // DELIVERY
@@ -234,7 +235,7 @@ export async function sendOrderNotification(data: OrderEmailData) {
           </table>
 
           <div style="margin-top: 12px; text-align: right;">
-            <p style="margin: 2px 0;">Subtotal: $${data.subtotal.toFixed(2)}</p>
+            <p style="margin: 2px 0;">Subtotal: $${data.subtotal.toFixed(2)}</p>${data.discountAmount && data.discountAmount > 0 ? `<p style="margin: 2px 0; color: #16a34a;">Discount: -$${data.discountAmount.toFixed(2)}</p>` : ""}
             <p style="margin: 2px 0;">Tax (7%): $${data.tax.toFixed(2)}</p>
             ${tipHtml}
             ${deliveryFeeHtml}
@@ -381,7 +382,7 @@ export async function sendCustomerConfirmation(data: OrderEmailData) {
             </table>
 
             <div style="margin-top: 16px; text-align: right; padding-top: 12px; border-top: 2px solid #5C1A1B;">
-              <p style="margin: 4px 0; color: #666;">Subtotal: $${data.subtotal.toFixed(2)}</p>
+              <p style="margin: 4px 0; color: #666;">Subtotal: $${data.subtotal.toFixed(2)}</p>${data.discountAmount && data.discountAmount > 0 ? `<p style="margin: 4px 0; color: #16a34a;">Discount: -$${data.discountAmount.toFixed(2)}</p>` : ""}
               <p style="margin: 4px 0; color: #666;">Tax (7%): $${data.tax.toFixed(2)}</p>
               ${tipHtml}
               ${deliveryFeeHtml}

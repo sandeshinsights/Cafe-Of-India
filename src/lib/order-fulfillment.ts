@@ -270,6 +270,7 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       await sendOrderNotification({
         orderId: order.id, name: order.name, email: order.email, phone: order.phone,
         items: order.items, subtotal: order.subtotal, tax: order.tax, total: order.total,
+        discountAmount: order.discountAmount ?? 0,
         scheduledFor, tipAmount, isDelivery, deliveryAddress, deliveryApt,
         deliveryInstructions, deliveryFee,
       });
@@ -284,6 +285,7 @@ export async function fulfillOrder(sessionId: string): Promise<FulfillmentResult
       await sendCustomerConfirmation({
         orderId: order.id, name: order.name, email: order.email, phone: order.phone,
         items: order.items, subtotal: order.subtotal, tax: order.tax, total: order.total,
+        discountAmount: order.discountAmount ?? 0,
         scheduledFor, tipAmount, isDelivery, deliveryAddress, deliveryApt,
         deliveryInstructions, deliveryFee,
       });
